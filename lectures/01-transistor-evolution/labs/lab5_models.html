@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hold It Yourself</title>
+  <link rel="stylesheet" href="lab.css">
+  <style>
+    .grid.lab5 { grid-template-columns: 1.75fr 1fr; }
+    .viewer { position: relative; }
+    .viewer canvas { cursor: grab; touch-action: none; }
+    .viewer canvas.dragging { cursor: grabbing; }
+    #tip {
+      position: absolute; pointer-events: none; display: none; z-index: 2;
+      background: rgba(14, 17, 22, 0.92); border: 1px solid var(--faint); border-radius: 6px;
+      padding: 4px 8px; font-size: 13px; white-space: nowrap;
+    }
+    #tip b { color: var(--gate); font-weight: 600; }
+    #nogl { display: none; color: var(--drain); font-weight: 600; padding: 20px; }
+    .about { color: var(--muted); font-size: 14px; margin: 0 0 8px; }
+    .about b { color: var(--ink); font-weight: 600; }
+    .layers { overflow: auto; min-height: 0; display: flex; flex-direction: column; gap: 2px; }
+    .layers button {
+      display: flex; align-items: center; gap: 8px; text-align: left;
+      background: transparent; color: var(--ink); border: 0; border-radius: 6px;
+      padding: 4px 6px; font-size: 14px; font-weight: 500;
+    }
+    .layers button:hover { background: rgba(255, 255, 255, 0.05); }
+    .layers button.off { color: var(--muted); text-decoration: line-through; }
+    .layers button.off .sw { opacity: 0.25; }
+    .layers .sw { width: 14px; height: 14px; border-radius: 3px; flex: none; }
+    .controls.lab5 { grid-template-columns: minmax(0, 1fr) auto; }
+    .models, .views { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .models { grid-column: 1 / -1; }
+    .models .label, .views .label { color: var(--muted); font-size: 14px; font-weight: 500; margin-right: 4px; }
+    .models button.ghost, .views button.ghost { font-size: 14px; padding: 6px 12px; }
+    .models button.ghost.on, .views button.ghost.on { border-color: var(--gate); color: var(--gate); }
+    @media (max-width: 820px) {
+      .grid.lab5 { grid-template-columns: 1fr; }
+      .controls.lab5 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="kicker">Live lab 5</div>
+    <h1>Hold it yourself</h1>
+    <p>FET Lab's 3D models. Drag to turn, scroll or pinch to zoom, cut it open, and switch layers off to see inside.</p>
+  </header>
+
+  <main class="grid lab5">
+    <section class="panel viewer">
+      <h2 id="title"></h2>
+      <canvas id="gl" tabindex="0" aria-label="A 3D model you can rotate, zoom and cut open"></canvas>
+      <div id="nogl">This browser can't draw 3D (WebGL is off). The models are also in the slides' 3D chapters.</div>
+      <div id="tip"></div>
+      <div class="readouts"><div class="hint" id="source"></div></div>
+    </section>
+    <section class="panel">
+      <h2>Layers: click to hide or show</h2>
+      <div class="layers" id="layers"></div>
+      <div class="readouts">
+        <button class="ghost" id="all">Show all</button>
+        <button class="ghost" id="only">Just the channels and gate</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="controls lab5">
+    <div class="models" role="group" aria-label="Model">
+      <span class="label">Model:</span>
+      <button class="ghost" data-model="show_fin">FinFET cell</button>
+      <button class="ghost" data-model="show_ns">Nanosheet cell</button>
+      <button class="ghost" data-model="show_fs">Forksheet cell</button>
+      <button class="ghost" data-model="show_cfet">CFET cell</button>
+      <button class="ghost" data-model="cfet_mono">Monolithic CFET</button>
+      <button class="ghost" data-model="cfet_seq">Sequential CFET</button>
+    </div>
+    <label class="control">
+      <div class="row"><span id="cutName">Cut away, across the channel</span><output id="oCut"></output></div>
+      <input id="cut" type="range" min="0" max="1" step="0.005" value="0">
+    </label>
+    <div class="views" role="group" aria-label="View">
+      <button class="ghost" id="axis">Cut along the channel instead</button>
+      <button class="ghost" id="gate">Cut through the gate</button>
+      <button class="ghost" id="spin" aria-pressed="false">Spin</button>
+      <button class="ghost" id="reset">Reset view</button>
+    </div>
+  </footer>
+
+  <script src="lab5-models.js"></script>
+  <script src="lab.js"></script>
+  <script>
+  (function () {
+    // Each model: what it is, and where it comes from.
+    const MODELS = {
+      show_fin: ["FinFET inverter cell", "FET Lab's schematic layout model: two fins per transistor, the gate, contacts and metal 0 with its rails. Not a foundry cell."],
+      show_ns: ["Nanosheet inverter cell", "FET Lab's schematic layout model: two sheets per transistor, 22 nm wide. Not a foundry cell."],
+      show_fs: ["Forksheet inverter cell (inner wall)", "FET Lab's schematic layout model: the n and p sheets either side of an 8 nm wall. Not a foundry cell."],
+      show_cfet: ["CFET inverter cell", "FET Lab's schematic layout model: n stacked on p, with the power rails on the back. Not a foundry cell."],
+      cfet_mono: ["Monolithic CFET", "FET Lab's model: one stack, both tiers made together, one common gate; after IBM US 11,869,812 B2."],
+      cfet_seq: ["Sequential CFET", "FET Lab's model: the top tier built on a bonded layer above the bottom one; after TSMC US 2024/0413156 A1."],
+    };
+    const $ = (id) => document.getElementById(id);
+    const canvas = $("gl");
+    const gl = canvas.getContext("webgl", { antialias: true, stencil: true })
+      || canvas.getContext("experimental-webgl", { stencil: true });
+    if (!gl) { canvas.style.display = "none"; $("nogl").style.display = "block"; return; }
+
+    // --- reading a .glb ------------------------------------------------------------------------
+    function bytesOf(name) {
+      const b64 = window.LAB5_MODELS && window.LAB5_MODELS[name];
+      if (b64) {
+        const s = atob(b64), out = new Uint8Array(s.length);
+        for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+        return Promise.resolve(out.buffer);
+      }
+      return fetch(`../models/${name}.glb`).then((r) => r.arrayBuffer());
+    }
+    function parseGLB(buf) {
+      const dv = new DataView(buf);
+      let off = 12, json = null, bin = null;
+      while (off + 8 <= dv.byteLength) {
+        const len = dv.getUint32(off, true), type = dv.getUint32(off + 4, true);
+        const data = buf.slice(off + 8, off + 8 + len);
+        if (type === 0x4e4f534a) json = JSON.parse(new TextDecoder().decode(data));
+        else if (type === 0x004e4942) bin = data;
+        off += 8 + len;
+      }
+      return { json, bin };
+    }
+    const TYPES = { 5126: Float32Array, 5125: Uint32Array, 5123: Uint16Array, 5121: Uint8Array };
+    const COMPS = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
+    function accessor(g, i) {
+      const a = g.json.accessors[i], bv = g.json.bufferViews[a.bufferView];
+      const Arr = TYPES[a.componentType], n = a.count * COMPS[a.type];
+      const start = (bv.byteOffset || 0) + (a.byteOffset || 0);
+      return new Arr(g.bin.slice(start, start + n * Arr.BYTES_PER_ELEMENT));
+    }
+    // A node's transform as a 4x4 column-major matrix (translation, rotation, scale or matrix).
+    function nodeMatrix(n) {
+      if (n.matrix) return n.matrix;
+      const [tx, ty, tz] = n.translation || [0, 0, 0];
+      const [x, y, z, w] = n.rotation || [0, 0, 0, 1];
+      const [sx, sy, sz] = n.scale || [1, 1, 1];
+      return [
+        (1 - 2 * (y * y + z * z)) * sx, 2 * (x * y + z * w) * sx, 2 * (x * z - y * w) * sx, 0,
+        2 * (x * y - z * w) * sy, (1 - 2 * (x * x + z * z)) * sy, 2 * (y * z + x * w) * sy, 0,
+        2 * (x * z + y * w) * sz, 2 * (y * z - x * w) * sz, (1 - 2 * (x * x + y * y)) * sz, 0,
+        tx, ty, tz, 1,
+      ];
+    }
+    const apply = (m, p) => [m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12],
+                             m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13],
+                             m[2] * p[0] + m[6] * p[1] + m[10] * p[2] + m[14]];
+
+    // Every mesh becomes a "part": flat-shaded triangles in one buffer, a colour, a bounding box.
+    function buildParts(g) {
+      const parts = [];
+      g.json.nodes.forEach((node) => {
+        if (node.mesh === undefined) return;
+        const m = nodeMatrix(node);
+        for (const prim of g.json.meshes[node.mesh].primitives) {
+          const pos = accessor(g, prim.attributes.POSITION);
+          const idx = prim.indices !== undefined ? accessor(g, prim.indices) : null;
+          const count = idx ? idx.length : pos.length / 3;
+          const data = new Float32Array(count * 6);
+          const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+          for (let t = 0; t < count; t += 3) {
+            const v = [0, 1, 2].map((k) => {
+              const i = idx ? idx[t + k] : t + k;
+              return apply(m, [pos[3 * i], pos[3 * i + 1], pos[3 * i + 2]]);
+            });
+            const e1 = v[1].map((c, k) => c - v[0][k]), e2 = v[2].map((c, k) => c - v[0][k]);
+            let nx = e1[1] * e2[2] - e1[2] * e2[1], ny = e1[2] * e2[0] - e1[0] * e2[2], nz = e1[0] * e2[1] - e1[1] * e2[0];
+            const len = Math.hypot(nx, ny, nz) || 1;
+            nx /= len; ny /= len; nz /= len;
+            v.forEach((p, k) => {
+              data.set([p[0], p[1], p[2], nx, ny, nz], (t + k) * 6);
+              for (let a = 0; a < 3; a++) { lo[a] = Math.min(lo[a], p[a]); hi[a] = Math.max(hi[a], p[a]); }
+            });
+          }
+          const mat = g.json.materials[prim.material] || { name: "unnamed" };
+          const color = (mat.pbrMetallicRoughness && mat.pbrMetallicRoughness.baseColorFactor) || [0.8, 0.8, 0.8, 1];
+          const buf = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+          gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+          const volume = (hi[0] - lo[0]) * (hi[1] - lo[1]) * (hi[2] - lo[2]);
+          parts.push({ name: node.name || "part", material: mat.name || "unnamed", color, buf, count, lo, hi, volume });
+        }
+      });
+      // Films, fills and the parts inside them overlap in these models. Where two faces or two cut
+      // faces coincide, the smaller (inner) part should show: rank them, biggest first.
+      parts.slice().sort((a, b) => b.volume - a.volume).forEach((p, i) => (p.rank = i));
+      return parts;
+    }
+
+    // --- drawing ---------------------------------------------------------------------------------
+    const VS = `
+      attribute vec3 aPos; attribute vec3 aNor;
+      uniform mat4 uViewProj;
+      varying vec3 vPos; varying vec3 vNor;
+      void main() { vPos = aPos; vNor = aNor; gl_Position = uViewProj * vec4(aPos, 1.0); }`;
+    const FS = `
+      precision highp float;
+      uniform vec3 uColor; uniform vec4 uClip; uniform vec3 uLight; uniform float uHi; uniform float uCap;
+      varying vec3 vPos; varying vec3 vNor;
+      void main() {
+        if (dot(uClip.xyz, vPos) > uClip.w) discard;
+        vec3 n = normalize(vNor);
+        float inside = (gl_FrontFacing || uCap > 0.5) ? 0.0 : 1.0;
+        if (inside > 0.5) n = -n;
+        float key = max(dot(n, uLight), 0.0);
+        float fill = max(dot(n, normalize(vec3(-0.5, 0.35, -0.4))), 0.0);
+        vec3 c = uColor * (0.36 + 0.56 * key + 0.16 * fill);
+        c *= 1.0 - 0.45 * inside;           // faces seen from inside, through the cut
+        c = mix(c, vec3(1.0), 0.3 * uHi);   // the part under the pointer
+        gl_FragColor = vec4(c, 1.0);
+      }`;
+    function shader(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+    const loc = {
+      pos: gl.getAttribLocation(prog, "aPos"), nor: gl.getAttribLocation(prog, "aNor"),
+      viewProj: gl.getUniformLocation(prog, "uViewProj"), color: gl.getUniformLocation(prog, "uColor"),
+      clip: gl.getUniformLocation(prog, "uClip"), light: gl.getUniformLocation(prog, "uLight"),
+      hi: gl.getUniformLocation(prog, "uHi"), cap: gl.getUniformLocation(prog, "uCap"),
+    };
+    const capBuf = gl.createBuffer();
+    gl.enable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);
+    gl.clearColor(0.09, 0.106, 0.133, 1);
+
+    // column-major 4x4 helpers
+    function perspective(fovy, aspect, near, far) {
+      const f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
+      return [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * nf, -1, 0, 0, 2 * far * near * nf, 0];
+    }
+    const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+    const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+    const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    const norm = (a) => { const l = Math.hypot(...a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+    function lookAt(eye, target, up) {
+      const f = norm(sub(target, eye)), s = norm(cross(f, up)), u = cross(s, f);
+      return [s[0], u[0], -f[0], 0, s[1], u[1], -f[1], 0, s[2], u[2], -f[2], 0,
+              -dot(s, eye), -dot(u, eye), dot(f, eye), 1];
+    }
+    function mul(a, b) {
+      const o = new Array(16).fill(0);
+      for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) o[c * 4 + r] += a[k * 4 + r] * b[c * 4 + k];
+      return o;
+    }
+
+    // --- state -------------------------------------------------------------------------------------
+    const FOV = 30 * Math.PI / 180;
+    const view = { theta: -0.95, phi: 0.5, zoom: 1, spin: false };
+    let model = null, parts = [], hidden = new Set(), hover = null, axis = 0, dirty = true;
+    let center = [0, 0, 0], radius = 1, lo = [0, 0, 0], hi = [0, 0, 0];
+    function eye() {
+      const d = (radius / Math.sin(FOV / 2)) * 1.05 / view.zoom;
+      return [center[0] + d * Math.cos(view.phi) * Math.sin(view.theta),
+              center[1] + d * Math.sin(view.phi),
+              center[2] + d * Math.cos(view.phi) * Math.cos(view.theta)];
+    }
+    // The cut: keep the side where coordinate[axis] <= position.
+    function cutAt() {
+      const f = +$("cut").value;
+      return hi[axis] - f * (hi[axis] - lo[axis]);
+    }
+
+    function resize() {
+      const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.round(r.width * dpr));
+      canvas.height = Math.max(1, Math.round(r.height * dpr));
+      dirty = true;
+    }
+    new ResizeObserver(resize).observe(canvas);
+
+    function bindPart(buf) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.vertexAttribPointer(loc.pos, 3, gl.FLOAT, false, 24, 0);
+      gl.vertexAttribPointer(loc.nor, 3, gl.FLOAT, false, 24, 12);
+    }
+    // A quad on the cut plane, a little bigger than the model, facing the cut-away side.
+    function capQuad(c) {
+      const u = (axis + 1) % 3, v = (axis + 2) % 3, m = radius * 0.1;
+      const corner = (a, b) => { const q = [0, 0, 0]; q[axis] = c; q[u] = a; q[v] = b; return q; };
+      const pts = [corner(lo[u] - m, lo[v] - m), corner(hi[u] + m, lo[v] - m), corner(hi[u] + m, hi[v] + m),
+                   corner(lo[u] - m, lo[v] - m), corner(hi[u] + m, hi[v] + m), corner(lo[u] - m, hi[v] + m)];
+      const n = [0, 0, 0];
+      n[axis] = 1;
+      const data = new Float32Array(36);
+      pts.forEach((q, i) => data.set([...q, ...n], i * 6));
+      gl.bindBuffer(gl.ARRAY_BUFFER, capBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+    }
+
+    function draw() {
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+      if (!parts.length) return;
+      const e = eye();
+      const proj = perspective(FOV, canvas.width / canvas.height, radius * 0.05, radius * 20);
+      gl.uniformMatrix4fv(loc.viewProj, false, new Float32Array(mul(proj, lookAt(e, center, [0, 1, 0]))));
+      const n = [0, 0, 0];
+      n[axis] = 1;
+      const cutting = +$("cut").value > 0;
+      const c = cutting ? cutAt() : hi[axis] + radius;
+      gl.uniform4f(loc.clip, n[0], n[1], n[2], c);
+      gl.uniform3fv(loc.light, norm([...sub(e, center)].map((v, i) => v + [radius, radius * 1.6, 0][i])));
+      gl.uniform1f(loc.cap, 0);
+      gl.enableVertexAttribArray(loc.pos);
+      gl.enableVertexAttribArray(loc.nor);
+      const shown = parts.filter((p) => !hidden.has(p.material));
+      // The parts, cut open. Where faces coincide, the smaller part wins.
+      gl.enable(gl.POLYGON_OFFSET_FILL);
+      for (const p of shown) {
+        gl.polygonOffset(0, -2 * p.rank);
+        bindPart(p.buf);
+        gl.uniform3f(loc.color, p.color[0], p.color[1], p.color[2]);
+        gl.uniform1f(loc.hi, p === hover ? 1 : 0);
+        gl.drawArrays(gl.TRIANGLES, 0, p.count);
+      }
+      if (!cutting) return;
+      // Close each cut part with a cap on the cut plane: count the part's back faces minus its
+      // front faces along each ray in the stencil; where that isn't zero, the ray passes through
+      // the part's inside, so paint the cap there. Biggest first, so inner parts' caps end on top.
+      capQuad(c);
+      gl.enable(gl.STENCIL_TEST);
+      gl.uniform1f(loc.cap, 1);
+      for (const p of shown.slice().sort((a, b) => a.rank - b.rank)) {
+        if (p.lo[axis] > c || p.hi[axis] < c) continue;
+        gl.clear(gl.STENCIL_BUFFER_BIT);
+        gl.colorMask(false, false, false, false);
+        gl.depthMask(false);
+        gl.disable(gl.DEPTH_TEST);
+        gl.stencilFunc(gl.ALWAYS, 0, 0xff);
+        gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.KEEP, gl.DECR_WRAP);
+        gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.KEEP, gl.INCR_WRAP);
+        gl.uniform1f(loc.cap, 0);
+        bindPart(p.buf);
+        gl.drawArrays(gl.TRIANGLES, 0, p.count);
+        gl.colorMask(true, true, true, true);
+        gl.depthMask(true);
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.stencilFunc(gl.NOTEQUAL, 0, 0xff);
+        gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+        gl.uniform1f(loc.cap, 1);
+        gl.uniform4f(loc.clip, n[0], n[1], n[2], c + radius);  // the cap itself is never clipped
+        gl.uniform3f(loc.color, p.color[0], p.color[1], p.color[2]);
+        gl.uniform1f(loc.hi, p === hover ? 1 : 0);
+        gl.polygonOffset(0, 0);
+        bindPart(capBuf);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        gl.uniform4f(loc.clip, n[0], n[1], n[2], c);
+      }
+      gl.disable(gl.STENCIL_TEST);
+      gl.depthFunc(gl.LESS);
+      gl.uniform1f(loc.cap, 0);
+    }
+
+    // --- picking: the nearest visible part's box under the pointer ---------------------------------
+    function pick(px, py) {
+      const r = canvas.getBoundingClientRect();
+      const nx = ((px - r.left) / r.width) * 2 - 1, ny = 1 - ((py - r.top) / r.height) * 2;
+      const e = eye(), f = norm(sub(center, e)), s = norm(cross(f, [0, 1, 0])), u = cross(s, f);
+      const t = Math.tan(FOV / 2), aspect = r.width / r.height;
+      const d = norm([0, 1, 2].map((i) => f[i] + s[i] * nx * t * aspect + u[i] * ny * t));
+      const c = cutAt();
+      let best = null, bestT = Infinity;
+      for (const p of parts) {
+        if (hidden.has(p.material)) continue;
+        const bl = p.lo.slice(), bh = p.hi.slice();
+        bh[axis] = Math.min(bh[axis], c);
+        if (bl[axis] > bh[axis]) continue;
+        let t0 = -Infinity, t1 = Infinity;
+        for (let i = 0; i < 3; i++) {
+          if (Math.abs(d[i]) < 1e-12) { if (e[i] < bl[i] || e[i] > bh[i]) { t0 = Infinity; break; } continue; }
+          let a = (bl[i] - e[i]) / d[i], b = (bh[i] - e[i]) / d[i];
+          if (a > b) [a, b] = [b, a];
+          t0 = Math.max(t0, a); t1 = Math.min(t1, b);
+        }
+        if (t0 <= t1 && t1 > 0 && t0 < bestT) { bestT = t0; best = p; }
+      }
+      return best;
+    }
+
+    // --- loading a model and its layer list ----------------------------------------------------------
+    const SHOW_ONLY = /channel|silicon \(si\)|sige|nanowire|gate|work-function|tungsten \(w\) · gate|hfo|tin|wall|silicon nitride/i;
+    function load(name) {
+      model = name;
+      document.querySelectorAll("[data-model]").forEach((b) => b.classList.toggle("on", b.dataset.model === name));
+      $("title").textContent = MODELS[name][0];
+      $("source").textContent = MODELS[name][1];
+      return bytesOf(name).then((buf) => {
+        for (const p of parts) gl.deleteBuffer(p.buf);
+        parts = buildParts(parseGLB(buf));
+        lo = [0, 1, 2].map((i) => Math.min(...parts.map((p) => p.lo[i])));
+        hi = [0, 1, 2].map((i) => Math.max(...parts.map((p) => p.hi[i])));
+        center = lo.map((v, i) => (v + hi[i]) / 2);
+        radius = Math.hypot(...hi.map((v, i) => v - lo[i])) / 2;
+        hidden = new Set();
+        $("cut").value = 0;
+        buildLayers();
+        dirty = true;
+      }).catch((err) => {
+        $("title").textContent = "Couldn't load the model";
+        $("source").textContent = String(err);
+      });
+    }
+    function buildLayers() {
+      const box = $("layers");
+      box.textContent = "";
+      const seen = new Map();
+      for (const p of parts) if (!seen.has(p.material)) seen.set(p.material, p.color);
+      for (const [name, c] of seen) {
+        const b = document.createElement("button");
+        const sw = document.createElement("span");
+        sw.className = "sw";
+        sw.style.background = `rgb(${c.slice(0, 3).map((v) => Math.round(v * 255)).join(",")})`;
+        b.append(sw, document.createTextNode(name));
+        b.className = hidden.has(name) ? "off" : "";
+        b.addEventListener("click", () => {
+          if (hidden.has(name)) hidden.delete(name); else hidden.add(name);
+          b.className = hidden.has(name) ? "off" : "";
+          dirty = true;
+        });
+        box.append(b);
+      }
+    }
+
+    // --- interaction -----------------------------------------------------------------------------
+    const tip = $("tip");
+    const pointers = new Map();
+    let pinch = null;
+    canvas.addEventListener("pointerdown", (e) => {
+      canvas.setPointerCapture(e.pointerId);
+      pointers.set(e.pointerId, [e.clientX, e.clientY]);
+      canvas.classList.add("dragging");
+      view.spin = false; syncSpin();
+    });
+    canvas.addEventListener("pointermove", (e) => {
+      if (pointers.has(e.pointerId)) {
+        const [x0, y0] = pointers.get(e.pointerId);
+        pointers.set(e.pointerId, [e.clientX, e.clientY]);
+        if (pointers.size === 1) {
+          view.theta -= (e.clientX - x0) * 0.008;
+          view.phi = Math.max(-1.45, Math.min(1.45, view.phi + (e.clientY - y0) * 0.008));
+        } else if (pointers.size === 2) {
+          const [a, b] = [...pointers.values()];
+          const dist = Math.hypot(a[0] - b[0], a[1] - b[1]);
+          if (pinch) view.zoom = Math.max(0.4, Math.min(6, view.zoom * dist / pinch));
+          pinch = dist;
+        }
+        tip.style.display = "none";
+        dirty = true;
+        return;
+      }
+      const p = pick(e.clientX, e.clientY);
+      if (p !== hover) { hover = p; dirty = true; }
+      if (p) {
+        const r = canvas.parentElement.getBoundingClientRect();
+        tip.innerHTML = `<b>${p.material}</b> · ${p.name}`;
+        tip.style.display = "block";
+        tip.style.left = `${Math.min(e.clientX - r.left + 14, r.width - tip.offsetWidth - 6)}px`;
+        tip.style.top = `${e.clientY - r.top + 14}px`;
+      } else tip.style.display = "none";
+    });
+    const up = (e) => {
+      pointers.delete(e.pointerId);
+      if (pointers.size < 2) pinch = null;
+      if (!pointers.size) canvas.classList.remove("dragging");
+    };
+    canvas.addEventListener("pointerup", up);
+    canvas.addEventListener("pointercancel", up);
+    canvas.addEventListener("pointerleave", () => { tip.style.display = "none"; if (hover) { hover = null; dirty = true; } });
+    canvas.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      view.zoom = Math.max(0.4, Math.min(6, view.zoom * Math.exp(-e.deltaY * 0.0015)));
+      dirty = true;
+    }, { passive: false });
+    canvas.addEventListener("dblclick", () => reset());
+
+    function reset() {
+      Object.assign(view, { theta: -0.95, phi: 0.5, zoom: 1 });
+      dirty = true;
+    }
+    function syncSpin() {
+      $("spin").classList.toggle("on", view.spin);
+      $("spin").setAttribute("aria-pressed", String(view.spin));
+    }
+    function syncAxis() {
+      $("cutName").textContent = axis === 0 ? "Cut away, across the channel" : "Cut away, along the channel";
+      $("axis").textContent = axis === 0 ? "Cut along the channel instead" : "Cut across the channel instead";
+    }
+    $("cut").addEventListener("input", () => (dirty = true));
+    $("axis").addEventListener("click", () => { axis = axis === 0 ? 2 : 0; $("cut").value = 0; syncAxis(); dirty = true; });
+    $("gate").addEventListener("click", () => {
+      // FET Lab's devices are centred on their gate: cut there, and look at the cut face.
+      axis = 0; syncAxis();
+      $("cut").value = (hi[0] - center[0]) / (hi[0] - lo[0]);
+      Object.assign(view, { theta: Math.PI / 2 - 0.12, phi: 0.18, zoom: 1.15 });
+      dirty = true;
+    });
+    $("spin").addEventListener("click", () => { view.spin = !view.spin; syncSpin(); });
+    $("reset").addEventListener("click", () => { reset(); $("cut").value = 0; dirty = true; });
+    $("all").addEventListener("click", () => { hidden = new Set(); buildLayers(); dirty = true; });
+    $("only").addEventListener("click", () => {
+      hidden = new Set(parts.map((p) => p.material).filter((m) => !SHOW_ONLY.test(m)));
+      buildLayers();
+      dirty = true;
+    });
+    document.querySelectorAll("[data-model]").forEach((b) => b.addEventListener("click", () => load(b.dataset.model)));
+
+    let last = performance.now();
+    function frame(t) {
+      if (view.spin) { view.theta += (t - last) * 0.0003; dirty = true; }
+      last = t;
+      const c = cutAt();
+      $("oCut").textContent = parts.length ? `${Math.round(+$("cut").value * 100)}%  (at ${c.toFixed(0)} nm)` : "";
+      if (dirty) { dirty = false; draw(); }
+      requestAnimationFrame(frame);
+    }
+    syncAxis();
+    load("show_ns").then(() => requestAnimationFrame(frame));
+  })();
+  </script>
+</body>
+</html>

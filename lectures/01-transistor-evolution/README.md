@@ -1,18 +1,22 @@
 # Lecture 1 · The Switch That Wouldn't Turn Off
 
-The transistor's evolution, told as one problem: turning it on is easy, but turning it *off* has
-been the hard part for 100 years. From Lilienfeld's 1925 field-effect patent, through the
-bipolar transistor and the MOSFET, to the FinFET, the nanosheet, the forksheet, the CFET and
-what comes after. Each architecture shows up as the answer to a physics problem, with its
-equations.
+The transistor's evolution, followed along one thread: every smaller transistor had to keep
+its off state under control, while still giving enough current and fitting into a cell that can
+be built. From Lilienfeld's 1925 field-effect patent, through the bipolar transistor and the
+MOSFET, to the FinFET, the nanosheet, the forksheet, the CFET and what comes after. Each
+architecture shows up as the answer to a physics problem, with its equations; the simple models
+are labelled as models.
 
-**Status: all thirteen chapters (0 to 12) and Live Labs 1 and 2 are built**: the cold open,
-the vacuum tube and Lilienfeld (1), the bipolar transistor (2), the oxide, the MOSFET and CMOS
-(3), Moore and Dennard (4), Boltzmann's tyranny (5), short channels and the natural length λ
-(6), the FinFET (7), nanosheets and how they're made (8), the forksheet (9), the CFET with
-backside power (10), 2D channels, steep-slope switches and the hard floors (11), and the
-outro (12). Lab 1 (Boltzmann's fence) follows chapter 5 and Lab 2 (who controls the barrier?)
-follows chapter 6. Labs 3 to 5 and the polish follow the storyboard in [PLAN.md](PLAN.md).
+**Status: built.** Thirteen chapters (0 to 12): the cold open, the vacuum tube and Lilienfeld
+(1), the bipolar transistor (2), the oxide, the MOSFET and CMOS (3), Moore and Dennard (4),
+Boltzmann's tyranny (5), short channels and the natural length λ (6), the FinFET (7), nanosheets
+and how they're made (8), the forksheet (9), the CFET with backside power (10), 2D channels and
+steep-slope switches (11), and the outro (12). Five live labs: Dennard's dial after chapter 4,
+Boltzmann's fence after chapter 5, who controls the barrier? after chapter 6, and build a cell
+and hold it yourself (FET Lab's 3D models) after chapter 10. The full deck runs about an hour;
+`core.html` is a 25-minute route through it with its own shorter script. It also exports to
+PowerPoint and cuts to a continuous movie for a recorded version. An outside audit (October
+2026) and what changed because of it are in [PLAN.md](PLAN.md#12-the-october-2026-audit-of-commit-c3cb12c).
 
 It's pitched at analog layout engineers: each chapter ties its physics to something they draw
 (W and L, common-centroid pairs, taps and guard rings, threshold flavours, λ and DRC rules). The
@@ -30,22 +34,42 @@ folder:
 
 ```bash
 python build.py            # quick draft: 480p, 15 fps
-python build.py -q p       # for presenting: 1080p, 30 fps (much slower)
+python build.py -q p --core   # for presenting: 1080p, 30 fps, and the 25-minute core (much slower)
 ```
 
 Other options: `-q m` (720p), `-q h` (1080p at 60 fps), `--only Ch05` (re-render one
-chapter), `--deck-only` (rebuild the deck without rendering), `--pptx` (also export PowerPoint,
-without the live labs). Building the deck downloads reveal.js once, to bundle it; `--cdn` skips
-that and loads it online instead. Run `python build.py --help` for the rest.
+chapter), `--deck-only` (rebuild the deck without rendering), `--core` (also build the 25-minute
+core deck), `--pptx` (also export PowerPoint), `--movie` (also cut a continuous movie; see below).
+Building the deck downloads reveal.js once, to bundle it; `--cdn` skips that and loads it online
+instead. Run `python build.py --help` for the rest.
 
-The deck is written to `build/deck/`. Copy that whole folder to present from another machine.
+The deck is written to `build/deck/`: `index.html` is the full lecture and `core.html` the
+25-minute core, sharing the same videos. Copy that whole folder to present from another machine.
 
 ## Present it
 
-Open `build/deck/index.html` in Chrome, Edge or Firefox. Everything it needs (reveal.js, the
-videos, the labs and the fonts) is inside the folder, so it works without an internet
-connection. `--pptx` also writes `build/lecture1.pptx`, with the animations as embedded videos
-and the notes in both languages, but without the live labs.
+Open `build/deck/index.html` (or `core.html`) in Chrome, Edge or Firefox. Everything it needs
+(reveal.js, the videos, the labs, the 3D models and the fonts) is inside the folder, so it works
+without an internet connection.
+
+**The 25-minute core.** `core.html` keeps 69 of the full deck's slides and all five labs, with a
+shorter script in both languages (about 2,800 words: some 19 minutes of talk, plus about 3 for the
+labs and 2 for transitions). Which slides, and the script, are in `core.py`. Rehearse it once with
+a clock; the derivations, latch-up, negative capacitance and Landauer are left for questions.
+
+**PowerPoint.** `--pptx` writes `build/lecture1.pptx` (and `lecture1-core.pptx` with `--core`):
+the animations as embedded videos, the notes in both languages, and each lab as a screenshot slide
+that says where to find the live one. PowerPoint plays slides in a straight line, so the ↓
+derivations sit inline. Check the videos play on the presenting machine before the talk.
+
+**A recorded version.** `--movie` cuts the deck into one continuous movie, `build/lecture1-en.mp4`
+(`--lang bn` for Bangla, `--core` for the core too), with a matching subtitle file and a narration
+script, `build/narration-en.md`. The narration has to be yours: record one audio file per slide into
+`narration/en/` (or `narration/en-core/`), named as the script says, and build again. Each slide then
+plays its animation and holds until its recording ends. Until it has one, a slide is held for its
+notes' length at 150 words a minute, silent, which is the timing to record against. For a lab, put a
+screen recording of yourself working it at `narration/en/<lab name>.mp4`, with its sound, and it
+replaces the screenshot.
 
 | Key | Does |
 |---|---|
@@ -78,15 +102,19 @@ while it has focus; click the background, or use the clicker, to move on.
 
 ```
 build.py               renders the chapters and assembles the deck
+core.py                the 25-minute core path: which slides, and their shorter script
 physics.py             every equation the lecture shows, as functions
 devicedata.py          loads FET Lab's device models from data/ for the chapters
 chapters/              one Manim scene per chapter
-labs/                  the live labs (plain HTML and JavaScript); lab-physics.js is the JS port of physics.py
+labs/                  the five live labs (plain HTML and JavaScript); lab-physics.js is the JS port of
+                       physics.py; lab5-models.js holds the 3D models for Lab 5 (written by build.py)
 template/deck.html     the reveal.js page the deck is built into
 template/speaker.html  the speaker view (S)
-images/                historical photos and patent drawings, with their sources in images/CREDITS.md
-tests/test_physics.py  checks the equations, and that the labs' JS port agrees with them
-references.md          a source for every date, name and number on the slides
+images/                historical photos and patent drawings, with their sources in images/CREDITS.md;
+                       images/labs/ has a screenshot of each lab, for PowerPoint and the movie
+tests/test_physics.py  checks the equations, that the labs' JS port agrees with them, and the core path
+references.md          the sources for the slides' dates, names and numbers, with any gaps marked
+narration/             your recorded narration for --movie (not in the repository until you add it)
 data/, models/         FET Lab's device geometry and 3D models (see data/README.md)
 ```
 

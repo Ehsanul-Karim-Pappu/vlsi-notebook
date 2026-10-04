@@ -144,7 +144,7 @@
                                : '<span class="empty">No notes for this slide.</span>';
       fitNotes();
     }
-    // Shrink the notes until they fit the box, so a long script never needs scrolling mid-talk.
+    // Shrink the notes until they fit the box (down to 15 px; below that the box scrolls).
     function fitNotes() {
       const box = $("notes");
       let size = 23;

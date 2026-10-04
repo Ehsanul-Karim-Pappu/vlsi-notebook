@@ -67,15 +67,15 @@ class Ch06LosingGrip(Chapter, Slide):
     def card(self):
         self.slide(say(
             """
-            By the late 2000s, the gate was only a few tens of nanometres long, and transistors
-            had a new problem. Even with the gate at zero volts, they wouldn't properly turn off.
-            Not because of the oxide this time, and not because of Boltzmann. Because of the
-            drain.
+            Short-channel effects had been fought since the 1970s, mostly with clever doping. By
+            the late 2000s, with gates only a few tens of nanometres long, they had become the main
+            problem. Even with the gate at zero volts, transistors wouldn't properly turn off. Not
+            because of the oxide this time, and not because of Boltzmann. Because of the drain.
             """,
             """
-            2000-এর দশকের শেষে gate-এর length মাত্র কয়েক দশ nanometre, আর transistor-এর নতুন একটা
-            সমস্যা হইলো। Gate শূন্য volt-এ রাখলেও এগুলা ঠিকমতো off হয় না। এবার oxide-এর জন্য না, Boltzmann-এর
-            জন্যও না। Drain-এর জন্য।
+            Short-channel effect-এর সাথে লড়াই চলতেছে 1970-এর দশক থেকে, বেশিরভাগ চালাক doping দিয়া। 2000-এর
+            দশকের শেষে, gate-এর length যখন মাত্র কয়েক দশ nanometre, এইটাই হয়ে গেল প্রধান সমস্যা। Gate শূন্য volt-এ
+            রাখলেও transistor ঠিকমতো off হয় না। এবার oxide-এর জন্য না, Boltzmann-এর জন্যও না। Drain-এর জন্য।
             """,
         ))
         self.card_group = self.open_chapter(6, 2007, 2005, "Losing grip", "When the drain starts to fight the gate")
@@ -252,9 +252,9 @@ class Ch06LosingGrip(Chapter, Slide):
         e3 = eq(r"\Delta E_b", r"\approx", r"2\sqrt{ab}\;", r"e^{-L/2\lambda}", size=44)
         e3[0].set_color(GATE)
         e3[3].set_color(DRAIN)
-        e4 = eq(r"SS", r"\approx", r"\frac{60\ \text{mV/dec}}{1-2\,e^{-L/2\lambda}}", size=44)
+        e4 = eq(r"SS", r"=", r"\frac{60\ \text{mV/dec}}{1-\operatorname{sech}(L/2\lambda)}", size=44)
         costs = VGroup(e3, e4).arrange(RIGHT, buff=1.2)
-        costs_l = text("the barrier sinks, and the swing gets worse, as L/λ falls", size=22, color=MUTED)
+        costs_l = text("the barrier sinks (long-channel limit), and the swing gets worse (V_DS ≈ 0), as L/λ falls", size=20, color=MUTED)
         col = VGroup(VGroup(e1, e1_l).arrange(DOWN, buff=0.15), VGroup(e2, e2_l).arrange(DOWN, buff=0.15),
                      VGroup(costs, costs_l).arrange(DOWN, buff=0.15)).arrange(DOWN, buff=0.5).move_to([0, -0.2, 0])
         key = text("It all depends on L / λ.", size=30, color=GATE, weight="SEMIBOLD").to_edge(DOWN, buff=0.45)
@@ -310,13 +310,15 @@ class Ch06LosingGrip(Chapter, Slide):
             length in lambdas. Right: the swing. Above about six lambda, both are fine: DIBL is
             small and the swing is close to 60. Below it, both blow up fast. The rule of thumb:
             keep the gate at least about six lambda long; different sources quote anything from
-            five to ten.
+            five to ten. And note: this lambda is an electrostatic length, not the layout lambda of
+            chapter 4. Same letter, different thing.
             """,
             """
             পুরা গল্পটা দুইটা curve-এ, model থেকে। বামে: channel length, lambda-র হিসাবে, তার সাথে DIBL। ডানে:
             swing। মোটামুটি ছয় lambda-র উপরে দুইটাই ঠিক আছে: DIBL কম, swing 60-এর কাছাকাছি। এর নিচে দুইটাই দ্রুত
             খারাপ হয়। Rule of thumb: gate-রে অন্তত মোটামুটি ছয় lambda লম্বা রাখেন; বিভিন্ন source পাঁচ থেকে দশ পর্যন্ত
-            বলে।
+            বলে। আর খেয়াল করেন: এই lambda একটা electrostatic length, chapter 4-এর layout lambda না। একই অক্ষর, আলাদা
+            জিনিস।
             """,
         ))
         self.play(FadeOut(self.screen))
@@ -330,10 +332,11 @@ class Ch06LosingGrip(Chapter, Slide):
             a.y_axis.add_labels({v: MathTex(str(v), font_size=26, color=MUTED) for v in ys})
         x1 = MathTex(r"L/\lambda", font_size=30, color=MUTED).next_to(a1.x_axis, DOWN, buff=0.45)
         x2 = MathTex(r"L/\lambda", font_size=30, color=MUTED).next_to(a2.x_axis, DOWN, buff=0.45)
-        y1 = text("DIBL (mV/V)", size=22, color=DRAIN).next_to(a1.y_axis, UP, buff=0.15)
-        y2 = text("swing (mV/decade)", size=22, color=GATE).next_to(a2.y_axis, UP, buff=0.15)
-        c1 = a1.plot(lambda k: min(phys.dibl_mV_per_V(k, 1, n=401), 250), x_range=[2.75, 12, 0.1], color=DRAIN, stroke_width=5)
-        c2 = a2.plot(lambda k: min(phys.short_channel_swing(k, 1) * 1e3, 150), x_range=[3.0, 12, 0.1], color=GATE, stroke_width=5)
+        y1 = text("barrier DIBL (mV/V)", size=22, color=DRAIN).next_to(a1.y_axis, UP, buff=0.15)
+        y1.shift(RIGHT * max(0, -6.75 - y1.get_left()[0]))  # keep it inside the frame
+        y2 = text("swing at V_DS ≈ 0 (mV/decade)", size=22, color=GATE).next_to(a2.y_axis, UP, buff=0.15)
+        c1 = a1.plot(lambda k: min(phys.dibl_mV_per_V(k, 1), 250), x_range=[2.75, 12, 0.1], color=DRAIN, stroke_width=5)
+        c2 = a2.plot(lambda k: min(phys.short_channel_swing(k, 1) * 1e3, 150), x_range=[2.4, 12, 0.1], color=GATE, stroke_width=5)
         floor = DashedLine(a2.c2p(2, 59.5), a2.c2p(12, 59.5), stroke_color=MUTED, stroke_width=2)
         floor_l = text("60", size=18, color=MUTED).next_to(a2.c2p(12, 59.5), RIGHT, buff=0.08)
 
@@ -361,35 +364,41 @@ class Ch06LosingGrip(Chapter, Slide):
 
     # --- analog: gain ------------------------------------------------------------------------
     def analog(self):
+        g3, g6, g10 = (phys.intrinsic_gain(k, 1, 0.4) for k in (3, 6, 10))
+        g10 = round(g10, -1)
         self.slide(say(
-            """
+            f"""
             For analog, DIBL has a direct price. If the drain moves the barrier, the drain
-            voltage moves the current, and that is output conductance. In fact, if DIBL were the
-            only effect, the transistor's own gain, g-m times r-o, would be exactly one over the
-            DIBL coefficient. At three lambda, a gain of about six. At ten lambda, nearly two
-            hundred. Real devices have other effects too, so take these as an upper limit. But
-            it's why your current mirrors and amplifier transistors are drawn longer than minimum,
-            and why the matched devices in a pair always share the same L.
+            voltage moves the current, and that is output conductance. Below threshold the current
+            follows the barrier, and both the gate and the drain pull on it: the gate by alpha-g,
+            the drain by alpha-d. So the transistor's own gain, g-m times r-o, is alpha-g over
+            alpha-d. With 0.4 volts on the drain, in this model: at three lambda, a gain of about
+            {g3:.0f}. At six, about {g6:.0f}. At ten, nearly {g10:.0f}. Real devices have other effects
+            too, so take these as an upper limit. But it's why your current mirrors and amplifier
+            transistors are drawn longer than minimum, and why the matched devices in a pair always
+            share the same L.
             """,
-            """
+            f"""
             Analog-এর জন্য DIBL-এর একটা সরাসরি দাম আছে। Drain যদি barrier নাড়ায়, তাহলে drain voltage current
-            নাড়ায়, আর সেইটাই output conductance। আসলে, শুধু DIBL থাকলে transistor-এর নিজের gain, g-m গুণ r-o, হবে
-            ঠিক এক বাই DIBL coefficient। তিন lambda-তে gain মোটে ছয়ের মতো। দশ lambda-তে প্রায় দুইশ। আসল device-এ আরও
-            effect আছে, তাই এগুলারে upper limit ধরেন। কিন্তু এই কারণেই আপনার current mirror আর amplifier-এর
-            transistor minimum-এর চেয়ে লম্বা করে আঁকা হয়, আর matched pair-এর দুইটা device-এর L সবসময় এক।
+            নাড়ায়, আর সেইটাই output conductance। Threshold-এর নিচে current barrier-রে follow করে, আর gate আর drain
+            দুইটাই barrier-রে টানে: gate টানে alpha-g দিয়া, drain alpha-d দিয়া। তাই transistor-এর নিজের gain, g-m গুণ
+            r-o, হইলো alpha-g বাই alpha-d। Drain-এ 0.4 volt দিলে, এই model-এ: তিন lambda-তে gain প্রায় {g3:.0f}। ছয়-এ
+            প্রায় {g6:.0f}। দশ-এ প্রায় {g10:.0f}। আসল device-এ আরও effect আছে, তাই এগুলারে upper limit ধরেন। কিন্তু এই কারণেই
+            আপনার current mirror আর amplifier-এর transistor minimum-এর চেয়ে লম্বা করে আঁকা হয়, আর matched pair-এর দুইটা
+            device-এর L সবসময় এক।
             """,
         ))
         self.clear()
         title = heading("DIBL is output conductance")
-        e1 = eq(r"g_{ds}", r"=", r"\eta", r"\,g_m", r"\quad\Rightarrow\quad", r"g_m r_o", r"=", r"\frac{1}{\eta}", size=46)
+        e1 = eq(r"\frac{g_{ds}}{g_m}", r"=", r"\frac{\alpha_d}{\alpha_g}", r"\quad\Rightarrow\quad", r"g_m r_o", r"=", r"\frac{\alpha_g}{\alpha_d}", size=46)
         e1[2].set_color(DRAIN)
-        e1[7].set_color(DRAIN)
-        e1_l = text("η = DIBL in V/V: the drain acts like η of a gate", size=22, color=MUTED)
+        e1[6].set_color(DRAIN)
+        e1_l = text("α_g, α_d: how hard the gate and the drain each pull the barrier top", size=22, color=MUTED)
         VGroup(e1, e1_l).arrange(DOWN, buff=0.15).move_to([0, 2.15, 0])
         rows = VGroup()
         unit = 6.0 / 200
         for k in (3, 6, 10):
-            g = phys.self_gain_from_dibl(phys.dibl_mV_per_V(k, 1))
+            g = phys.intrinsic_gain(k, 1, 0.4)
             bar = Rectangle(width=max(g * unit, 0.04), height=0.42, fill_color=GOOD, fill_opacity=0.8, stroke_width=0)
             lab = MathTex(rf"L = {k}\lambda", font_size=34, color=INK)
             val = text(f"gain ≈ {g:.0f}", size=24, color=GOOD)
@@ -400,7 +409,7 @@ class Ch06LosingGrip(Chapter, Slide):
             r[2].next_to(r[1], RIGHT, buff=0.2)
         for i, r in enumerate(rows):
             r.shift(UP * (0.75 - 0.75 * i))
-        tag = VGroup(model_tag(), text("DIBL alone; real devices are lower", size=18, color=MUTED)).arrange(RIGHT, buff=0.2)
+        tag = VGroup(model_tag(), text("weak inversion, V_DS = 0.4 V, the barrier's pull only; real devices are lower", size=18, color=MUTED)).arrange(RIGHT, buff=0.2)
         tag.next_to(rows, DOWN, buff=0.3).align_to(rows, LEFT)
         note = layout_note("Analog transistors are drawn longer than minimum: for gain, and because a short "
                            "device's V_T depends on its exact L. Matched pairs share the same L, and the same "
@@ -416,18 +425,21 @@ class Ch06LosingGrip(Chapter, Slide):
         self.slide(say(
             """
             So how do you get the grip back? Not by pushing the gate harder: a higher gate voltage
-            just moves the whole curve. You make lambda smaller. And here's lambda. Three
-            things set it. The channel's thickness, t-Si: a thinner channel, a shorter reach. The
-            oxide, t-ox: but we already took that as far as it goes, to about one nanometre, in
-            the last chapter. And N: the number of gates touching the channel. This one equation
-            explains every transistor built since 2011.
+            just moves the whole curve. You make lambda smaller. And here's lambda, in a simple
+            model of a thin channel. Three things set it. The channel's thickness, t-Si: a thinner
+            channel, a shorter reach. The oxide, t-ox: but we already took that as far as it goes,
+            to about one nanometre, in the last chapter. And N: an equivalent number of gates
+            around the channel. It's a toy, and real geometries need real calculations, but it
+            captures the strategy behind every new architecture since 2011: a thinner channel, with
+            more gate around it.
             """,
             """
             তাহলে grip ফিরায়ে পাবো কীভাবে? Gate-রে আরও জোরে চাপ দিয়া না: gate voltage বাড়াইলে শুধু পুরা curve-টা
             সরে। Lambda ছোট করতে হবে। আর এই হইলো lambda। তিনটা জিনিস এইটা ঠিক করে। Channel-এর thickness, t-Si:
             channel যত পাতলা, drain-এর হাত তত ছোট। Oxide, t-ox: কিন্তু সেইটা তো আগের chapter-এই যতদূর যায় নিয়া গেছি,
-            প্রায় এক nanometre। আর N: channel-রে কয়টা gate ছুঁয়ে আছে। 2011-এর পর থেকে বানানো প্রত্যেকটা
-            transistor এই একটা equation দিয়া বোঝা যায়।
+            প্রায় এক nanometre। আর N: channel-এর চারপাশে equivalent কয়টা gate। এইটা একটা toy, আসল geometry-র জন্য
+            আসল হিসাব লাগে, কিন্তু 2011-এর পর থেকে প্রত্যেকটা নতুন architecture-এর কৌশল এইটাই: পাতলা channel, তার
+            চারপাশে আরও gate।
             """,
         ))
         self.clear()
@@ -440,14 +452,14 @@ class Ch06LosingGrip(Chapter, Slide):
         labels = VGroup(
             text("channel thickness:\nmake it thinner", size=22, color=SILICON).move_to([lam[3].get_x() - 1.7, 2.45, 0]),
             text("oxide (EOT): already\n~1 nm (chapter 5)", size=22, color=OXIDE_TEXT).move_to([lam[5].get_x() + 1.9, 2.45, 0]),
-            text("gates touching the channel:\nwrap more around it", size=22, color=GATE).next_to(lam, DOWN, buff=0.5),
+            text("N, an equivalent number of gates:\nwrap more around it", size=22, color=GATE).next_to(lam, DOWN, buff=0.5),
         )
         ar = VGroup(
             Arrow(labels[0].get_bottom(), lam[3].get_top(), buff=0.12, stroke_color=SILICON, stroke_width=3, tip_length=0.15),
             Arrow(labels[1].get_bottom(), lam[5].get_top(), buff=0.12, stroke_color=OXIDE_TEXT, stroke_width=3, tip_length=0.15),
             Arrow(labels[2].get_top(), lam[7].get_bottom(), buff=0.1, stroke_color=GATE, stroke_width=3, tip_length=0.15),
         )
-        src = source("Young 1989; Yan et al. 1992; Colinge 2004 (N: equivalent number of gates)")
+        src = source("A toy model: Young 1989; Yan et al. 1992; Colinge 2004. Real geometries: Frank, Taur and Wong 1998")
         self.play(FadeIn(title))
         self.play(Write(lam), run_time=2)
         for lbl, a in zip(labels, ar):
@@ -457,25 +469,27 @@ class Ch06LosingGrip(Chapter, Slide):
     def gates(self):
         self.slide(say(
             """
-            Now count the gates. Planar, one gate on top, with an effective channel depth of
-            about 15 nanometres: lambda is about 6.7 nanometres, so the gate can't be much shorter
-            than 40. Two gates, one above and one below a 10 nanometre film: 3.9, so about 23.
-            Three, a fin, six nanometres thick: 2.4, so about 15. And four, a gate all the way
-            around a 5 nanometre sheet: 1.9, so about 12. Same oxide every time. That's the next
-            three chapters, in one line.
+            Now count the gates, in this toy model. Planar, one gate on top, with an effective
+            channel depth of about 15 nanometres: lambda is about 6.7 nanometres, so by the
+            six-lambda rule the gate shouldn't be much shorter than 40. Two gates, one above and
+            one below a 10 nanometre film: 3.9, so about 23. Three, a fin six nanometres thick: 2.4,
+            so about 15. And four, all the way around a 5 nanometre square wire: 1.9, so about 12.
+            Same oxide every time. Treat these as a trend, not hard limits: real fins and sheets
+            aren't squares, and a wide, thin sheet behaves mostly like a double gate.
             """,
             """
-            এবার gate গুনি। Planar, উপরে একটা gate, channel-এর effective depth প্রায় 15 nanometre: lambda প্রায় 6.7
-            nanometre, তাই gate 40-এর চেয়ে খুব একটা ছোট করা যায় না। দুইটা gate, 10 nanometre-এর একটা film-এর উপরে
-            আর নিচে: 3.9, তাই প্রায় 23। তিনটা, মানে একটা fin, ছয় nanometre পুরু: 2.4, তাই প্রায় 15। আর চারটা, 5
-            nanometre-এর sheet-এর চারপাশ ঘিরে gate: 1.9, তাই প্রায় 12। প্রতিবার oxide একই। পরের তিনটা chapter, এক
-            line-এ।
+            এবার gate গুনি, এই toy model-এ। Planar, উপরে একটা gate, channel-এর effective depth প্রায় 15 nanometre:
+            lambda প্রায় 6.7 nanometre, তাই ছয়-lambda rule অনুযায়ী gate 40-এর চেয়ে খুব একটা ছোট হওয়া উচিত না। দুইটা gate,
+            10 nanometre-এর একটা film-এর উপরে আর নিচে: 3.9, তাই প্রায় 23। তিনটা, মানে ছয় nanometre পুরু একটা fin: 2.4,
+            তাই প্রায় 15। আর চারটা, 5 nanometre-এর একটা square wire-এর চারপাশ ঘিরে: 1.9, তাই প্রায় 12। প্রতিবার oxide
+            একই। এগুলারে trend হিসাবে নেন, শক্ত limit না: আসল fin আর sheet square না, আর চওড়া পাতলা একটা sheet বেশিরভাগ
+            double gate-এর মতো আচরণ করে।
             """,
         ))
         self.clear()
-        title = heading("Count the gates")
+        title = heading("Count the gates (a toy model)")
         cases = [(1, 15, "planar", "planar"), (2, 10, "double", "double gate"), (3, 6, "finfet", "fin (three faces)"),
-                 (4, 5, "nanosheet", "all around")]
+                 (4, 5, "nanosheet", "all around (square wire)")]
         cols = VGroup()
         bars = VGroup()
         unit = 1.9 / 40
@@ -494,8 +508,9 @@ class Ch06LosingGrip(Chapter, Slide):
         for col, b in zip(cols, bars):
             b[0].move_to([col.get_x(), base_y + b[0].height / 2, 0])
             b[1].next_to(b[0], UP, buff=0.08)
-        bar_l = text("shortest\ngate, ≈ 6λ", size=20, color=DRAIN).move_to([-6.1, -2.7, 0])
-        tag = VGroup(model_tag(), text("1 nm oxide (EOT)", size=18, color=MUTED)).arrange(DOWN, buff=0.1).move_to([6.1, 2.6, 0])
+        bar_l = text("≈ 6λ\n(rule of\nthumb)", size=20, color=DRAIN).move_to([-6.2, -2.6, 0])
+        tag = VGroup(model_tag(), text("1 nm oxide (EOT);\nN: Colinge's\nequivalent gates", size=16, color=MUTED)).arrange(DOWN, buff=0.1).move_to([6.2, 2.4, 0])
+        tag.shift(LEFT * max(0, tag.get_right()[0] - 6.8))
         self.play(FadeIn(title), FadeIn(tag))
         for col, b in zip(cols, bars):
             self.play(FadeIn(col, shift=UP * 0.15), GrowFromEdge(b[0], DOWN), FadeIn(b[1]), run_time=1.0)

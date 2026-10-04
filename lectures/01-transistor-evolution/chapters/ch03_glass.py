@@ -1,6 +1,6 @@
 """Chapter 3 · The glass that saved electronics (1955–1963).
 
-Oxide masking, Atalla's passivation (chapter 1's surface-state equation, fixed), the MOSFET,
+Oxide masking, Atalla's passivation (chapter 1's surface-state model, with good oxide), the MOSFET,
 how a gate makes a channel (band bending to 2 phi_F), the threshold voltage, the square law
 with its drawn W/L (and the gradual-channel derivation one level down), CMOS, and its price in
 layout: latch-up.
@@ -117,18 +117,21 @@ class Ch03Glass(Chapter, Slide):
         self.slide(say(
             """
             Then Mohamed Atalla at Bell Labs found something even more important. A carefully grown
-            oxide doesn't just protect the silicon: it ties up those broken bonds at the surface.
-            The density of surface states drops about a thousand times. Put that into Bardeen's
-            equation from chapter one: instead of two percent of the gate's charge reaching the
-            channel, now about ninety-six percent does. The field effect finally works. That's
-            Atalla on the right, in 1963.
+            oxide doesn't just protect the silicon: it ties up most of those broken bonds at the
+            surface. A good thermal oxide has orders of magnitude fewer surface states: typically
+            around ten to the ten per square centimetre per electron-volt, against around ten to
+            the thirteen for a bare surface. Put typical values like these into chapter one's
+            simple model: the semiconductor's share of the induced charge goes from about two
+            percent to about ninety-six. Now the gate can bend the bands far enough to make a
+            channel. That's Atalla on the right, in 1963.
             """,
             """
             এরপর Bell Labs-এর Mohamed Atalla আরও important একটা জিনিস পাইলেন। যত্ন করে জন্মানো oxide শুধু
-            silicon-রে protect করে না: surface-এর ওই ভাঙা bond-গুলারেও বাঁধে ফেলে। Surface states-এর density প্রায়
-            হাজার গুণ কমে যায়। Chapter one-এর Bardeen-এর equation-এ এইটা বসান: gate-এর charge-এর দুই
-            percent-এর বদলে এখন প্রায় ছিয়ানব্বই percent channel-এ পৌঁছায়। Field effect অবশেষে কাজ করে। ডানের
-            ছবিতে Atalla, 1963-এ।
+            silicon-রে protect করে না: surface-এর ভাঙা bond-গুলার বেশিরভাগই বাঁধে ফেলে। ভালো একটা thermal oxide-এ
+            surface state কয়েক order কম: সাধারণত প্রতি square centimetre প্রতি electron-volt-এ দশের দশ ঘাতের আশেপাশে,
+            খালি surface-এর দশের তেরো ঘাতের বিপরীতে। এই রকম typical মান chapter one-এর সহজ model-এ বসান:
+            induce করা charge-এ semiconductor-এর ভাগ প্রায় দুই percent থেকে প্রায় ছিয়ানব্বই percent হয়। এখন gate band
+            যথেষ্ট বাঁকায়ে একটা channel বানাইতে পারে। ডানের ছবিতে Atalla, 1963-এ।
             """,
         ))
         self.play(FadeOut(self.parts))
@@ -142,14 +145,14 @@ class Ch03Glass(Chapter, Slide):
         lines = VGroup(*[Arrow([x, 2.1, 0], [x, 0.97 if i != 8 else -1.0, 0], buff=0, stroke_color=GATE, stroke_width=3,
                                max_tip_length_to_length_ratio=0.08) for i, x in enumerate(xs)])
         self.play(FadeIn(title), FadeIn(gate), FadeIn(ox), FadeIn(semi), FadeIn(traps), FadeIn(lines))
-        before = phys.share_reaching_channel(1e13)
-        after = phys.share_reaching_channel(1e10)
+        before = phys.share_in_semiconductor(1e13)
+        after = phys.share_in_semiconductor(1e10)
         e1 = eq(r"\frac{C_{dep}}{C_{dep}+C_{it}}", r"\approx", rf"{before * 100:.0f}\%", size=50)
         e1[2].set_color(DRAIN)
-        d1 = text("D_it ≈ 10¹³ (bare surface)", size=24, color=MUTED)
+        d1 = text("D_it ≈ 10¹³ (bare surface, typical)", size=24, color=MUTED)
         col = VGroup(e1, d1).arrange(DOWN, buff=0.3).move_to([3.4, 0.6, 0])
         self.play(Write(e1), FadeIn(d1))
-        heal = text("thermal oxide: D_it ≈ 10¹⁰", size=24, color=GOOD).move_to(d1)
+        heal = text("thermal oxide: D_it ≈ 10¹⁰ (typical)", size=24, color=GOOD).move_to(d1)
         e2 = eq(r"\frac{C_{dep}}{C_{dep}+C_{it}}", r"\approx", rf"{after * 100:.0f}\%", size=50).move_to(e1)
         e2[2].set_color(GOOD)
         deep = VGroup(*[Arrow([x, 2.1, 0], [x, -1.0, 0], buff=0, stroke_color=GATE, stroke_width=3, max_tip_length_to_length_ratio=0.03) for x in xs])
@@ -240,23 +243,27 @@ class Ch03Glass(Chapter, Slide):
     def band_bending(self):
         self.slide(say(
             """
-            So how does a gate make a channel? Here is the gate, the oxide, and p-type silicon, with
+            So how does a gate make a channel? Kahng's device was p-channel, on n-type silicon.
+            We'll draw the mirror image, an n-channel device on p-type silicon, which works the
+            same way with the signs flipped. Here is the gate, the oxide, and p-type silicon, with
             the silicon's energy bands drawn to the right: the conduction band, the intrinsic level,
             the valence band, and the Fermi level, flat. Put a positive voltage on the gate and the
             bands bend down near the surface. First the holes are pushed away, leaving a depletion
             layer of fixed negative charge. Bend further, until the intrinsic level at the surface
             drops below the Fermi level by as much as it sits above it in the bulk: that's surface
-            potential two phi-F. Now the surface has more electrons than the bulk has holes. It has
-            inverted. That thin layer of electrons is the channel.
+            potential two phi-F. There the surface has as many electrons as the bulk has holes, and
+            beyond it, more. It has inverted. That thin layer of electrons is the channel.
             """,
             """
-            তাহলে gate কীভাবে channel বানায়? এই যে gate, oxide, আর p-type silicon, ডানে silicon-এর energy
+            তাহলে gate কীভাবে channel বানায়? Kahng-এর device ছিল p-channel, n-type silicon-এর উপর। আমরা আঁকবো
+            তার আয়নার ছবি, p-type silicon-এর উপর একটা n-channel device, যেটা sign উল্টায়ে একইভাবে কাজ করে। এই যে
+            gate, oxide, আর p-type silicon, ডানে silicon-এর energy
             band আঁকা: conduction band, intrinsic level, valence band, আর Fermi level, সমান। Gate-এ positive
             voltage দিলে surface-এর কাছে band নিচের দিকে বাঁকে। প্রথমে hole-গুলা সরে যায়, পিছনে থাকে fixed
             negative charge-এর একটা depletion layer। আরও বাঁকান, যতক্ষণ না surface-এ intrinsic level Fermi
-            level-এর নিচে ততটাই নামে যতটা bulk-এ উপরে ছিল: এইটাই surface potential two phi-F। এখন surface-এ
-            electron-এর সংখ্যা bulk-এর hole-এর চেয়ে বেশি। Surface invert হয়ে গেছে। Electron-এর ওই পাতলা
-            layer-টাই channel।
+            level-এর নিচে ততটাই নামে যতটা bulk-এ উপরে ছিল: এইটাই surface potential two phi-F। ওইখানে surface-এ
+            electron-এর সংখ্যা bulk-এর hole-এর সমান, আর তার পরে বেশি। Surface invert হয়ে গেছে। Electron-এর ওই
+            পাতলা layer-টাই channel।
             """,
         ))
         self.play(FadeOut(self.parts))
@@ -432,9 +439,10 @@ class Ch03Glass(Chapter, Slide):
         self.play(FadeIn(title))
         self.play(FadeIn(od), FadeIn(poly), FadeIn(cts), FadeIn(tags))
         self.play(GrowFromCenter(l_arr), FadeIn(l_lbl), GrowFromCenter(w_arr), FadeIn(w_lbl))
-        sq = eq(r"I_D", r"=", r"\tfrac{1}{2}\,", r"\mu C_{ox}", r"\,\frac{W}{L}", r"\,(V_{GS}-V_T)^2", size=54)
+        sq = eq(r"I_D", r"=", r"\tfrac{1}{2}\,", r"\mu C_{ox}", r"\,\frac{W}{L}", r"\,(V_{GS}-V_T)^2", size=48)
         sq[4].set_color(GATE)
-        sq.move_to([3.6, 1.2, 0])
+        sq.move_to([3.7, 1.2, 0])
+        sq.shift(LEFT * max(0, sq.get_right()[0] - 6.6))  # keep a margin from the frame's edge
         sat = text("saturation (the square law)", size=22, color=MUTED).next_to(sq, UP, buff=0.25)
         k = 400 * phys.oxide_capacitance_cm2(T_OX)
         i_ex = phys.square_law_current(0.84, 1.0, 0.34, k, 10)
@@ -565,16 +573,22 @@ class Ch03Glass(Chapter, Slide):
 
         self.slide(say(
             """
-            Here's how it switches. Input low: the p-device is on and the n-device is off, so the output is high. Input high: the
-            reverse. In either steady state one of them is off, so no current flows from supply to
-            ground. Power is only spent while switching: alpha C V squared f. Wanlass and C. T. Sah called
-            their 1963 paper nanowatt logic.
+            Here's how it switches. Input low: the p-device is on and the n-device is off, so the
+            output is high. Input high: the reverse. With the input at either rail, one of them is
+            off, so ideally no current flows from supply to ground, apart from leakage. Only while
+            the input passes through the middle are both partly on, and a little current flows
+            straight through: that hump, plotted against the input voltage. Most of the power goes
+            into charging the load: alpha C V squared f, with alpha the share of clock cycles in
+            which the node rises from 0 to 1. Real chips add that short-circuit current and
+            leakage. Wanlass and C. T. Sah called their 1963 paper nanowatt logic.
             """,
             """
-            এইটা কীভাবে switch করে দেখেন। Input low হলে p-device on, n-device
-            off, তাই output high। Input high হলে উল্টা। যেকোনো steady state-এ একটা না একটা off থাকে, তাই supply
-            থেকে ground-এ কোনো current যায় না। Power খরচ হয় শুধু switch করার সময়: alpha C V square f। Wanlass আর C. T. Sah-এর
-            1963-এর paper-এর নামই ছিল nanowatt logic।
+            এইটা কীভাবে switch করে দেখেন। Input low হলে p-device on, n-device off, তাই output high। Input high হলে
+            উল্টা। Input যেকোনো rail-এ থাকলে একটা না একটা off থাকে, তাই ideally supply থেকে ground-এ কোনো current যায়
+            না, leakage বাদে। শুধু input যখন মাঝখান দিয়া যায়, দুইটাই আংশিক on থাকে, আর সোজা একটু current চলে যায়: ওই
+            কুঁজটা, input voltage-এর সাথে আঁকা। Power-এর বেশিরভাগ যায় load charge করতে: alpha C V square f, যেখানে alpha হইলো
+            কত ভাগ clock cycle-এ node 0 থেকে 1-এ ওঠে। আসল chip-এ এর সাথে যোগ হয় ওই short-circuit current আর leakage।
+            Wanlass আর C. T. Sah-এর 1963-এর paper-এর নামই ছিল nanowatt logic।
             """,
         ))
         self.play(FadeOut(pic))
@@ -617,12 +631,15 @@ class Ch03Glass(Chapter, Slide):
         cur = axes.plot(lambda v: 0.9 * np.exp(-((v - 0.5) / 0.07) ** 2), x_range=[0, 1], color=THERMAL, stroke_width=3)
         ax_l = VGroup(MathTex(r"V_{in}", font_size=28, color=MUTED).next_to(axes.x_axis, DOWN, buff=0.15),
                       MathTex(r"V_{out}", font_size=28, color=GATE).next_to(axes.y_axis, UP, buff=0.1))
-        cur_l = text("current: only while switching", size=20, color=THERMAL).next_to(axes, DOWN, buff=0.55)
+        cur_l = text("through-current vs. V_in (qualitative):\nboth devices on in the middle", size=18, color=THERMAL).next_to(axes, DOWN, buff=0.5)
         self.play(Create(axes), FadeIn(ax_l), Create(vtc))
         self.play(Create(cur), FadeIn(cur_l))
-        pw = eq(r"P", r"=", r"\alpha\,C\,", r"V_{DD}^2", r"\,f", size=54).move_to([4.9, 0.9, 0])
+        pw = eq(r"P", r"\approx", r"\alpha\,C\,", r"V_{DD}^2", r"\,f", size=50).move_to([4.9, 1.2, 0])
         pw[3].set_color(THERMAL)
-        pw_l = text("power only when switching", size=22, color=MUTED).next_to(pw, DOWN, buff=0.25)
+        pw2 = eq(r"+\,P_{sc}", r"+\,V_{DD}I_{leak}", size=36, color=MUTED).next_to(pw, DOWN, buff=0.2)
+        pw_l = text("α: share of cycles with\na 0→1 transition", size=18, color=MUTED).next_to(pw2, DOWN, buff=0.25)
+        pw_l = VGroup(pw2, pw_l)
+        VGroup(pw, pw_l).shift(LEFT * max(0, VGroup(pw, pw_l).get_right()[0] - 6.6))
         src = source("F. Wanlass & C. T. Sah, “Nanowatt logic…”, ISSCC 1963")
         self.play(Write(pw), FadeIn(pw_l), FadeIn(src))
         self.inv = VGroup(vdd, gnd, vdd_l, gnd_l, p, n, wires, in_l, out_l, path_lo, st)

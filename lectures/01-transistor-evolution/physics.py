@@ -27,9 +27,7 @@ def thermal_voltage(T=300.0):
 
 
 def body_factor(c_dep, c_ox):
-    """m = 1 + C_dep / C_ox: how much of the gate voltage reaches the channel surface (1/m).
-    A negative-capacitance insulator (C_ox < 0, chapter 11) gives m < 1, and a swing below
-    60 mV/decade (S. Salahuddin and S. Datta, Nano Lett. 8, 405 (2008))."""
+    """m = 1 + C_dep / C_ox: how much of the gate voltage reaches the channel surface (1/m)."""
     return 1.0 + c_dep / c_ox
 
 
@@ -39,7 +37,9 @@ def subthreshold_swing(T=300.0, m=1.0):
 
 
 def fraction_over_barrier(barrier_eV, T=300.0):
-    """Share of a Boltzmann population with energy above the barrier: exp(-E_b / k_B T)."""
+    """The Boltzmann factor exp(-E_b / k_B T): the share of a population with a Boltzmann
+    (exponential) energy tail that lies above the barrier. A teaching model: a real source's
+    flux over a barrier also depends on the density of states and the carriers' velocities."""
     return exp(-barrier_eV / thermal_voltage(T))
 
 
@@ -59,6 +59,14 @@ def drain_current(vgs, vt, T=300.0, m=1.2, i_spec=1e-6):
     x = (vgs - vt) / (2 * m * ut)
     soft = x + log1p(exp(-x)) if x > 30 else log1p(exp(x))
     return i_spec * soft**2
+
+
+def specific_current(i_spec_ref, T=300.0, m=1.0, T_ref=300.0, m_ref=1.0):
+    """EKV's specific current I_spec = 2 m beta U_T^2, scaled from a reference value. Holding
+    I_spec fixed while T or m changes would make the strong-inversion current scale as 1/T^2:
+    an artefact, not physics (C. Enz and E. Vittoz). Mobility and V_T still drift with T in real
+    devices; this keeps only the normalisation consistent."""
+    return i_spec_ref * (m / m_ref) * (T / T_ref) ** 2
 
 
 def off_current_ratio(delta_vt, ss):
@@ -115,14 +123,17 @@ def depletion_capacitance_cm2(n_a_cm3, psi_s):
 
 
 def surface_state_capacitance_cm2(d_it_cm2_eV):
-    """C_it = q^2 D_it, with D_it per cm^2 per eV; in F/cm^2 (q x states per volt)."""
+    """C_it = q D_it, with D_it per cm^2 per eV; in F/cm^2. (It is q^2 D_it when D_it is quoted
+    per joule.)"""
     return Q * d_it_cm2_eV
 
 
-def share_reaching_channel(d_it_cm2_eV, n_a_cm3=1e16):
-    """Of the charge a gate induces, the share that reaches the channel instead of filling
-    surface states: C_dep / (C_dep + C_it), with the depletion region at threshold (psi_s =
-    2 phi_F). Bardeen's surface states (D_it ~ 1e13) leave almost nothing for the channel."""
+def share_in_semiconductor(d_it_cm2_eV, n_a_cm3=1e16):
+    """Of the extra charge a gate induces, the share the semiconductor answers with rather than
+    the interface traps: C_dep / (C_dep + C_it). A depletion-and-trap approximation, with the
+    depletion capacitance taken at psi_s = 2 phi_F; the semiconductor's share here is depletion
+    charge, not the mobile electrons of an inversion channel. Typical D_it: ~1e13 for a bare
+    surface, ~1e10 cm^-2 eV^-1 for a good thermal oxide (illustrative values)."""
     c_dep = depletion_capacitance_cm2(n_a_cm3, 2 * fermi_potential(n_a_cm3))
     c_it = surface_state_capacitance_cm2(d_it_cm2_eV)
     return c_dep / (c_dep + c_it)
@@ -200,14 +211,41 @@ def dennard_factor(power, kappa):
     return kappa**power
 
 
+def generalized_scaling(kappa, u, fixed_clock=False):
+    """Ideal scaling with the dimensions shrunk by kappa and the voltage by u (1 <= u <= kappa):
+    u = kappa is Dennard's constant field, u = 1 keeps the voltage fixed (G. Baccarani,
+    M. R. Wordeman and R. H. Dennard, IEEE TED 31, 452 (1984)). Long-channel square-law current
+    I ~ (W/L) C_ox V^2, gate capacitance C ~ C_ox W L, switching power C V^2 f with f = 1/delay,
+    or f held where it was (fixed_clock). No leakage, velocity saturation or wires. Each value is
+    relative to before the shrink (Live Lab 3)."""
+    delay = u / kappa**2
+    frequency = 1.0 if fixed_clock else 1 / delay
+    power = (1 / kappa) * (1 / u) ** 2 * frequency
+    return {
+        "size": 1 / kappa,
+        "voltage": 1 / u,
+        "density": kappa**2,
+        "current": kappa / u**2,
+        "capacitance": 1 / kappa,
+        "delay": delay,
+        "frequency": frequency,
+        "power": power,
+        "power_density": power * kappa**2,
+    }
+
+
 # --- Chapter 6: losing grip (the quasi-2D model) ---------------------------------------------
 # The channel's potential along x (source at 0, drain at L) under a gate that holds it at
 # phi_gs far from the ends: d2phi/dx2 - (phi - phi_gs)/lambda^2 = 0, with phi = V_bi at the
 # source and V_bi + V_DS at the drain (K. K. Young, IEEE TED 36, 399 (1989); R.-H. Yan,
 # A. Ourmazd and K. F. Lee, IEEE TED 39, 1704 (1992)).
 def natural_length_nm(t_si_nm, t_ox_nm, n_gates=1, eps_si=EPS_SI, eps_ox=EPS_SIO2):
-    """lambda = sqrt(eps_si t_si t_ox / (N eps_ox)): how far the drain's field reaches into the
-    channel. N counts the gates around it: 1 planar, 2 double gate, 3 tri-gate, 4 all around."""
+    """lambda = sqrt(eps_si t_si t_ox / (N eps_ox)): roughly how far the drain's field reaches
+    into a thin channel. A toy model: N is an "equivalent number of gates" (J.-P. Colinge, 2004:
+    1 single gate, 2 double gate, about 3 tri-gate and 4 surrounding gate, for square-ish cross
+    sections). Real scale lengths depend on the geometry: a wide, thin sheet behaves mostly like
+    a double gate, and fringing fields matter (D. J. Frank, Y. Taur and H.-S. P. Wong, 1998).
+    Not the layout lambda of Mead and Conway's design rules."""
     return sqrt(eps_si * t_si_nm * t_ox_nm / (n_gates * eps_ox))
 
 
@@ -218,21 +256,59 @@ def channel_potential(x, length, lam, v_bi=1.0, v_ds=0.05, phi_gs=0.4):
             + (v_bi + v_ds - phi_gs) * sinh(x / lam) / s)
 
 
-def barrier_height(length, lam, v_bi=1.0, v_ds=0.05, phi_gs=0.4, n=2001):
+def barrier_top(length, lam, v_bi=1.0, v_ds=0.05, phi_gs=0.4):
+    """Where the potential is lowest (the top of the electron's barrier), as u = x / lambda.
+    phi is convex, so its minimum solves phi'(x) = 0, i.e. b cosh u = a cosh(l - u), with
+    a = V_bi - phi_gs, b = V_bi + V_DS - phi_gs and l = L / lambda. Written so it stays exact
+    for long channels: u = (l + ln(a - b e^-l) - ln(b - a e^-l)) / 2, or 0 when a <= b e^-l."""
+    l = length / lam
+    a, b = v_bi - phi_gs, v_bi + v_ds - phi_gs
+    e = exp(-l)
+    if a - b * e <= 0:
+        return 0.0
+    return min(max(0.5 * (l + log(a - b * e) - log(b - a * e)), 0.0), l)
+
+
+def barrier_height(length, lam, v_bi=1.0, v_ds=0.05, phi_gs=0.4):
     """The electron's barrier from the source, V_bi - min(phi), in eV. Long channel: V_bi - phi_gs."""
-    lo = min(channel_potential(length * i / (n - 1), length, lam, v_bi, v_ds, phi_gs) for i in range(n))
-    return v_bi - lo
+    u = barrier_top(length, lam, v_bi, v_ds, phi_gs)
+    return v_bi - channel_potential(u * lam, length, lam, v_bi, v_ds, phi_gs)
+
+
+def gate_coupling(length, lam, v_ds=0.05, v_bi=1.0, phi_gs=0.4):
+    """alpha_g = d(phi_min)/d(phi_gs): how much of a change in the gate's long-channel potential
+    reaches the top of the barrier. 1 in a long channel; 1 - sech(L / 2 lambda) at V_DS = 0."""
+    l, u = length / lam, barrier_top(length, lam, v_bi, v_ds, phi_gs)
+    return 1 - (sinh(l - u) + sinh(u)) / sinh(l)
+
+
+def drain_coupling(length, lam, v_ds=0.05, v_bi=1.0, phi_gs=0.4):
+    """alpha_d = d(phi_min)/d(V_DS): how much a change in drain voltage lowers the barrier top
+    (the local barrier DIBL, in V/V)."""
+    l, u = length / lam, barrier_top(length, lam, v_bi, v_ds, phi_gs)
+    return sinh(u) / sinh(l)
 
 
 def dibl_mV_per_V(length, lam, v_lo=0.05, v_hi=0.75, **kw):
-    """Drain-induced barrier lowering: how much the barrier drops per volt on the drain."""
+    """Barrier DIBL: how much the barrier drops per volt on the drain, from V_DS = v_lo to
+    v_hi. Barrier lowering, not threshold-voltage DIBL (that divides by the gate coupling)."""
     return 1000 * (barrier_height(length, lam, v_ds=v_lo, **kw) - barrier_height(length, lam, v_ds=v_hi, **kw)) / (v_hi - v_lo)
 
 
-def short_channel_swing(length, lam, T=300.0):
-    """SS ~ (60 mV/dec at 300 K) / (1 - 2 exp(-L/(2 lambda))), in V/decade (K. Suzuki et al.,
-    IEEE TED 40, 2326 (1993)). A model: it fails as L approaches lambda."""
-    return subthreshold_swing(T) / (1 - 2 * exp(-length / (2 * lam)))
+def short_channel_swing(length, lam, T=300.0, v_ds=0.0):
+    """SS = SS_ideal / alpha_g in the toy model: the barrier top follows the gate by alpha_g.
+    At V_DS = 0 this is 60 mV/dec / (1 - sech(L / 2 lambda)), which tends to K. Suzuki et
+    al.'s 1 / (1 - 2 exp(-L / 2 lambda)) for long channels but has no pole at short ones."""
+    g = gate_coupling(length, lam, v_ds)
+    return subthreshold_swing(T) / g if g > 0 else float("inf")  # inf: no barrier left
+
+
+def intrinsic_gain(length, lam, v_ds=0.4):
+    """g_m r_o = alpha_g / alpha_d in weak inversion, where I ~ exp(-E_b / k_B T): the gate and
+    the drain each move the barrier, and the current follows the barrier. A model of the
+    DIBL-limited gain at the given drain bias; channel-length modulation lowers it further."""
+    d = drain_coupling(length, lam, v_ds)
+    return gate_coupling(length, lam, v_ds) / d if d > 0 else float("nan")  # nan: no barrier left
 
 
 # --- Chapters 7-10: width, cells, wires ------------------------------------------------------
@@ -247,8 +323,9 @@ def weff_sheets_nm(n_sheets, w_sh_nm, t_sh_nm):
 
 
 def roughness_mobility_ratio(t_nm, t_ref_nm):
-    """Below about 5 nm, thickness fluctuations make mobility fall roughly as t^6 (K. Uchida et
-    al., IEDM 2002). Illustrative: the ratio of mobilities at two thicknesses."""
+    """The roughness-limited part of the mobility (thickness-fluctuation scattering), which
+    theory puts at ~t^6: the ratio at two thicknesses. Illustrative only: total mobility in thin
+    silicon depends on several competing mechanisms (K. Uchida et al., IEDM 2002)."""
     return (t_nm / t_ref_nm) ** 6
 
 
@@ -257,36 +334,73 @@ def cell_height_nm(tracks, m2_pitch_nm):
     return tracks * m2_pitch_nm
 
 
+# FET Lab's inverter layouts (data/devices.json, show_*), in nm: the room from a rail's centre to
+# the nearest device, and the space between the n and the p devices (None: stacked).
+CELL_SPACING = {"fin": (22.5, 45.0), "sheet": (23.0, 46.0), "fork": (27.0, 8.0), "cfet": (27.0, None)}
+
+
+def fin_footprint_nm(n_fin, w_fin_nm=6.0, pitch_nm=27.0):
+    """How much of the cell's height N fins on a fixed pitch take, edge to edge."""
+    return (n_fin - 1) * pitch_nm + w_fin_nm
+
+
+def cell_height_needed_nm(arch, device_nm):
+    """The rail-to-rail height an inverter needs, from the devices up (Live Lab 4): the room to
+    each rail, the n and the p devices (each DEVICE_NM across) and the space between them; a
+    CFET stacks n on p, so it needs one device's width. A schematic model after FET Lab's
+    layouts, not a design rule."""
+    edge, gap = CELL_SPACING[arch]
+    if gap is None:
+        return 2 * edge + device_nm
+    return 2 * edge + 2 * device_nm + gap
+
+
 def wire_resistance_ohm(length_nm, width_nm, thickness_nm, rho_ohm_m=2.0e-8):
     """R = rho L / (w t). The default rho is a thin-wire copper value, not the bulk 1.7e-8."""
     return rho_ohm_m * length_nm * 1e-9 / (width_nm * 1e-9 * thickness_nm * 1e-9)
 
 
-def self_gain_from_dibl(dibl_mV_per_V):
-    """An analog transistor's intrinsic gain g_m r_o when DIBL is all that sets its output
-    resistance: the drain moves the current like eta = DIBL (V/V) times the gate, so
-    g_ds = eta g_m and g_m r_o = 1/eta. A model: channel-length modulation lowers it further."""
-    return 1000.0 / dibl_mV_per_V
-
 
 # --- Chapter 11: beyond silicon, beyond Boltzmann ---------------------------------------------
+def nc_body_factor(c_s, c_ox, c_fe):
+    """m for a ferroelectric (C_FE < 0) in series with the oxide, over a semiconductor of
+    capacitance C_s: m = 1 + C_s (1/C_ox + 1/C_FE). Below 1 only if |C_FE| < C_ox (S. Salahuddin
+    and S. Datta, Nano Lett. 8, 405 (2008)); see nc_stable for the other half of the matching."""
+    return 1 + c_s * (1 / c_ox + 1 / c_fe)
+
+
+def nc_stable(c_s, c_ox, c_fe):
+    """Without hysteresis, the whole stack's series capacitance must stay positive:
+    1/C_FE + 1/C_ox + 1/C_s > 0, i.e. |C_FE| larger than the oxide and semiconductor in series."""
+    return 1 / c_fe + 1 / c_ox + 1 / c_s > 0
+
+
 def source_drain_tunnelling(length_nm, barrier_eV=0.4, m_eff=0.2):
-    """WKB share of electrons that tunnel straight through the channel's barrier, source to
-    drain, rather than climbing over it. m_eff ~0.2 m0 for electrons in silicon."""
+    """The WKB transmission factor exp(-2 kappa L) through a rectangular barrier as long as
+    the channel. Illustrative: a real leakage current also needs the band profile, the bias
+    and the supply of carriers. m_eff ~0.2 m0 for electrons in silicon."""
     return tunnel_transmission(length_nm, barrier_eV, m_eff)
 
 
 def tunnelling_crossover_nm(barrier_eV=0.4, m_eff=0.2, T=300.0):
-    """The channel length at which tunnelling through the barrier equals the thermal leak over
-    it: exp(-2 kappa L) = exp(-E_b / k_B T)."""
+    """The length at which that tunnelling factor equals the thermal factor exp(-E_b / k_B T),
+    for these assumptions. Another barrier or material moves it."""
     return barrier_eV / thermal_voltage(T) / tunnel_decay_per_m(barrier_eV, m_eff) * 1e9
 
 
 def landauer_limit_J(T=300.0):
-    """The least energy to erase one bit: k_B T ln 2 (R. Landauer, IBM J. Res. Dev. 5, 183 (1961))."""
+    """The least heat released by erasing one bit (a logically irreversible operation on an
+    equally likely 0 or 1): k_B T ln 2 (R. Landauer, IBM J. Res. Dev. 5, 183 (1961)). It is not
+    a minimum cost for every transistor transition."""
     return K_B * T * log(2)
 
 
-def switching_energy_J(c_fF, v):
-    """The energy one switching event draws from the supply into a node: C V^2 / 2."""
+def stored_energy_J(c_fF, v):
+    """The energy stored on a node of C femtofarads charged to V: C V^2 / 2."""
     return 0.5 * c_fF * 1e-15 * v**2
+
+
+def cycle_energy_J(c_fF, v):
+    """The energy drawn from the supply to charge the node (C V^2: half stored, half lost in
+    the charging path), all of it dissipated over a full 0 -> 1 -> 0 cycle."""
+    return c_fF * 1e-15 * v**2

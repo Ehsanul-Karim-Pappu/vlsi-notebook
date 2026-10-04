@@ -6,10 +6,12 @@ forksheet, the CFET and beyond. It's built with **Manim** and **manim-slides**, 
 Veritasium, and heavy on theory: each architecture shows up as the answer to a physics problem
 that we state with its equations.
 
-Status: **Phases 1 to 3 are built, and most of 4**: the style kit, all thirteen chapters
-(0 to 12) and Live Labs 1 and 2, with English slides, speaker notes in English and Bangla, and a
-speaker view that shows each animation's progress. See `README.md` to build and present it.
-Next: Live Labs 3 to 5, then the polish (Phase 5).
+Status: **built**: the style kit, all thirteen chapters (0 to 12) and Live Labs 1 to 5, with
+English slides, speaker notes in English and Bangla, a speaker view that shows each animation's
+progress, a 25-minute core path (`core.py`, `build/deck/core.html`), a PowerPoint export with the
+labs as screenshots, and a tool that cuts a continuous movie to your recorded narration. See
+`README.md` to build and present it. What's left is yours: rehearse the core with a clock,
+check the PowerPoint on the presenting machine, and record the narration for the movie.
 
 The device data in `data/` and the 3D models in `models/` are copied from
 [FET Lab](https://github.com/Ehsanul-Karim-Pappu/fet-lab), so the deck's devices match that
@@ -21,24 +23,28 @@ app. See `data/README.md`.
 
 Veritasium videos hang on one question that sounds simple and turns out to be deep. Ours:
 
-> **"Turning a transistor on is easy. The hard part, for 100 years, has been turning it *off*."**
+> **"Every smaller transistor had to keep its off state under control, while still giving
+> enough current and fitting into a cell that can be built. The off state is the thread that
+> keeps coming back."**
 
-Every architecture change in this story is the same fight. The gate tries to keep **control**
-of a potential barrier, and physics (surface states, Boltzmann statistics, tunnelling, the
-drain's electric field) keeps taking that control away:
+The off state is the organising thread, not a claim that it explains every invention. The gate
+tries to keep **control** of a potential barrier, and physics (surface states, Boltzmann
+statistics, tunnelling, the drain's electric field) keeps taking that control away. Other
+problems sit alongside it: making a usable amplifier at all, drive current, and packing n and p
+into the cell.
 
-| Era | Who stole control | The fix | The gate's grip |
+| Era | The problem | What answered it | The gate's grip |
 |---|---|---|---|
-| 1925–47 | Surface states screen the field | (none: the idea fails) | 0 |
-| 1947–59 | (we go around the problem: bipolar) | Point contact, BJT | n/a |
+| 1925–47 | Surface states block the field; no usable field-effect switch | (not yet) | 0 |
+| 1947–59 | A working solid-state amplifier | Point contact, BJT | n/a |
 | 1959–2003 | Surface states again | Thermal SiO₂ → MOSFET, CMOS | 1 face |
 | 2003–07 | Tunnelling through 5-atom oxide | Strain, high-κ/metal gate | 1 face |
-| 2005– | Boltzmann: 60 mV/decade | (no fix: V_DD stops scaling) | 1 face |
-| 2011 | The drain reaches the source | FinFET | 3 faces |
-| 2022 | Fins can't get thinner or wider in fine steps | Nanosheet (GAA) | 4 faces |
-| ~2030 (projected) | n-to-p spacing eats the cell | Forksheet | 3 faces + wall |
-| ~2033 (projected) | Out of floor space | CFET (stack n on p) | 4 faces, 2 storeys |
-| 2040s | Silicon can't get thinner | 2D channels; steep-slope switches | 4 faces, 1 atom thick |
+| 2005– | Power, and 60 mV/decade at 300 K | (no fix: V_DD stops scaling) | 1 face |
+| 2011 | The drain reaches the barrier | FinFET | 3 faces |
+| 2022 | Fins come in whole numbers and can't get much thinner | Nanosheet (GAA) | 4 faces |
+| ~2030 (projected) | n-to-p spacing eats the cell | Forksheet | 3 faces + wall (packing, not grip) |
+| ~2033 (projected) | Out of floor space | CFET (stack n on p) | as the nanosheet, 2 storeys |
+| research now; roadmap 2040s | Silicon very hard to thin further | 2D channels; steep-slope switches | thinner channel (toy model) |
 
 The recurring visual **motifs** carry this table:
 
@@ -298,29 +304,36 @@ The ↓ marks the deep-dive derivations.
   slides under the nFET tier; the wafer flips to show backside contacts.
 - **Problem**: silicon itself is the next limit. Below ~3 nm thick, its mobility collapses.
 
-### Ch 11 · Beyond silicon, beyond Boltzmann (2030s–2040s, ≈4 min)
+### Ch 11 · Beyond silicon, beyond Boltzmann (research now; roadmap 2040s, ≈4 min)
 
-- **2D channels** (MoS₂, WSe₂, a 0.65 nm monolayer): put $t_{ch}\to0.65$ nm into the λ formula
-  and the grip becomes nearly perfect. imec's roadmap places 2D FETs around A2. **Callback**:
-  the open problem is the contacts, where Fermi-level pinning (Bardeen's 1947 surface states)
-  is back.
-- **Beating 60 mV/dec**, with the ch. 5 payoff challenged:
-  - Tunnel FET: band-to-band tunnelling filters out the Boltzmann tail, so SS < 60.
-  - Negative-capacitance FET: $m = 1 + C_{dep}/C_{ox}$ with a ferroelectric negative
-    capacitance gives **m < 1**.
-- **The hard floors**:
-  - Source-to-drain tunnelling: $T\approx e^{-2L\sqrt{2m^*E_b}/\hbar}$. Around 5 nm, the
-    barrier is no longer a wall.
-  - Landauer: $E_{min}=k_BT\ln2\approx 2.9\times10^{-21}$ J; today's switches spend roughly
-    10³–10⁴ times that (illustrative estimate).
-- Also briefly: VTFET, carbon nanotubes (the RV16X-NANO, 2019), monolithic 3D.
+- **2D channels** (MoS₂, a 0.65 nm monolayer): in the toy model λ ∝ √t, so with the same gates
+  and oxide λ is about √(5/0.65) ≈ 2.8× shorter than for a 5 nm silicon sheet. No minimum gate
+  length is claimed. imec's roadmap places 2D FETs around A2, in the early 2040s (projection).
+  **Callback**: the open problem is the contacts, where Fermi-level pinning (Bardeen's 1947
+  surface states) is back.
+- **Two examples of beating 60 mV/dec** (not the only ideas), with the ch. 5 payoff challenged:
+  - Tunnel FET: band-to-band tunnelling cuts off the Boltzmann tail, so SS < 60. Current was
+    the problem; MIT's 2024 GaSb/InAs vertical nanowire TFETs reached sub-60 mV/dec with about
+    300 µA/µm at 0.3 V, in the lab.
+  - Negative capacitance: a ferroelectric in series with the oxide gives
+    $m = 1 + C_s(1/C_{ox} + 1/C_{FE})$; m < 1 needs |C_FE| < C_ox, and stability needs
+    $1/C_{FE} + 1/C_{ox} + 1/C_s > 0$. Example: m ≈ 0.92, SS ≈ 55 mV/dec at one bias point.
+- **Two scales, not floors**:
+  - Source-to-drain tunnelling: for a rectangular 0.4 eV barrier and m* = 0.2 m₀ the WKB factor
+    meets the thermal factor at about 5.3 nm. Illustrative for those assumptions only.
+  - Landauer: erasing a bit costs at least $k_BT\ln2\approx 2.9\times10^{-21}$ J. Charging
+    0.1 fF to 0.7 V draws CV² ≈ 49 aJ from the supply (½CV² stored), about 17,000 times that.
+- Also briefly: VTFET, carbon nanotubes (the RV16X-NANO, 2019), monolithic 3D; a tunnel FET's
+  source and drain can't be swapped.
 
 ### Ch 12 · Outro (≈1.5 min)
 
-- The five shapes line up. The control meter's history plays back.
-- **Closing thought**: the transistor has been reinvented again and again, never to make it
-  turn *on* better, always to make it turn *off*. And the one number that hasn't moved since
-  1947 is $\frac{k_BT}{q}\ln10$. Whoever breaks it writes the next chapter.
+- The table of eras; the grip in the toy model (planar, FinFET, nanosheet), with the forksheet
+  and the CFET shown as packing rather than grip.
+- **Closing thought**: every smaller transistor had to turn off, still turn on, and fit in a
+  buildable cell. For a conventional room-temperature MOSFET without internal gain,
+  $\frac{k_BT}{q}\ln10$ is still the best possible swing; lab devices have crossed it, and
+  making them useful and reliable by the billion is the next chapter.
 
 ## 5. The live labs (HTML/JS, inside the deck)
 
@@ -328,9 +341,9 @@ The ↓ marks the deep-dive derivations.
 |---|---|---|---|
 | 1 | **Boltzmann's fence** | V_G, temperature (77 / 300 / 400 K), body factor m | Particle marbles over the hill; a live log(I_D)–V_G plot that draws 60 mV/dec at 300 K and gets steeper when cold |
 | 2 | **Who controls the barrier?** | L_g, t_ox, t_ch, V_DS, gate count N (planar / fin / GAA / forksheet / 2D) | The φ(x) barrier from the ch. 6 model; readouts of λ, DIBL and SS; a warning when L_g < 6λ |
-| 3 | **Dennard's dial** | κ, with or without voltage scaling | Density, frequency and power-density gauges, with Gelsinger's hot plate → reactor → rocket nozzle markers |
-| 4 | **Build a cell** | Fin count / sheet width / CFET stacking, track count | W_eff vs footprint, cell height to scale |
-| 5 | **Hold it yourself** | Rotate and zoom | FET Lab's real 3D models (`models/*.glb`) |
+| 3 | **Dennard's dial** | κ; how far the voltage follows (V ∝ 1/κ^a); hold the clock | A patch of chip with its transistors and its heat; every quantity relative to before the shrink, against Dennard's constant field (ideal long-channel scaling, after Baccarani, Wordeman and Dennard, 1984) |
+| 4 | **Build a cell** | FinFET / nanosheet / forksheet / CFET; fins or sheet width; tracks | The inverter cell from above and one transistor across its channel, to scale; whether it fits, and the fewest tracks (schematic model with FET Lab's spacings) |
+| 5 | **Hold it yourself** | Rotate, zoom, cut through the gate or along the channel, switch layers off | FET Lab's 3D models (`models/*.glb`) in a small offline WebGL viewer, cut faces capped, each part named on hover |
 
 The same equations live in one Python module (`physics.py`, unit-tested). Manim plots use
 it, and the labs port it to JS. A small test checks that both give the same numbers, so what
@@ -374,7 +387,7 @@ vlsi-notebook/
     labs/                 lab1_boltzmann.html … lab5_models.html (+ shared lab.css, lab.js, lab-physics.js)
     template/deck.html    reveal.js template that adds the labs and the 3D viewer
     template/speaker.html the speaker view: notes, timer, and each animation's progress
-    references.md         a source for every date and number (reuses data/references.json R-ids)
+    references.md         the sources for the slides' dates and numbers, with any gaps marked
     build.py              render (draft/final) → manim-slides convert → html/pptx/mp4
     tests/test_physics.py
 ```
@@ -392,14 +405,15 @@ deck is a build output.
 2. ✅ **The history arc**: Ch 1–4, with notes in both languages and the speaker view.
 3. ✅ **The architecture arc**: Ch 6–10, with the 3D devices, the layouts from above and the
    nanosheet process animation.
-4. **The frontier**: ✅ Ch 11–12 and Lab 2; Labs 3–5 to come.
-5. **Polish**: transitions, pacing, a speaker-notes script for every slide, an accuracy audit,
-   final 1080p renders, HTML + PPTX + the documentary cut, and the README.
+4. ✅ **The frontier**: Ch 11–12 and Labs 2 to 5.
+5. ✅ **Polish**: the outside audit and its fixes, the 25-minute core path, final 1080p renders,
+   HTML + PPTX, the movie-cutting tool, and the README. Still yours: a timed rehearsal, and the
+   narration recordings for the movie.
 
 ## 9. Accuracy policy (same standard as FET Lab)
 
-- Every date, name and number gets a source in `references.md`, reusing FET Lab's R-ids where
-  they overlap.
+- Dates, names and numbers get sources in `references.md`. Where a source supports less than
+  the slide says, the slide is reworded or the gap is marked there.
 - Results from simplified models (quasi-2D λ, the SS formula, Landauer comparisons) are
   labelled **"model" / "illustrative"** on screen.
 - Roadmap claims (A10, A7, A2 timing) are presented as imec's projections, not facts, and
@@ -419,7 +433,65 @@ deck is a build output.
 
 1. **Live talk**: a live, clicker-paced deck presented from a laptop, with a script in the
    speaker notes. The documentary cut comes as a by-product.
-2. **Length**: about 45 min in full, with a 25-min core path. (Not yet confirmed.)
+2. **Length**: about an hour in full (about 11,000 words of notes), with a 25-minute core path
+   (`core.py`).
 3. **Audience**: analog layout engineers, junior and senior (confirmed).
 4. **Languages**: English slides; speaker notes in English and Bangla (confirmed).
 5. **Hosting**: a local HTML folder per language, plus PPTX.
+
+## 12. The October 2026 audit (of commit c3cb12c)
+
+An outside audit listed 22 findings (F01–F22). Each was checked against its sources and the
+code before changing anything; all were accepted. What changed:
+
+| # | Finding | What we did |
+|---|---|---|
+| F01 | Opening chip didn't match the transistor shown | Ch 0 now opens on the A20 Pro (TSMC N2, nanosheets), and the 3D model is labelled illustrative, not measured N2 geometry |
+| F02 | "Reaches the channel" share was mislabelled; q²D_it units | `share_in_semiconductor`, C_it = q·D_it; Ch 1, Ch 3 and the references reworded |
+| F03 | Lilienfeld drawing wasn't his patent's geometry | Labelled a modern analogy; the patent figure shown beside it |
+| F04 | CMOS "current only while switching" | Short-circuit current and leakage added: P = αCV²f + P_sc + V_DD I_leak |
+| F05 | Lab 1's fixed I_spec | I_spec ∝ m U_T² (`specific_current`), in Python and JS |
+| F06 | Boltzmann factor called the whole distribution | Reworded as the Boltzmann factor; labels say illustrative |
+| F07 | Face-counting λ treated as universal | Labelled a toy model everywhere; Frank, Taur and Wong cited; electrostatic λ ≠ layout λ |
+| F08 | SS formula used past its range | Exact toy-model closed form, 60/(1 − sech(L/2λ)) at V_DS = 0 |
+| F09 | Barrier DIBL used as threshold DIBL for gain | Gain = α_g/α_d; "barrier DIBL" labels |
+| F10 | t⁶ roughness as a hard cutoff | One mechanism, illustrative; Uchida's competing effects noted |
+| F11 | Nanosheet cartoon contradicted its isolation claim | Bottom dielectric isolation drawn; one nFET route; omitted steps stated; `process.json` not claimed as used |
+| F12 | Patent captions | FinFET patent: double gate with hard mask; TSMC forksheet: a stage with sacrificial gate 142 |
+| F13 | Inner- and outer-wall forksheets mixed up | Separate icons and words; motif and Lab 2 icon fixed; no λ penalty; imec's measured 66–68 mV/dec |
+| F14 | Layout labels | SCMOS widths, current direction along the fin, 54 nm convention, 136 nm rail span vs 144/120 nm track examples, model cells |
+| F15 | Steep-slope chapter too categorical; NC needed the full stack | "Two examples"; MIT 2024 TFET; NC with C_s, C_ox, C_FE and the stability condition |
+| F16 | ~5 nm called a universal floor | An illustrative crossover for stated assumptions; floor removed from Ch 11 and Ch 12 |
+| F17 | ½CV² called supply energy | CV² = 49 aJ drawn from the supply, ½CV² stored; Landauer's erasure scope; ≈17,000× |
+| F18 | Backside power and heat stated universally | PowerVia in 18A without CFET; "mostly signal"; 8× illustrative; heat-sink path drawn; "up to" 2× |
+| F19 | The thesis overstated the off-state story | Off state as a thread, alongside current and buildable cells; new closing |
+| F20 | Date labels | CHM 2 April 2018; deliberate amplification research; 2011/2012; 2022 production; node names; research now vs roadmap |
+| F21 | Numbers needing a definition | B200 two dies; our extrapolation; ≈10×/≈1000×; interfacial layer in EOT; base vs turbo clocks |
+| F22 | Gelsinger chart years unsourced | Years removed; attributed to his keynote talk, with the gap noted |
+
+The audit's remaining-work list is done too: Labs 3–5, the core path, the PowerPoint export (now
+with lab screenshot slides) and a movie-cutting tool. Two of its acceptance checks can only be done by
+you: a rehearsal of the core with a clock, and PowerPoint playback on the presenting machine.
+
+### The 25-minute core path, beat by beat
+
+The budget the core script was written to (about 2,800 words; the labs are timed for working them):
+
+| Beat | Slides kept | Budget |
+|---|---|---:|
+| Opening: the A20 Pro and the question | Ch 0: 5 | 1:30 |
+| Tubes, Lilienfeld, the surface | Ch 1: 6 | 1:30 |
+| The bipolar transistor | Ch 2: 4 | 1:00 |
+| Oxide, MOSFET, CMOS | Ch 3: 8 | 2:30 |
+| Moore and Dennard, then Lab 3 | Ch 4: 6 | 1:45 + 0:30 |
+| The thermal swing and high-k, then Lab 1 | Ch 5: 9 | 2:30 + 0:45 |
+| Short channels, then Lab 2 | Ch 6: 7 | 2:00 + 0:45 |
+| The fin and its width | Ch 7: 6 | 1:30 |
+| The nanosheet and how it's made | Ch 8: 6 | 2:00 |
+| The forksheet, as a bridge | Ch 9: 1 | 0:45 |
+| The CFET, backside power, heat, then Labs 4 and 5 | Ch 10: 5 | 1:30 + 1:00 |
+| Beyond silicon, a teaser | Ch 11: 3 | 0:45 |
+| The ending | Ch 12: 3 | 0:45 |
+| Transitions and slack | | 2:00 |
+| **Total** | **69 + 5 labs** | **25:00** |
+

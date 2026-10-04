@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Build a Cell</title>
+  <link rel="stylesheet" href="lab.css">
+  <style>
+    .grid.lab4 { grid-template-columns: 1.15fr 1fr; }
+    .lab4 .readouts .big b { font-size: 20px; }
+    .assume { font-size: 12px; }
+    .controls.lab4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .arch { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .arch .label { color: var(--muted); font-size: 14px; font-weight: 500; margin-right: 4px; }
+    .arch button.ghost { font-size: 14px; padding: 6px 12px; }
+    .arch button.ghost.on { border-color: var(--gate); color: var(--gate); }
+    .arch #squeeze { margin-left: auto; }
+    .verdict { flex-basis: 100%; font-weight: 600; font-size: 16px; }
+    .verdict.bad { color: var(--drain); }
+    .verdict.ok { color: var(--good); }
+    .assume { grid-column: 1 / -1; }
+    .control.off { opacity: 0.35; }
+    @media (max-width: 820px) {
+      .controls.lab4 { grid-template-columns: 1fr; }
+      .arch #squeeze { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="kicker">Live lab 4</div>
+    <h1>Build a cell</h1>
+    <p>Pick an architecture, size the transistors, and choose how many metal tracks tall the cell is. Does the inverter fit?</p>
+  </header>
+
+  <main class="grid lab4">
+    <section class="panel">
+      <h2>The inverter cell from above, to scale: rails, tracks, the n and p devices</h2>
+      <canvas id="cell" aria-label="The inverter cell seen from above, to scale"></canvas>
+      <div class="readouts">
+        <div class="big"><span>Cell height</span> <b id="rH"></b></div>
+        <div class="big"><span>The devices need</span> <b id="rNeed"></b></div>
+        <div class="big"><span>Fewest tracks</span> <b id="rMin"></b></div>
+        <div id="verdict" class="verdict"></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>One transistor cut across its channel, at twice that scale: current flows on the gold faces</h2>
+      <canvas id="cut" aria-label="One transistor cut across its channel, with its effective width"></canvas>
+      <div class="readouts">
+        <div class="big"><span>W<sub>eff</sub> per transistor</span> <b id="rWeff"></b></div>
+        <div class="big"><span>Across the cell</span> <b id="rFoot"></b></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="controls lab4">
+    <label class="control" id="cSize">
+      <div class="row"><span id="sizeName">Fins per transistor</span><output id="oSize"></output></div>
+      <input id="size" type="range" min="1" max="4" step="1" value="2">
+    </label>
+    <label class="control">
+      <div class="row"><span>Cell height: metal tracks (24 nm pitch)</span><output id="oT"></output></div>
+      <input id="tracks" type="range" min="3" max="9" step="1" value="7">
+    </label>
+    <div class="arch" role="group" aria-label="Architecture">
+      <span class="label">Architecture:</span>
+      <button class="ghost" data-arch="fin">FinFET</button>
+      <button class="ghost" data-arch="sheet">Nanosheet</button>
+      <button class="ghost" data-arch="fork">Forksheet</button>
+      <button class="ghost" data-arch="cfet">CFET</button>
+      <button id="squeeze">Fewest tracks</button>
+    </div>
+    <div class="hint assume">Schematic model after FET Lab's inverter layouts: rails centred on the cell's edges (cell height = rail to rail); rail-to-device room and n-to-p space (45, 46 nm; an 8 nm wall; none when stacked) from those layouts; fins 6 × 45 nm on a 27 nm pitch; three 5 nm sheets. Not foundry design rules, not DRC-checked.</div>
+  </footer>
+
+  <script src="lab-physics.js"></script>
+  <script src="lab.js"></script>
+  <script>
+  (function () {
+    const P = window.LabPhysics;
+    const C = {
+      ink: Lab.css("--ink"), muted: Lab.css("--muted"), faint: Lab.css("--faint"), panel: Lab.css("--panel"),
+      electron: Lab.css("--electron"), hole: Lab.css("--hole"), gate: Lab.css("--gate"), drain: Lab.css("--drain"),
+      good: Lab.css("--good"), metal: "#F2C1A2", wall: "#9AA3AF", gatePoly: "#6B6FD8", oxide: "#E07A5F",
+    };
+    const PITCH = 24, FIN_W = 6, FIN_H = 45, FIN_PITCH = 27, N_SH = 3, T_SH = 5, SHEET_GAP = 6;
+    const ARCH = {
+      fin: { name: "FinFET", size: "Fins per transistor", min: 1, max: 3, step: 1, value: 2 },
+      sheet: { name: "Nanosheet", size: "Sheet width", min: 10, max: 50, step: 1, value: 22 },
+      fork: { name: "Forksheet", size: "Sheet width", min: 10, max: 50, step: 1, value: 22 },
+      cfet: { name: "CFET", size: "Sheet width", min: 10, max: 50, step: 1, value: 20 },
+    };
+    const $ = (id) => document.getElementById(id);
+    const ui = { size: $("size"), tracks: $("tracks") };
+    let arch = "fin";
+    let dirty = true;
+
+    function model() {
+      const size = +ui.size.value, tracks = +ui.tracks.value;
+      const across = arch === "fin" ? P.finFootprint(size, FIN_W, FIN_PITCH) : size;
+      const need = P.cellHeightNeeded(arch, across);
+      // A forksheet's sheets give one face (of thickness T) to the wall: three faces each.
+      const weff = arch === "fin" ? P.weffFin(size, FIN_H, FIN_W)
+        : arch === "fork" ? P.weffSheets(N_SH, size, T_SH) - N_SH * T_SH : P.weffSheets(N_SH, size, T_SH);
+      return { size, tracks, across, need, weff, H: tracks * PITCH, minTracks: Math.ceil(need / PITCH - 1e-9) };
+    }
+
+    // --- the cell from above -----------------------------------------------------------------
+    const cell = Lab.fitCanvas($("cell"), () => (dirty = true));
+    const SPAN = 9 * PITCH + 20;  // the tallest cell, plus a margin, sets the drawing scale
+    const scale = (h) => (h - 24) / SPAN;  // px per nm, for both views (the panels are as tall)
+    function drawCell(m) {
+      const { ctx, w, h } = cell;
+      ctx.clearRect(0, 0, w, h);
+      const k = scale(h);                      // px per nm
+      const cx = w * 0.36, cy = h / 2;
+      const cellW = 96 * k;                    // two gate pitches wide, as in FET Lab's layouts
+      const Y = (z) => cy - z * k;             // z in nm, up from the cell's centre
+      const H = m.H, half = H / 2;
+      // the tracks
+      ctx.strokeStyle = C.faint;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 4]);
+      for (let i = 0; i <= m.tracks; i++) {
+        const z = -half + i * PITCH;
+        ctx.beginPath(); ctx.moveTo(cx - cellW / 2 - 14, Y(z)); ctx.lineTo(cx + cellW / 2 + 14, Y(z)); ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      // the cell's outline
+      ctx.strokeStyle = C.muted;
+      ctx.strokeRect(cx - cellW / 2, Y(half), cellW, H * k);
+      // the gate, down the middle
+      ctx.fillStyle = C.gatePoly;
+      ctx.globalAlpha = 0.55;
+      ctx.fillRect(cx - 8 * k, Y(half - 6), 16 * k, (H - 12) * k);
+      ctx.globalAlpha = 1;
+      // the devices
+      const dev = (z0, z1, color) => {
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.8;
+        ctx.fillRect(cx - cellW / 2 + 6 * k, Y(z1), cellW - 12 * k, (z1 - z0) * k);
+        ctx.globalAlpha = 1;
+      };
+      const [edge, gap] = P.CELL_SPACING[arch];
+      const placeDevices = (zBottom, color) => {
+        if (arch === "fin") {
+          for (let i = 0; i < m.size; i++) dev(zBottom + i * FIN_PITCH, zBottom + i * FIN_PITCH + FIN_W, color);
+        } else dev(zBottom, zBottom + m.across, color);
+      };
+      ctx.font = "600 13px Inter, system-ui, sans-serif";
+      ctx.textBaseline = "middle";
+      if (gap === null) {
+        // CFET: n on p, one footprint, centred
+        placeDevices(-m.across / 2, C.hole);
+        ctx.fillStyle = C.ink;
+        ctx.fillText("n on p", cx + cellW / 2 + 22, Y(0));
+      } else {
+        const zn = -gap / 2 - m.across, zp = gap / 2;
+        placeDevices(zn, C.electron);
+        placeDevices(zp, C.hole);
+        if (arch === "fork") {
+          ctx.fillStyle = C.wall;
+          ctx.fillRect(cx - cellW / 2, Y(gap / 2), cellW, gap * k);
+        }
+        ctx.fillStyle = C.electron;
+        ctx.fillText("n", cx + cellW / 2 + 22, Y(zn + m.across / 2));
+        ctx.fillStyle = C.hole;
+        ctx.fillText("p", cx + cellW / 2 + 22, Y(zp + m.across / 2));
+        // the n-to-p space
+        ctx.strokeStyle = C.drain;
+        ctx.lineWidth = 2;
+        const xg = cx - cellW / 2 - 26;
+        ctx.beginPath(); ctx.moveTo(xg, Y(-gap / 2)); ctx.lineTo(xg, Y(gap / 2)); ctx.stroke();
+        ctx.fillStyle = C.drain;
+        ctx.textAlign = "right";
+        ctx.fillText(arch === "fork" ? `wall ${gap} nm` : `n–p ${gap} nm`, xg - 6, Y(0));
+        ctx.textAlign = "left";
+      }
+      // the rails, centred on the cell's top and bottom edges
+      const rail = (z, name) => {
+        ctx.fillStyle = C.metal;
+        ctx.globalAlpha = arch === "cfet" ? 0.35 : 0.9;
+        ctx.fillRect(cx - cellW / 2 - 10, Y(z + 8), cellW + 20, 16 * k);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = C.ink;
+        ctx.fillText(name, cx + cellW / 2 + 22, Y(z));
+      };
+      rail(half, arch === "cfet" ? "V_DD (back)" : "V_DD");
+      rail(-half, arch === "cfet" ? "GND (back)" : "GND");
+      // what the devices need, against what the cell gives
+      const over = m.need > m.H + 1e-9;
+      const xr = cx + cellW / 2 + 120;
+      ctx.strokeStyle = over ? C.drain : C.good;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(xr, Y(m.need / 2)); ctx.lineTo(xr, Y(-m.need / 2)); ctx.stroke();
+      ctx.fillStyle = over ? C.drain : C.good;
+      ctx.textAlign = "center";
+      ctx.fillText("needs", xr, Y(m.need / 2) - 10);
+      ctx.textAlign = "left";
+      if (over) {
+        ctx.fillStyle = "rgba(232, 85, 62, 0.18)";
+        ctx.fillRect(cx - cellW / 2, Y(m.need / 2), cellW, (m.need - m.H) / 2 * k);
+        ctx.fillRect(cx - cellW / 2, Y(-half), cellW, (m.need - m.H) / 2 * k);
+      }
+      // scale bar
+      ctx.fillStyle = C.muted;
+      ctx.fillRect(w - 20 - 24 * k, h - 14, 24 * k, 3);
+      ctx.textAlign = "right";
+      ctx.fillText("24 nm", w - 20, h - 26);
+      ctx.textAlign = "left";
+    }
+
+    // --- one transistor, cut across ----------------------------------------------------------
+    const cut = Lab.fitCanvas($("cut"), () => (dirty = true));
+    function drawCut(m) {
+      const { ctx, w, h } = cut;
+      ctx.clearRect(0, 0, w, h);
+      const k = 2 * scale(h);  // twice the cell view's scale
+      const base = h - 30, cx = w / 2;
+      ctx.font = "600 13px Inter, system-ui, sans-serif";
+      ctx.textBaseline = "middle";
+      // substrate and isolation
+      ctx.fillStyle = "#4E4148";
+      ctx.fillRect(16, base, w - 32, 14);
+      const outline = (x, y, ww, hh) => {
+        ctx.strokeStyle = C.gate;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x, y, ww, hh);
+      };
+      const body = (x, y, ww, hh, color) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, ww, hh);
+      };
+      if (arch === "fin") {
+        const span = (m.size - 1) * FIN_PITCH + FIN_W;
+        const x0 = cx - (span * k) / 2;
+        // gate wrapped over the fins
+        ctx.fillStyle = C.gatePoly;
+        ctx.globalAlpha = 0.35;
+        ctx.fillRect(x0 - 10 * k, base - (FIN_H + 12) * k, (span + 20) * k, (FIN_H + 12) * k);
+        ctx.globalAlpha = 1;
+        for (let i = 0; i < m.size; i++) {
+          const x = x0 + i * FIN_PITCH * k;
+          body(x, base - FIN_H * k, FIN_W * k, FIN_H * k, C.electron);
+          // the conducting faces: both sidewalls and the top
+          ctx.strokeStyle = C.gate;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(x, base); ctx.lineTo(x, base - FIN_H * k); ctx.lineTo(x + FIN_W * k, base - FIN_H * k); ctx.lineTo(x + FIN_W * k, base);
+          ctx.stroke();
+        }
+        label(`${m.size} fin${m.size > 1 ? "s" : ""}, ${FIN_W} × ${FIN_H} nm, ${FIN_PITCH} nm pitch`, base - (FIN_H + 30) * k);
+      } else {
+        const tiers = arch === "cfet" ? 2 : 1;
+        const stackH = N_SH * T_SH + (N_SH - 1) * SHEET_GAP;
+        const x0 = cx - (m.size * k) / 2;
+        let y = base - 10 * k;
+        ctx.fillStyle = C.gatePoly;
+        ctx.globalAlpha = 0.35;
+        const totalH = tiers * stackH + (tiers - 1) * 14 + 16;
+        ctx.fillRect(x0 - 8 * k, base - (totalH + 4) * k, (m.size + 16) * k, (totalH + 4) * k);
+        ctx.globalAlpha = 1;
+        for (let t = 0; t < tiers; t++) {
+          const color = arch === "cfet" ? (t === 0 ? C.hole : C.electron) : C.electron;
+          for (let i = 0; i < N_SH; i++) {
+            const top = y - T_SH * k;
+            body(x0, top, m.size * k, T_SH * k, color);
+            if (arch === "fork") {
+              // three faces: the side against the wall stays bare
+              const x1 = x0 + m.size * k;
+              ctx.strokeStyle = C.gate;
+              ctx.lineWidth = 3;
+              ctx.beginPath();
+              ctx.moveTo(x1, top); ctx.lineTo(x0, top); ctx.lineTo(x0, top + T_SH * k); ctx.lineTo(x1, top + T_SH * k);
+              ctx.stroke();
+            } else outline(x0, top, m.size * k, T_SH * k);
+            y -= (T_SH + SHEET_GAP) * k;
+          }
+          if (t < tiers - 1) {
+            y -= 8 * k;
+            ctx.fillStyle = C.wall;
+            ctx.fillRect(x0 - 4 * k, y + 2 * k, (m.size + 8) * k, 4 * k);
+            y -= 8 * k;
+          }
+        }
+        if (arch === "fork") {
+          ctx.fillStyle = C.wall;
+          ctx.fillRect(x0 + m.size * k, base - (totalH + 4) * k, 8 * k, (totalH + 4) * k);
+          ctx.fillStyle = C.wall;
+          ctx.fillText("wall", x0 + (m.size + 12) * k, base - (totalH / 2) * k);
+        }
+        label(arch === "cfet" ? `n tier over p tier, ${N_SH} sheets each, ${m.size} × ${T_SH} nm`
+          : `${N_SH} sheets, ${m.size} × ${T_SH} nm`, base - (totalH + 30) * k);
+        if (arch === "fork") label("(each sheet gives one face to the wall)", base - (totalH + 30) * k + 18);
+      }
+      function label(s, y) {
+        ctx.fillStyle = C.muted;
+        ctx.textAlign = "center";
+        ctx.fillText(s, cx, Math.max(14, y));
+        ctx.textAlign = "left";
+      }
+    }
+
+    // --- update --------------------------------------------------------------------------------
+    function update() {
+      const m = model();
+      const a = ARCH[arch];
+      $("sizeName").textContent = a.size;
+      $("oSize").textContent = arch === "fin" ? `${m.size} fin${m.size > 1 ? "s" : ""}` : `${m.size} nm`;
+      $("oT").textContent = `${m.tracks} tracks = ${m.H} nm`;
+      $("rH").textContent = `${m.H} nm`;
+      $("rNeed").textContent = `${m.need} nm`;
+      $("rWeff").textContent = `${m.weff} nm` + (arch === "cfet" ? " (n), and the same (p)" : arch === "fork" ? " (three faces)" : "");
+      $("rFoot").textContent = arch === "cfet" ? `${m.across} nm (n and p)` : `${m.across} nm (n) + ${m.across} nm (p)`;
+      $("rMin").textContent = `${m.minTracks}`;
+      const v = $("verdict");
+      if (m.need > m.H + 1e-9) {
+        v.className = "verdict bad";
+        v.textContent = `Doesn't fit: the devices need ${m.need} nm, the cell gives ${m.H}. It needs ${m.minTracks} tracks, or smaller devices.`;
+      } else {
+        v.className = "verdict ok";
+        v.textContent = m.tracks > m.minTracks
+          ? `Fits, with ${m.H - m.need} nm to spare. Could it be ${m.minTracks} tracks?`
+          : `Fits in ${m.tracks} tracks, the fewest it can.`;
+      }
+      document.querySelectorAll("[data-arch]").forEach((b) => b.classList.toggle("on", b.dataset.arch === arch));
+      drawCell(m);
+      drawCut(m);
+    }
+
+    function setArch(name) {
+      arch = name;
+      const a = ARCH[name];
+      ui.size.min = a.min; ui.size.max = a.max; ui.size.step = a.step; ui.size.value = a.value;
+      dirty = true;
+    }
+    function frame() {
+      if (dirty) { dirty = false; update(); }
+      requestAnimationFrame(frame);
+    }
+    for (const el of [ui.size, ui.tracks]) el.addEventListener("input", () => (dirty = true));
+    document.querySelectorAll("[data-arch]").forEach((b) => b.addEventListener("click", () => setArch(b.dataset.arch)));
+    $("squeeze").addEventListener("click", () => { ui.tracks.value = Math.max(3, model().minTracks); dirty = true; });
+    setArch("fin");
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>

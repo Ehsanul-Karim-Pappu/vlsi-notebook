@@ -30,7 +30,7 @@ CHIPS = [
     (2006, 2.91e8, "Core 2 Duo"),
     (2020, 1.6e10, "Apple M1"),
     (2023, 9.2e10, "Apple M3 Max"),
-    (2024, 2.08e11, "NVIDIA B200"),
+    (2024, 2.08e11, "NVIDIA B200 (2 dies)"),
 ]
 
 # Approximate points from Moore's 1965 figure: log2(components per chip).
@@ -116,14 +116,16 @@ class Ch04FreeLunch(Chapter, Slide):
             Now take Moore's 1975 version, doubling every two years, start it from Intel's first
             microprocessor in 1971, two thousand three hundred transistors, and draw it for fifty
             years. Then put real chips on it. The 8086, the 386, the Pentium, the Pentium 4, Core
-            2, Apple's M1 and M3 Max. In 2024, NVIDIA's B200 has 208 billion transistors. The line
-            drawn in 1975 says 218 billion. A straight line on a log plot, held for fifty years.
+            2, Apple's M1 and M3 Max. In 2024, NVIDIA's B200, two dies in one package, has 208
+            billion transistors. Our line, Moore's two-year doubling started from the 4004, says 218
+            billion. A straight line on a log plot, holding for fifty years.
             """,
             """
             এবার Moore-এর 1975-এর version নেন, প্রতি দুই বছরে দ্বিগুণ, 1971-এ Intel-এর প্রথম microprocessor থেকে
             শুরু করেন, দুই হাজার তিনশ transistor, আর পঞ্চাশ বছর ধরে টানেন। তারপর আসল chip-গুলা বসান। 8086,
-            386, Pentium, Pentium 4, Core 2, Apple-এর M1 আর M3 Max। 2024-এ NVIDIA-র B200-তে 208 billion
-            transistor। 1975-এ টানা line বলে 218 billion। Log plot-এ একটা সোজা line, পঞ্চাশ বছর টিকে আছে।
+            386, Pentium, Pentium 4, Core 2, Apple-এর M1 আর M3 Max। 2024-এ NVIDIA-র B200, এক package-এ দুইটা die,
+            তাতে 208 billion transistor। আমাদের line, মানে 4004 থেকে শুরু করা Moore-এর দুই বছরে দ্বিগুণ, বলে 218 billion।
+            Log plot-এ একটা সোজা line, পঞ্চাশ বছর টিকে আছে।
             """,
         ))
         self.play(FadeOut(self.parts))
@@ -137,7 +139,7 @@ class Ch04FreeLunch(Chapter, Slide):
         # The label runs along the line, just above it.
         a, b = (axes.c2p(y, log10(phys.moore_count(y))) for y in (1980, 1992))
         ang = np.arctan2(b[1] - a[1], b[0] - a[0])
-        line_l = text("Moore 1975: ×2 every 2 years", size=20, color=GATE).rotate(ang)
+        line_l = text("×2 every 2 years (Moore, 1975), from the 4004", size=18, color=GATE).rotate(ang)
         line_l.move_to(axes.c2p(1986, log10(phys.moore_count(1986))) + rotate_vector(UP * 0.42, ang))
         self.play(FadeIn(title), Create(axes))
         self.play(Create(line), FadeIn(line_l), run_time=2)
@@ -146,17 +148,17 @@ class Ch04FreeLunch(Chapter, Slide):
             d = Dot(axes.c2p(y, log10(n)), color=ELECTRON, radius=0.08)
             where = RIGHT if y >= 2023 else DOWN + RIGHT
             lab = text(name, size=16, color=INK).next_to(d, where, buff=0.08)
-            lab.shift({"NVIDIA B200": UP * 0.1, "Apple M3 Max": DOWN * 0.1}.get(name, ORIGIN))
+            lab.shift({"NVIDIA B200 (2 dies)": UP * 0.1, "Apple M3 Max": DOWN * 0.1}.get(name, ORIGIN))
             dots.add(VGroup(d, lab))
         self.play(LaggedStart(*[FadeIn(g, scale=0.5) for g in dots], lag_ratio=0.3), run_time=4)
         pred = phys.moore_count(2024)
         callout = VGroup(
             text("NVIDIA B200, 2024", size=22, color=ELECTRON, weight="SEMIBOLD"),
-            text("actual: 208 billion", size=22),
-            text(f"1975 line: {pred / 1e9:.0f} billion", size=22, color=GATE),
+            text("actual: 208 billion (two dies)", size=22),
+            text(f"the line: {pred / 1e9:.0f} billion", size=22, color=GATE),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.08).move_to([5.1, -1.2, 0]).to_edge(RIGHT, buff=0.5)
         self.play(Indicate(dots[-1][0], color=ELECTRON, scale_factor=2), FadeIn(callout))
-        src = source("Transistor counts: manufacturers' figures")
+        src = source("Transistor counts: manufacturers' figures. The line is our extrapolation, not a point Moore plotted")
         self.play(FadeIn(src))
         self.parts = VGroup(title, axes, line, line_l, dots, callout, src)
 
@@ -318,17 +320,17 @@ class Ch04FreeLunch(Chapter, Slide):
             Layout rode the same wave. In 1980 Carver Mead and Lynn Conway wrote design rules in
             units of a single length, lambda: poly two lambda wide, spaced two lambda, and so on.
             Draw your inverter on the lambda grid once, and when the next node arrives, shrink
-            lambda and the whole layout scales with it. That only works because Dennard scaling
-            shrank everything together. When scaling stopped being uniform, the rules stopped being
-            simple multiples of lambda, and the DRC decks you work with today grew into what they
-            are.
+            lambda and the whole layout scales with it. That worked well while everything shrank
+            together. As scaling stopped being uniform, and processes grew more complicated, the
+            rules stopped being simple multiples of lambda, and the DRC decks you work with today
+            grew into what they are.
             """,
             """
             Layout-ও একই ঢেউয়ে চড়ছিল। 1980-এ Carver Mead আর Lynn Conway design rule লিখলেন একটা মাত্র length-এর
             হিসাবে, lambda: poly দুই lambda চওড়া, দুই lambda ফাঁক, এরকম। আপনার inverter একবার lambda grid-এ
-            আঁকেন, পরের node আসলে lambda ছোট করেন, পুরা layout সেটার সাথে scale হয়ে যায়। এইটা কাজ করে শুধু কারণ
-            Dennard scaling সবকিছু একসাথে ছোট করত। Scaling যখন আর uniform থাকল না, rule-গুলাও আর lambda-র সরল
-            গুণিতক থাকল না, আর আজকে যে DRC deck নিয়া আপনারা কাজ করেন সেটা আজকের চেহারায় পৌঁছাইল।
+            আঁকেন, পরের node আসলে lambda ছোট করেন, পুরা layout সেটার সাথে scale হয়ে যায়। যতদিন সবকিছু একসাথে ছোট
+            হইত, ততদিন এইটা ভালো চলছে। Scaling যখন আর uniform থাকল না, আর process আরও জটিল হইল, rule-গুলাও আর
+            lambda-র সরল গুণিতক থাকল না, আর আজকে যে DRC deck নিয়া আপনারা কাজ করেন সেটা আজকের চেহারায় পৌঁছাইল।
             """,
         ))
         self.play(FadeOut(self.parts))
@@ -350,8 +352,8 @@ class Ch04FreeLunch(Chapter, Slide):
                 r(2, 14, 20, 8, NWELL, 0.5),
                 r(6, 16, 12, 4, HOLE, 0.7), r(6, 3, 12, 4, ELECTRON, 0.7),
                 r(11, 1, 2, 22, GATE, 0.9),
-                r(3, 21, 18, 2, METAL, 0.6), r(3, 0, 18, 2, METAL, 0.6),
-                r(16, 5, 2, 13, METAL, 0.8),
+                r(3, 20, 18, 3, METAL, 0.6), r(3, 0, 18, 3, METAL, 0.6),
+                r(16, 5, 3, 13, METAL, 0.8),
             )
             return VGroup(g, lay)
 
@@ -367,9 +369,9 @@ class Ch04FreeLunch(Chapter, Slide):
         self.play(FadeIn(shrink))
         self.play(lam.animate.set_value(0.155), run_time=2)
         self.play(lam.animate.set_value(0.11), run_time=2)
-        note = layout_note("When scaling stopped being uniform, rules stopped being multiples of λ: hence today's DRC decks.", size=22, width=44)
+        note = layout_note("As scaling stopped being uniform, and processes grew more complex, rules stopped being multiples of λ: hence today's DRC decks.", size=22, width=44)
         note.move_to([3.0, -2.1, 0])
-        src = source("C. Mead & L. Conway, Introduction to VLSI Systems (1980); widths as in the MOSIS SCMOS rules")
+        src = source("C. Mead & L. Conway (1980); widths as in the MOSIS SCMOS rules. Schematic, not a DRC-checked cell")
         self.play(FadeIn(note, shift=UP * 0.2), FadeIn(src))
         self.parts = VGroup(title, art, legend, shrink, note, src)
 

@@ -1,7 +1,7 @@
 """Chapter 1 · The switch nobody could build (1904–1947).
 
-The vacuum tube and its heat, ENIAC, Lilienfeld's 1925 field-effect patent, and why it failed:
-Bardeen's surface states swallow the gate's charge.
+The vacuum tube and its heat, ENIAC, Lilienfeld's 1925 field-effect patent, and why early
+field-effect devices failed: Bardeen's surface states answer most of the gate's charge.
 """
 
 import sys
@@ -160,19 +160,19 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
             এখন এই tube দিয়ে একটা computer বানান। এইটা ENIAC, 1946-এ সবার সামনে আসে; ছবিতে এর দুইজন
             programmer, Glen Beck আর Betty Snyder, কাজ করতেছেন। যত panel দেখতেছেন, সবগুলা tube দিয়ে ঠাসা।
             """,
-        ), "ENIAC, 1946: 17,468 tubes, all glowing",
+        ), "ENIAC, 1946: about 18,000 tubes, all glowing",
             figure(IMAGES / "eniac_1946.jpg", 5.9,
                    "Glen Beck and Betty Snyder program ENIAC, about 1947. U.S. Army photo (public domain)").move_to(DOWN * 0.4),
             clear=self.tube_parts)
 
         self.slide(say(
             """
-            Count them: 17,468 tubes, every one of them a little heater, drawing 150 kilowatts. Tubes burned out, and finding the dead
-            one among eighteen thousand took time. Everyone knew what they wanted instead: a switch
+            About eighteen thousand tubes, every one of them a little heater, drawing some 150
+            kilowatts. Tubes burned out, and finding the dead one among eighteen thousand took time. Everyone knew what they wanted instead: a switch
             made from a cold, solid piece of material, with no vacuum and no filament.
             """,
             """
-            গুনে দেখেন: 17,468টা tube, প্রত্যেকটা একটা ছোট heater, সব মিলায়ে 150 kilowatt টানে। Tube পুড়ে যাইত, আর আঠারো হাজারের মধ্যে নষ্টটা
+            প্রায় আঠারো হাজার tube, প্রত্যেকটা একটা ছোট heater, সব মিলায়ে প্রায় 150 kilowatt টানে। Tube পুড়ে যাইত, আর আঠারো হাজারের মধ্যে নষ্টটা
             খুঁজে বের করতে সময় লাগত। সবাই জানত তারা আসলে কী চায়: ঠান্ডা, solid কোনো material-এর একটা
             switch, যেটায় vacuum নাই, filament নাই।
             """,
@@ -187,14 +187,14 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         ])
         key = text("each square: 10 tubes", size=20, color=MUTED).next_to(dots, DOWN, buff=0.2)
         stats = VGroup(
-            display("17,468", size=64, color=THERMAL),
+            display("≈ 18,000", size=64, color=THERMAL),
             text("vacuum tubes", size=26, color=MUTED),
-            display("150 kW", size=64, color=THERMAL),
+            display("≈ 150 kW", size=64, color=THERMAL),
             text("of heat, all the time", size=26, color=MUTED),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.12).move_to([4.4, 0.7, 0])
         stats[2].shift(DOWN * 0.3)
         stats[3].shift(DOWN * 0.3)
-        src = source("ENIAC figures: University of Pennsylvania / U.S. Army, 1946")
+        src = source("ENIAC figures (approximate): University of Pennsylvania, ENIAC history")
         self.play(FadeIn(src))
         self.play(FadeIn(dots, lag_ratio=0.0006), run_time=2.5)
         self.play(FadeIn(key), FadeIn(stats[:2], shift=LEFT * 0.2))
@@ -210,12 +210,17 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
     def lilienfeld(self):
         title, pic = self.show_figure(say(
             """
-            In 1925 a physicist named Julius Edgar Lilienfeld filed a patent for exactly that.
-            This is the drawing from his US patent, filed in 1926 and granted in 1930.
+            To see why ENIAC still needed tubes, rewind twenty years. In 1925 a physicist named
+            Julius Edgar Lilienfeld applied for a patent on a solid-state switch controlled by an
+            electric field. This is the drawing from his US patent, filed in 1926 and granted in
+            1930: a film of copper sulfide on glass, with the control electrode, a thin foil,
+            wedged into a crack in the glass beneath it.
             """,
             """
-            1925-এ Julius Edgar Lilienfeld নামে একজন physicist ঠিক এই জিনিসের patent file করেন। এইটা তাঁর
-            US patent-এর drawing, file করা 1926-এ, grant হয় 1930-এ।
+            ENIAC-এর কেন তখনও tube লাগত বুঝতে, বিশ বছর পিছনে যাই। 1925-এ Julius Edgar Lilienfeld নামে একজন
+            physicist electric field দিয়া control করা একটা solid-state switch-এর patent-এর আবেদন করেন। এইটা তাঁর
+            US patent-এর drawing, file করা 1926-এ, grant হয় 1930-এ: কাচের উপর copper sulfide-এর একটা film, আর
+            control electrode, একটা পাতলা foil, তার নিচে কাচের একটা ফাটলে গোঁজা।
             """,
         ), "1925: Lilienfeld's idea",
             figure(IMAGES / "lilienfeld_US1745175.png", 5.6,
@@ -224,16 +229,19 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
 
         self.slide(say(
             """
-            Redrawn, it's simple: a thin film of semiconductor, two contacts, and a metal plate on top,
-            separated by an insulator. Put a voltage on the plate and it pulls charge into the film,
-            the way one plate of a capacitor pulls charge onto the other. Source, drain, and a gate
-            on an insulator. That is the transistor you lay out every day, thirty-five years early.
+            Here is the idea behind it, in modern terms. This is an analogy, not a copy of his
+            figure. A thin film of semiconductor, two contacts, and a metal plate above it,
+            separated by an insulator. Put a voltage on the plate and it pulls charge into the
+            film, the way one plate of a capacitor pulls charge onto the other. Source, drain, and a
+            gate that works through its field: the idea behind the transistor you lay out every
+            day, decades early.
             """,
             """
-            নতুন করে আঁকলে জিনিসটা সহজ: semiconductor-এর একটা পাতলা film, দুই পাশে দুইটা contact, আর উপরে insulator দিয়ে আলাদা
-            করা একটা metal plate। Plate-এ voltage দিলে ওইটা film-এর ভিতরে charge টেনে আনে, ঠিক যেভাবে
-            capacitor-এর এক plate আরেক plate-এ charge জমায়। Source, drain, আর insulator-এর উপর একটা gate।
-            আপনারা প্রতিদিন যে transistor-এর layout করেন, এইটা সেটাই, পঁয়ত্রিশ বছর আগে।
+            এর পেছনের idea-টা, আজকের ভাষায়। এইটা একটা analogy, তাঁর figure-এর copy না। Semiconductor-এর একটা
+            পাতলা film, দুই পাশে দুইটা contact, আর উপরে insulator দিয়ে আলাদা করা একটা metal plate। Plate-এ voltage
+            দিলে ওইটা film-এর ভিতরে charge টেনে আনে, ঠিক যেভাবে capacitor-এর এক plate আরেক plate-এ charge জমায়।
+            Source, drain, আর এমন একটা gate যেটা field দিয়া কাজ করে: আপনারা প্রতিদিন যে transistor-এর layout করেন,
+            তার পেছনের idea, কয়েক দশক আগে।
             """,
         ))
         self.play(FadeOut(pic))
@@ -252,7 +260,8 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         )
         device = VGroup(glass, film, c_l, c_r, ins, plate)
         src = source("Lilienfeld: Canadian application 1925; US 1,745,175, filed 1926, granted 1930")
-        self.play(FadeIn(src))
+        analogy = text("a modern analogy, not a redraw of his figure", size=20, color=MUTED, slant="ITALIC").move_to([0, y0 + 2.0, 0])
+        self.play(FadeIn(src), FadeIn(analogy))
         self.play(LaggedStart(*[FadeIn(m, shift=DOWN * 0.15) for m in device], lag_ratio=0.2), FadeIn(names), run_time=2)
 
         plus = VGroup(*[MathTex("+", font_size=30, color=BG).move_to([x, y0 + 0.37, 0]) for x in np.linspace(-1.1, 1.1, 6)])
@@ -262,22 +271,23 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         cur = text("current flows in the film", size=20, color=ELECTRON).next_to(glass, DOWN, buff=0.12)
         self.play(FadeIn(vg), FadeIn(plus, lag_ratio=0.1), FadeIn(induced, lag_ratio=0.05), run_time=1.5)
         self.play(GrowArrow(arrow), FadeIn(cur))
-        tie = layout_note("Source, drain, a gate on an insulator: the MOSFET you draw, 35 years early.", size=22)
+        tie = layout_note("Source, drain and a gate that works through its field: the idea behind the MOSFET you draw, decades early.", size=22, width=70)
         tie.to_edge(DOWN, buff=0.9)
         self.play(FadeIn(tie, shift=UP * 0.2))
 
         self.slide(say(
             """
-            And the numbers say it should have worked. The plate and the film are a capacitor: the
-            charge is C times V. With an insulator a tenth of a micron thick and ten volts on the
-            gate, that's about two times ten to the twelve electrons per square centimetre, plenty
-            to carry a current. It should have worked. It didn't.
+            On paper, the effect is big. The plate and the film are a capacitor: the charge is C
+            times V. With an ideal insulator a tenth of a micron thick and ten volts on the gate,
+            that's about two times ten to the twelve electrons per square centimetre, plenty to
+            carry a current. In practice, for decades, nobody could get a useful field effect out of
+            devices like this.
             """,
             """
-            আর হিসাবও বলে এইটা কাজ করার কথা। Plate আর film মিলে একটা capacitor: charge হলো C গুণ V।
-            Insulator যদি এক micron-এর দশ ভাগের এক ভাগ পুরু হয়, আর gate-এ দেন দশ volt, তাহলে প্রতি square
-            centimetre-এ প্রায় দুই গুণ দশের বারো ঘাত electron, current চালানোর জন্য যথেষ্ট। কাজ করার কথা ছিল।
-            করে নাই।
+            কাগজে-কলমে effect-টা বড়। Plate আর film মিলে একটা capacitor: charge হলো C গুণ V। Ideal একটা insulator
+            যদি এক micron-এর দশ ভাগের এক ভাগ পুরু হয়, আর gate-এ দেন দশ volt, তাহলে প্রতি square centimetre-এ প্রায়
+            দুই গুণ দশের বারো ঘাত electron, current চালানোর জন্য যথেষ্ট। কিন্তু বাস্তবে, কয়েক দশক ধরে, এরকম device
+            থেকে কেউ কাজের মতো field effect বের করতে পারে নাই।
             """,
         ))
         n_s = phys.induced_sheet_density_cm2(10, 100)
@@ -288,45 +298,46 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         e2[0].set_color(ELECTRON)
         e3 = eq(r"=", rf"{n_s / 1e12:.1f}\times10^{{12}}\ \text{{cm}}^{{-2}}", size=44)
         e3[1].set_color(ELECTRON)
-        cond = text("t_ox = 100 nm, V_G = 10 V", size=20, color=MUTED)
+        cond = text("ideal capacitor: t_ox = 100 nm, V_G = 10 V", size=20, color=MUTED)
         VGroup(e1, e2, e3, cond).arrange(DOWN, buff=0.3).move_to([4.4, -1.55, 0])
         self.play(FadeOut(tie), VGroup(device, names, plus, induced, vg, arrow, cur).animate.shift(LEFT * 2.2 + UP * 0.2))
         self.play(Write(e1))
         self.play(Write(e2))
         self.play(Write(e3), FadeIn(cond))
         verdict = VGroup(
-            text("It should have worked.", size=34, weight="SEMIBOLD"),
-            text("It didn't.", size=34, weight="SEMIBOLD", color=DRAIN),
+            text("On paper: plenty of charge.", size=34, weight="SEMIBOLD"),
+            text("In practice: almost no effect.", size=34, weight="SEMIBOLD", color=DRAIN),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.15).move_to([-3.2, -2.3, 0])
         self.play(FadeIn(verdict[0]))
         self.wait(0.6)
         self.play(FadeIn(verdict[1]))
-        self.lil_parts = VGroup(title, device, names, plus, induced, vg, arrow, cur, src, e1, e2, e3, cond, verdict)
+        self.lil_parts = VGroup(title, device, names, plus, induced, vg, arrow, cur, src, analogy, e1, e2, e3, cond, verdict)
 
     # --- surface states ----------------------------------------------------------------------
     def surface_states(self):
         self.slide(say(
             """
-            At Bell Labs in 1945, William Shockley built devices like Lilienfeld's and worked out how
-            big the effect should be. He measured almost nothing. The explanation came from John
-            Bardeen in 1947. The surface of a semiconductor is a broken crystal: bonds that end in
-            nothing. They trap electrons. So when the gate pulls charge in, almost all of it gets
-            stuck in these surface states and never reaches the channel. With a typical density of
-            surface states, only about two percent of the charge is free to carry current. Press
-            down for where the two percent comes from.
+            At Bell Labs in 1945, William Shockley built field-effect devices of his own and worked
+            out how big the effect should be. He measured almost nothing. The explanation came from
+            John Bardeen in 1947. The surface of a semiconductor is a broken crystal: bonds that end
+            in nothing. They trap charge. So when the gate induces charge, most of it is answered
+            by these surface states, not by the semiconductor. In a simple model with a typical
+            density of surface states, only about two percent of the induced charge ends up in the
+            semiconductor. Whether this is exactly what stopped Lilienfeld, we can't say for sure;
+            it is what stopped Shockley. Press down for where the two percent comes from.
             """,
             """
-            1945-এ Bell Labs-এ William Shockley Lilienfeld-এর মতো device বানায়ে হিসাব করলেন effect কতটা
-            বড় হওয়ার কথা। মাপতে গিয়ে প্রায় কিছুই পাইলেন না। Explanation দিলেন John Bardeen, 1947-এ।
-            Semiconductor-এর surface হইলো একটা ভাঙা crystal: এমন bond যেগুলা কোথাও গিয়া শেষ হয় না। এগুলা
-            electron আটকায়ে ফেলে। তাই gate যখন charge টানে, তার প্রায় পুরাটাই এই surface states-এ আটকায়ে
-            যায়, channel পর্যন্ত আর পৌঁছায় না। Surface states-এর typical density-তে, যত charge আনলেন তার
-            মাত্র দুই percent-এর মতো current carry করতে পারে। দুই percent কোথা থেকে আসলো, দেখতে চাইলে
-            নিচে (↓) যান।
+            1945-এ Bell Labs-এ William Shockley নিজেই field-effect device বানায়ে হিসাব করলেন effect কতটা বড়
+            হওয়ার কথা। মাপতে গিয়ে প্রায় কিছুই পাইলেন না। Explanation দিলেন John Bardeen, 1947-এ। Semiconductor-এর
+            surface হইলো একটা ভাঙা crystal: এমন bond যেগুলা কোথাও গিয়া শেষ হয় না। এগুলা charge আটকায়ে ফেলে। তাই
+            gate যখন charge induce করে, তার বেশিরভাগের জবাব দেয় এই surface states, semiconductor না। Surface
+            states-এর typical density নিয়া একটা সহজ model-এ, induce করা charge-এর মাত্র দুই percent-এর মতো
+            semiconductor-এ যায়। Lilienfeld-রে ঠিক এইটাই আটকাইছিল কিনা নিশ্চিত বলা যায় না; Shockley-রে এইটাই
+            আটকাইছিল। দুই percent কোথা থেকে আসলো, দেখতে চাইলে নিচে (↓) যান।
             """,
         ))
         self.play(FadeOut(self.lil_parts))
-        title = heading("Why it failed: the surface eats the field")
+        title = heading("Why Shockley's field effect failed: the surface")
         x0 = -3.2
         gate = Rectangle(width=5.2, height=0.45, fill_color=GATE, fill_opacity=1, stroke_width=0).move_to([x0, 2.35, 0])
         ins = Rectangle(width=5.2, height=1.1, fill_color=OXIDE_TEXT, fill_opacity=0.25, stroke_width=0).move_to([x0, 1.57, 0])
@@ -338,7 +349,7 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
             text("gate", size=22, color=BG, weight="SEMIBOLD").move_to(gate),
             text("insulator", size=20, color=OXIDE_TEXT).move_to(ins).add_background_rectangle(color=BG, opacity=0.85, buff=0.08),
             text("surface states\n(broken bonds)", size=20, color=MUTED).next_to(traps, DOWN, buff=0.12).align_to(semi, LEFT).shift(RIGHT * 0.15),
-            text("channel", size=20, color=ELECTRON).move_to([x0, -1.25, 0]),
+            text("semiconductor", size=20, color=ELECTRON).move_to([x0, -1.25, 0]),
         )
         self.play(FadeIn(title))
         self.play(FadeIn(gate), FadeIn(ins), FadeIn(semi), FadeIn(labels[0]), FadeIn(labels[1]))
@@ -354,16 +365,17 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         self.play(FadeIn(fills, lag_ratio=0.05), FadeIn(free), FadeIn(labels[3]))
         self.play(Indicate(free, color=ELECTRON, scale_factor=2))
 
-        share = phys.share_reaching_channel(1e13)
-        e1 = eq(r"\frac{\Delta Q_{ch}}{\Delta Q_G}", r"\approx", r"\frac{C_{dep}}{C_{dep}+C_{it}}", size=46)
+        share = phys.share_in_semiconductor(1e13)
+        e1 = eq(r"\frac{\Delta Q_{s}}{\Delta Q_G}", r"\approx", r"\frac{C_{dep}}{C_{dep}+C_{it}}", size=46)
         e2 = eq(r"C_{it}", r"=", r"q\,D_{it}", size=42)
         e2[0].set_color(MUTED)
         dit = text("D_it ≈ 10¹³ states per cm² per eV", size=22, color=MUTED)
         big = VGroup(
             display(f"≈ {share * 100:.0f}%", size=72, color=ELECTRON),
-            text("of the gate's charge\nreaches the channel", size=24, color=INK),
+            text("of the induced charge ends\nup in the semiconductor", size=24, color=INK),
         ).arrange(DOWN, buff=0.12)
-        col = VGroup(e1, e2, dit, big, model_tag()).arrange(DOWN, buff=0.32).move_to([3.6, -0.1, 0])
+        tag = VGroup(model_tag(), text("depletion-and-trap model", size=18, color=MUTED)).arrange(RIGHT, buff=0.15)
+        col = VGroup(e1, e2, dit, big, tag).arrange(DOWN, buff=0.32).move_to([3.6, -0.1, 0])
         src = source("J. Bardeen, Phys. Rev. 71, 717 (1947)")
         self.play(Write(e1), FadeIn(src))
         self.play(Write(e2), FadeIn(dit))
@@ -407,13 +419,14 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
             Now the numbers. A lightly doped substrate gives a depletion capacitance of about 34
             nanofarads per square centimetre. Ten to the thirteen surface states per square
             centimetre per electron-volt give a surface-state capacitance of 1.6 microfarads, about
-            fifty times bigger. So about two percent goes to the channel.
+            fifty times bigger. So about two percent of the induced charge is in the semiconductor,
+            as depletion charge in this simple picture. These are typical, illustrative values.
             """,
             """
             এবার সংখ্যা। হালকা doping-এর substrate-এ depletion capacitance প্রতি square centimetre-এ প্রায় 34
             nanofarad। আর প্রতি square centimetre প্রতি eV-তে দশের তেরো ঘাত surface state মানে
-            surface-state capacitance 1.6 microfarad, প্রায় পঞ্চাশ গুণ বড়। তাই channel-এ যায় মাত্র দুই
-            percent-এর মতো।
+            surface-state capacitance 1.6 microfarad, প্রায় পঞ্চাশ গুণ বড়। তাই induce করা charge-এর মাত্র দুই
+            percent-এর মতো থাকে semiconductor-এ, এই সহজ ছবিতে depletion charge হিসাবে। মানগুলা typical, illustrative।
             """,
         ), direction="vertical")
         c_dep = phys.depletion_capacitance_cm2(1e16, 2 * phys.fermi_potential(1e16))
@@ -438,14 +451,15 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
             """
             That was the dead end of the 1940s: a perfect idea, defeated by a few atoms' worth of
             broken bonds. So Bardeen and his colleague Walter Brattain stopped trying to beat the
-            surface. Instead they started poking it with fine metal points, to study it. And in
-            December 1947, one of those experiments did something nobody expected.
+            surface. Instead they started poking it with fine metal points, to study it and to
+            try to get amplification out of it. In December 1947 they got it, though not in the
+            way anyone had predicted.
             """,
             """
             1940-এর দশকে এইটাই ছিল dead end: একটা perfect idea, হেরে গেল কয়েকটা atom-এর সমান ভাঙা
             bond-এর কাছে। তাই Bardeen আর তাঁর colleague Walter Brattain surface-রে হারানোর চেষ্টা বাদ
-            দিলেন। বরং ওইটাকে বোঝার জন্য সরু metal point দিয়ে খোঁচানো শুরু করলেন। আর 1947-এর ডিসেম্বরে,
-            এমনই এক experiment এমন একটা কাজ করল যেটা কেউ আশা করে নাই।
+            দিলেন। বরং ওইটাকে বুঝতে, আর ওইটা থেকে amplification বের করতে, সরু metal point দিয়ে খোঁচানো শুরু
+            করলেন। 1947-এর ডিসেম্বরে amplification পাইলেন, কিন্তু যেভাবে কেউ ভাবে নাই সেভাবে।
             """,
         ))
         self.play(FadeOut(self.screen))

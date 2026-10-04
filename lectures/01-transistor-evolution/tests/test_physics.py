@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 import unittest
-from math import exp, log10
+from math import cosh, exp, log10
 from pathlib import Path
 
 LECTURE = Path(__file__).resolve().parents[1]
@@ -70,8 +70,9 @@ class HistoryChapters(unittest.TestCase):
         self.assertAlmostEqual(p.induced_sheet_density_cm2(10, 100) / 1e12, 2.16, delta=0.02)
 
     def test_surface_states_swallow_the_field(self):
-        self.assertAlmostEqual(p.share_reaching_channel(1e13), 0.021, delta=0.002)
-        self.assertGreater(p.share_reaching_channel(1e10), 0.95)
+        self.assertAlmostEqual(p.share_in_semiconductor(1e13), 0.021, delta=0.002)
+        self.assertGreater(p.share_in_semiconductor(1e10), 0.95)
+        self.assertAlmostEqual(p.surface_state_capacitance_cm2(1e13) * 1e6, 1.602, places=3)  # q D_it, uF/cm^2
 
     def test_bjt_rises_tenfold_per_60_mV(self):
         r = p.collector_current(0.6 + p.subthreshold_swing(300)) / p.collector_current(0.6)
@@ -105,6 +106,19 @@ class HistoryChapters(unittest.TestCase):
         self.assertAlmostEqual(f["power density"], 1.0)
         self.assertAlmostEqual(p.dynamic_power(1, 1 / k, 1 / k, k) * k * k, p.dynamic_power(1, 1, 1, 1))
 
+    def test_generalized_scaling(self):
+        k = 2.0
+        cf = p.generalized_scaling(k, k)  # Dennard: the DENNARD table again
+        for name, pw in (("size", -1), ("voltage", -1), ("current", -1), ("capacitance", -1),
+                         ("delay", -1), ("power", -2), ("density", 2), ("power_density", 0)):
+            self.assertAlmostEqual(cf[name], k**pw, msg=name)
+        cv = p.generalized_scaling(k, 1)  # the voltage stuck: the textbook constant-voltage case
+        self.assertAlmostEqual(cv["current"], k)
+        self.assertAlmostEqual(cv["delay"], k**-2)
+        self.assertAlmostEqual(cv["power_density"], k**3)
+        held = p.generalized_scaling(k, 1, fixed_clock=True)  # ...with the clock held as well
+        self.assertAlmostEqual(held["power_density"], k)
+
 
 @unittest.skipUnless(shutil.which("node"), "node is not installed")
 class ArchitectureChapters(unittest.TestCase):
@@ -128,7 +142,24 @@ class ArchitectureChapters(unittest.TestCase):
 
     def test_short_channel_swing(self):
         self.assertAlmostEqual(p.short_channel_swing(100, 1) * 1e3, 59.5, places=1)
-        self.assertAlmostEqual(p.short_channel_swing(6, 1) / p.subthreshold_swing(), 1 / (1 - 2 * exp(-3)), places=6)
+        # At V_DS = 0 the barrier top follows the gate by 1 - sech(L / 2 lambda): no pole.
+        self.assertAlmostEqual(p.short_channel_swing(6, 1) / p.subthreshold_swing(), 1 / (1 - 1 / cosh(3)), places=9)
+        self.assertAlmostEqual(p.short_channel_swing(1.5, 1) * 1e3, 261.528, places=2)
+        self.assertAlmostEqual(p.short_channel_swing(20, 1) / p.subthreshold_swing(), 1 / (1 - 2 * exp(-10)), places=6)
+
+    def test_closed_form_barrier_matches_a_grid_search(self):
+        for L, v in ((1.5, 0.05), (3, 0.75), (6, 0.4)):
+            grid = 1.0 - min(p.channel_potential(L * i / 4000, L, 1, 1.0, v, 0.4) for i in range(4001))
+            self.assertAlmostEqual(p.barrier_height(L, 1, v_ds=v), grid, places=6)
+
+    def test_gate_and_drain_coupling(self):
+        self.assertAlmostEqual(p.gate_coupling(3, 1, 0.4), 0.5577, places=4)
+        self.assertAlmostEqual(p.drain_coupling(3, 1, 0.4), 0.15367, places=5)
+        h = 1e-6  # the closed forms agree with finite differences of the barrier
+        dg = (p.barrier_height(3, 1, v_ds=0.4, phi_gs=0.4 - h) - p.barrier_height(3, 1, v_ds=0.4, phi_gs=0.4 + h)) / (2 * h)
+        dd = (p.barrier_height(3, 1, v_ds=0.4 - h) - p.barrier_height(3, 1, v_ds=0.4 + h)) / (2 * h)
+        self.assertAlmostEqual(dg, p.gate_coupling(3, 1, 0.4), places=5)
+        self.assertAlmostEqual(dd, p.drain_coupling(3, 1, 0.4), places=5)
 
     def test_effective_widths(self):
         self.assertEqual(p.weff_fin_nm(2, 45, 6), 192)
@@ -136,13 +167,26 @@ class ArchitectureChapters(unittest.TestCase):
 
     def test_cells_and_wires(self):
         self.assertEqual(p.cell_height_nm(6, 24), 144)
+        # Live Lab 4's model gives back FET Lab's four inverter cells, rail to rail.
+        self.assertEqual(p.cell_height_needed_nm("fin", p.fin_footprint_nm(2)), 156)
+        self.assertEqual(p.cell_height_needed_nm("sheet", 22), 136)
+        self.assertEqual(p.cell_height_needed_nm("fork", 22), 106)
+        self.assertEqual(p.cell_height_needed_nm("cfet", 20), 74)
+        from devicedata import rail_span_nm
+        for key, arch, w in (("show_fin", "fin", p.fin_footprint_nm(2)), ("show_ns", "sheet", 22),
+                             ("show_fs", "fork", 22), ("show_cfet", "cfet", 20)):
+            self.assertAlmostEqual(rail_span_nm(key), p.cell_height_needed_nm(arch, w), msg=key)
         self.assertAlmostEqual(p.wire_resistance_ohm(1000, 20, 40), 25.0)
         self.assertAlmostEqual(p.roughness_mobility_ratio(4, 5), 0.262, places=3)
 
-    def test_self_gain_from_dibl(self):
-        self.assertAlmostEqual(p.self_gain_from_dibl(100), 10.0)
-        short, long_ = (p.self_gain_from_dibl(p.dibl_mV_per_V(k, 1)) for k in (3, 10))
-        self.assertTrue(5 < short < 8 and long_ > 100, (short, long_))
+    def test_intrinsic_gain(self):
+        self.assertAlmostEqual(p.intrinsic_gain(3, 1, 0.4), 3.63, places=2)
+        self.assertGreater(p.intrinsic_gain(10, 1, 0.4), 100)
+
+    def test_specific_current_keeps_strong_inversion_fixed(self):
+        hot = p.drain_current(0.8, 0.4, 300, 1.0, p.specific_current(2e-7, 300, 1.0))
+        cold = p.drain_current(0.8, 0.4, 77, 1.0, p.specific_current(2e-7, 77, 1.0))
+        self.assertAlmostEqual(cold / hot, 1.0, delta=0.02)
 
 
 class BeyondChapters(unittest.TestCase):
@@ -151,9 +195,12 @@ class BeyondChapters(unittest.TestCase):
 
     def test_negative_capacitance_gives_m_below_one(self):
         self.assertAlmostEqual(p.body_factor(1.0, 4.0), 1.25)
-        m = p.body_factor(1.0, -5.0)
-        self.assertAlmostEqual(m, 0.8)
-        self.assertLess(p.subthreshold_swing(300, m), 0.05)
+        m = p.nc_body_factor(1.0, 4.0, -3.0)
+        self.assertAlmostEqual(m, 1 - 1 / 12)
+        self.assertTrue(p.nc_stable(1.0, 4.0, -3.0))
+        self.assertFalse(p.nc_stable(1.0, 4.0, -0.5))
+        self.assertGreater(p.nc_body_factor(1.0, 4.0, -5.0), 1)  # |C_FE| > C_ox: no gain
+        self.assertAlmostEqual(p.subthreshold_swing(300, m) * 1e3, 54.6, places=1)
 
     def test_tunnelling_matches_the_thermal_leak_near_5_nm(self):
         L = p.tunnelling_crossover_nm()
@@ -163,8 +210,10 @@ class BeyondChapters(unittest.TestCase):
 
     def test_landauer_and_today(self):
         self.assertAlmostEqual(p.landauer_limit_J() * 1e21, 2.87, places=2)
-        ratio = p.switching_energy_J(0.1, 0.7) / p.landauer_limit_J()
-        self.assertTrue(5e3 < ratio < 2e4, ratio)
+        self.assertAlmostEqual(p.stored_energy_J(0.1, 0.7) * 1e18, 24.5)
+        self.assertAlmostEqual(p.cycle_energy_J(0.1, 0.7) * 1e18, 49.0)
+        ratio = p.cycle_energy_J(0.1, 0.7) / p.landauer_limit_J()
+        self.assertTrue(1.6e4 < ratio < 1.8e4, ratio)
 
 
 class LabPortAgrees(unittest.TestCase):
@@ -188,10 +237,62 @@ class LabPortAgrees(unittest.TestCase):
             ("P.barrierHeight(5, 1, 1.0, 0.75)", p.barrier_height(5, 1, 1.0, 0.75)),
             ("P.diblMVperV(6, 1)", p.dibl_mV_per_V(6, 1)),
             ("P.shortChannelSwing(7, 1.1)", p.short_channel_swing(7, 1.1)),
+            ("P.shortChannelSwing(2.5, 1.0, 300, 0.6)", p.short_channel_swing(2.5, 1.0, 300, 0.6)),
+            ("P.gateCoupling(3, 1, 0.4)", p.gate_coupling(3, 1, 0.4)),
+            ("P.drainCoupling(4, 1.2, 0.7)", p.drain_coupling(4, 1.2, 0.7)),
+            ("P.intrinsicGain(5, 1, 0.4)", p.intrinsic_gain(5, 1, 0.4)),
+            ("P.specificCurrent(2e-7, 77, 1.3)", p.specific_current(2e-7, 77, 1.3)),
+            ("P.generalizedScaling(2.7, 1.6).power_density", p.generalized_scaling(2.7, 1.6)["power_density"]),
+            ("P.generalizedScaling(2.7, 1.6, true).power", p.generalized_scaling(2.7, 1.6, True)["power"]),
+            ("P.generalizedScaling(3.1, 3.1).frequency", p.generalized_scaling(3.1, 3.1)["frequency"]),
+            ("P.cellHeightNeeded('fin', P.finFootprint(3))", p.cell_height_needed_nm("fin", p.fin_footprint_nm(3))),
+            ("P.cellHeightNeeded('cfet', 31)", p.cell_height_needed_nm("cfet", 31)),
+            ("P.weffSheets(3, 30, 5)", p.weff_sheets_nm(3, 30, 5)),
+            ("P.weffFin(2, 45, 6)", p.weff_fin_nm(2, 45, 6)),
         ]
         for expr, want in cases:
             with self.subTest(expr=expr):
                 self.assertAlmostEqual(self.js(expr) / want, 1.0, places=9)
+
+
+class DeckFiles(unittest.TestCase):
+    def test_lab5_models_match_the_glb_files(self):
+        import base64
+
+        text = (LECTURE / "labs" / "lab5-models.js").read_text()
+        glbs = sorted((LECTURE / "models").glob("*.glb"))
+        self.assertTrue(glbs)
+        for glb in glbs:
+            with self.subTest(model=glb.stem):
+                self.assertIn(f'{glb.stem}: "{base64.b64encode(glb.read_bytes()).decode()}"', text)
+
+    def test_core_path(self):
+        """Every core slide still exists and is the slide core.py means (checked against the
+        rendered slides when there are any), every scene keeps one, and every lab has notes."""
+        import core
+
+        sys.path.insert(0, str(LECTURE.parents[1]))
+        from build import BANGLA, SEQUENCE
+
+        scenes = [s[2] for s in SEQUENCE if s[0] == "scene"]
+        self.assertEqual(set(core.CORE), set(scenes))
+        self.assertEqual(set(core.LABS), {s[1] for s in SEQUENCE if s[0] == "lab"})
+        words = 0
+        for scene in scenes:
+            rows = core.CORE[scene]
+            self.assertTrue(rows, scene)
+            self.assertEqual([r[0] for r in rows], sorted({r[0] for r in rows}), scene)
+            for i, anchor, en, bn in rows:
+                words += len(en.split())
+                self.assertTrue(any("\u0980" <= c <= "\u09ff" for c in bn), f"{scene} {i}: Bangla notes")
+            rendered = LECTURE / "slides" / f"{scene}.json"
+            if rendered.exists():
+                slides = json.loads(rendered.read_text())["slides"]
+                for i, anchor, en, bn in rows:
+                    full = " ".join(slides[i]["notes"].split(BANGLA)[0].split())
+                    self.assertTrue(full.startswith(anchor), f"{scene} {i}: {full[:40]!r}")
+        words += sum(len(en.split()) for en, bn in core.LABS.values())
+        self.assertTrue(2500 <= words <= 3400, f"core script: {words} words")
 
 
 if __name__ == "__main__":

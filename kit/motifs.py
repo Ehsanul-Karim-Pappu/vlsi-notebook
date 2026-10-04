@@ -54,7 +54,8 @@ def _base():
 
 
 def _sheet(x, y, w=1.0, t=0.16, color=SILICON, faces=4):
-    """One channel sheet with its gate oxide; faces=3 leaves the right-hand face bare."""
+    """One channel sheet with its gate oxide; faces=3 leaves the right-hand face bare (flip it
+    for a sheet whose bare face is on the left)."""
     ox_w = w + (0.08 if faces == 4 else 0.04)
     ox_x = x if faces == 4 else x - 0.02
     return VGroup(_box(ox_w, t + 0.08, ox_x, y, OXIDE_TEXT), _box(w, t, x, y, color))
@@ -63,8 +64,10 @@ def _sheet(x, y, w=1.0, t=0.16, color=SILICON, faces=4):
 def xsection(kind):
     """Cross-section of a transistor architecture, the gate in gold.
 
-    kind: "planar", "finfet", "nanosheet", "forksheet" or "cfet". Every shape sits on the same
-    base, so one can be transformed into the next.
+    kind: "planar", "finfet", "nanosheet", "forksheet", "forksheet_outer" or "cfet". Every shape
+    sits on the same base, so one can be transformed into the next. "forksheet" is the original
+    inner-wall pair (n and p either side of a wall inside the cell); "forksheet_outer" is the
+    outer-wall variant, with a thicker wall at the cell edge between two devices of the same type.
     """
     if kind == "planar":
         sub = _box(3.2, 1.2, 0, -0.6, SUBSTRATE)
@@ -85,10 +88,18 @@ def xsection(kind):
     if kind == "forksheet":
         gate = _box(2.3, 1.6, 0, 0.6, GATE)
         wall = _box(0.16, 1.8, 0, 0.7, WALL)
-        left = VGroup(*[_sheet(-0.5, y, w=0.76, faces=3) for y in (0.15, 0.6, 1.05)])
+        # Each sheet's bare face sits against the wall (-0.08 to 0.08): no gap between them.
+        left = VGroup(*[_sheet(-0.46, y, w=0.76, faces=3) for y in (0.15, 0.6, 1.05)])
         right = VGroup(*[_sheet(0.5, y, w=0.76, faces=3).flip(UP) for y in (0.15, 0.6, 1.05)])
         for s in right:
             s[1].set_fill(HOLE, opacity=0.85)
+        return VGroup(_base(), gate, left, right, wall)
+    if kind == "forksheet_outer":
+        gate = _box(2.3, 1.6, 0, 0.6, GATE)
+        wall = _box(0.24, 1.8, 0, 0.7, WALL)
+        # Same polarity on both sides, bare faces against the thicker wall (-0.12 to 0.12).
+        left = VGroup(*[_sheet(-0.50, y, w=0.76, faces=3) for y in (0.15, 0.6, 1.05)])
+        right = VGroup(*[_sheet(0.54, y, w=0.76, faces=3).flip(UP) for y in (0.15, 0.6, 1.05)])
         return VGroup(_base(), gate, left, right, wall)
     if kind == "cfet":
         gate = _box(1.6, 2.5, 0, 1.05, GATE)

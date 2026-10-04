@@ -25,7 +25,7 @@
   <header>
     <div class="kicker">Live lab 2</div>
     <h1>Who controls the barrier?</h1>
-    <p>Shrink the gate and watch the drain reach in and pull the hill down. Then wrap more gate around a thinner channel, and take control back. (Chapter 6's model; every channel uses silicon's permittivity.)</p>
+    <p>Shrink the gate and watch the drain reach in and pull the hill down. Then wrap more gate around a thinner channel, and take control back. (Chapter 6's toy model: N is an "equivalent number of gates", every channel uses silicon's permittivity, and real geometries differ.)</p>
   </header>
 
   <main class="grid">
@@ -35,7 +35,7 @@
       <div class="readouts">
         <div class="big"><span>Barrier E<sub>b</sub></span> <b id="rEb"></b></div>
         <div class="big"><span>Leakage, vs. a long channel</span> <b id="rLeak"></b></div>
-        <div class="big"><span>DIBL</span> <b id="rDibl"></b></div>
+        <div class="big"><span>Barrier DIBL, 0.05→0.75 V</span> <b id="rDibl"></b></div>
       </div>
     </section>
     <section class="panel">
@@ -45,7 +45,7 @@
         <div class="big"><span>λ</span> <b id="rLam"></b></div>
         <div class="big"><span>L / λ</span> <b id="rRatio"></b></div>
         <div class="big"><span>Swing</span> <b id="rSS"></b></div>
-        <div class="big"><span>Gain g<sub>m</sub>r<sub>o</sub>, DIBL alone</span> <b id="rGain"></b></div>
+        <div class="big"><span>Gain g<sub>m</sub>r<sub>o</sub> = α<sub>g</sub>/α<sub>d</sub></span> <b id="rGain"></b></div>
         <div id="verdict" class="verdict"></div>
       </div>
     </section>
@@ -69,13 +69,13 @@
       <input id="vds" type="range" min="0.05" max="1" step="0.01" value="0.05">
     </label>
     <div class="arch" role="group" aria-label="Architecture">
-      <span class="label">Gates around the channel:</span>
+      <span class="label">Equivalent gates (toy):</span>
       <button class="ghost" data-arch="planar">Planar · 1</button>
       <button class="ghost" data-arch="double">Double gate · 2</button>
       <button class="ghost" data-arch="fin">FinFET · 3</button>
       <button class="ghost" data-arch="sheet">Nanosheet · 4</button>
       <button class="ghost" data-arch="fork">Forksheet · 3</button>
-      <button class="ghost" data-arch="twod">2D layer · 2</button>
+      <button class="ghost" data-arch="twod" title="A body as thin as a MoS₂ monolayer, with silicon's permittivity: a what-if">0.65 nm body · 2</button>
       <button id="sweep">Shrink the gate</button>
     </div>
   </footer>
@@ -99,7 +99,7 @@
       fin: { n: 3, t: 6, name: "FinFET" },
       sheet: { n: 4, t: 5, name: "Nanosheet" },
       fork: { n: 3, t: 5, name: "Forksheet" },
-      twod: { n: 2, t: 0.65, name: "2D layer" },
+      twod: { n: 2, t: 0.65, name: "0.65 nm body" },
     };
     const $ = (id) => document.getElementById(id);
     const ui = { len: $("len"), tox: $("tox"), tch: $("tch"), vds: $("vds") };
@@ -118,12 +118,8 @@
 
     // Where the hill is highest, and its height (eV, from the source).
     function peak(s, lam) {
-      let xb = 0, eb = -Infinity;
-      for (let i = 0; i <= 400; i++) {
-        const x = (s.L * i) / 400, e = V_BI - P.channelPotential(x, s.L, lam, V_BI, s.vds, PHI_GS);
-        if (e > eb) { eb = e; xb = x; }
-      }
-      return { x: xb, e: eb };
+      const u = P.barrierTop(s.L, lam, V_BI, s.vds, PHI_GS);
+      return { x: u * lam, e: P.barrierHeight(s.L, lam, V_BI, s.vds, PHI_GS) };
     }
 
     // --- the hill --------------------------------------------------------------------------
@@ -197,8 +193,10 @@
       // A cross-section looking down the channel, as in the slides: the gate gold, silicon pink.
       const cx = x0 + w / 2, base = y0 + h - 14;
       rect(ctx, x0 + 6, base, w - 12, 12, C.sub);
-      const sheet = (x, y, sw, sh, faces) => {
-        rect(ctx, x - 2, y - 2, sw + (faces === 3 ? 2 : 4), sh + 4, C.oxide);
+      // A sheet in its gate oxide; bare = "left" or "right" leaves that face against a wall.
+      const sheet = (x, y, sw, sh, bare) => {
+        const ox = bare === "right" ? x - 2 : x;
+        rect(ctx, bare ? ox : x - 2, y - 2, sw + (bare ? 2 : 4), sh + 4, C.oxide);
         rect(ctx, x, y, sw, sh, C.silicon);
       };
       if (a === "planar") {
@@ -215,10 +213,10 @@
         rect(ctx, cx - 5, base - 51, 10, 51, C.silicon);
       } else if (a === "sheet") {
         rect(ctx, cx - 34, base - 66, 68, 66, C.gate);
-        for (let i = 0; i < 3; i++) sheet(cx - 24, base - 16 - 20 * i, 48, 8, 4);
+        for (let i = 0; i < 3; i++) sheet(cx - 24, base - 16 - 20 * i, 48, 8, null);
       } else if (a === "fork") {
         rect(ctx, cx - 46, base - 66, 92, 66, C.gate);
-        for (let i = 0; i < 3; i++) { sheet(cx - 40, base - 16 - 20 * i, 36, 8, 3); sheet(cx + 4, base - 16 - 20 * i, 36, 8, 3); }
+        for (let i = 0; i < 3; i++) { sheet(cx - 39, base - 16 - 20 * i, 36, 8, "right"); sheet(cx + 3, base - 16 - 20 * i, 36, 8, "left"); }
         rect(ctx, cx - 3, base - 72, 6, 72, C.wall);
       }
       ctx.fillStyle = C.ink; ctx.font = "600 14px Inter, system-ui, sans-serif"; ctx.textAlign = "center";
@@ -269,14 +267,14 @@
         }
         ctx.stroke();
       };
-      // Below about 2.5λ the barrier is all but gone and the model's DIBL stops meaning much.
-      curve((L) => P.diblMVperV(L, lam, 0.05, 0.75, 301), C.drain, Math.max(2.5 * lam, 0.5));
-      curve((L) => P.shortChannelSwing(L, lam) * 1e3, C.gate, Math.max(1.5 * lam, 0.5));
+      // Barrier DIBL only while a barrier is left at 0.75 V; the swing at the chosen V_DS.
+      curve((L) => (P.barrierHeight(L, lam, V_BI, 0.75) > 0.01 ? P.diblMVperV(L, lam) : NaN), C.drain, 0.5);
+      curve((L) => P.shortChannelSwing(L, lam, 300, s.vds) * 1e3, C.gate, 0.5);
       ctx.restore();
 
       // where we are
-      const d = s.L > 2.5 * lam ? P.diblMVperV(s.L, lam, 0.05, 0.75, 801) : Infinity;
-      const ss = s.L > 1.4 * lam ? P.shortChannelSwing(s.L, lam) * 1e3 : Infinity;
+      const d = P.barrierHeight(s.L, lam, V_BI, 0.75) > 0.01 ? P.diblMVperV(s.L, lam) : Infinity;
+      const ss = P.shortChannelSwing(s.L, lam, 300, s.vds) * 1e3;
       ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
       ctx.beginPath(); ctx.moveTo(X(s.L), top); ctx.lineTo(X(s.L), b); ctx.stroke(); ctx.setLineDash([]);
       for (const [v, col] of [[d, C.drain], [ss, C.gate]]) {
@@ -285,8 +283,8 @@
       }
 
       ctx.font = "600 12px Inter, system-ui, sans-serif"; ctx.textAlign = "right";
-      ctx.fillStyle = C.drain; ctx.fillText("DIBL, mV/V", r - 4, top + 16);
-      ctx.fillStyle = C.gate; ctx.fillText("swing, mV/decade", r - 4, top + 32);
+      ctx.fillStyle = C.drain; ctx.fillText("barrier DIBL, mV/V", r - 4, top + 16);
+      ctx.fillStyle = C.gate; ctx.fillText("swing at this V_DS, mV/decade", r - 4, top + 32);
       ctx.fillStyle = C.muted; ctx.fillText("60: Boltzmann", r - 4, Y(60) - 6);
     }
 
@@ -294,23 +292,27 @@
     function readouts(s, lam, pk) {
       const ratio = s.L / lam;
       const dibl = P.diblMVperV(s.L, lam);
+      const gone = pk.e < 0.01;  // no barrier left at this drain voltage
+      const ss = P.shortChannelSwing(s.L, lam, 300, s.vds) * 1e3;
+      const gain = P.intrinsicGain(s.L, lam, s.vds);
       $("oL").textContent = s.L.toFixed(1) + " nm";
       $("oTox").textContent = s.tox.toFixed(2) + " nm";
       $("oTch").textContent = s.tch.toFixed(2) + " nm";
       $("oVds").textContent = s.vds.toFixed(2) + " V";
       $("rEb").textContent = pk.e.toFixed(2) + " eV";
       $("rLeak").textContent = big(Math.pow(10, Math.max(0, E_LONG - pk.e) / SS0));
-      $("rDibl").textContent = ratio > 2 ? dibl.toFixed(0) + " mV/V" : "barrier gone";
+      $("rDibl").textContent = P.barrierHeight(s.L, lam, V_BI, 0.75) > 0.01 ? dibl.toFixed(0) + " mV/V" : "no barrier at 0.75 V";
       $("rLam").textContent = lam.toFixed(2) + " nm";
       $("rRatio").textContent = ratio.toFixed(1);
       $("rRatio").style.color = ratio < 6 ? C.drain : C.good;
-      $("rSS").textContent = ratio > 2 ? (P.shortChannelSwing(s.L, lam) * 1e3).toFixed(0) + " mV/dec" : "off the chart";
-      $("rGain").textContent = ratio <= 2 ? "none" : dibl > 0.5 ? (1000 / dibl).toFixed(0) : "> 2000";
+      $("rSS").textContent = gone ? "no barrier" : ss > 999 ? "> 999 mV/dec" : ss.toFixed(0) + " mV/dec";
+      $("rGain").textContent = gone || !isFinite(gain) ? "none" : gain > 2000 ? "> 2000" : gain.toFixed(0);
       const v = $("verdict");
       v.className = "verdict " + (ratio < 6 ? "bad" : "ok");
-      v.textContent = ratio < 6
-        ? "L < 6λ: the drain is reaching the barrier. Shorten λ: a thinner channel, more gates, a thinner oxide."
-        : "L ≥ 6λ: the gate is in control.";
+      v.textContent = (ratio < 6
+        ? "L < 6λ: the drain is reaching the barrier. Shorten λ: a thinner channel, more gate, a thinner oxide."
+        : "L ≥ 6λ: the gate is in control.") + (ratio < 2 ? " (The toy model is rough this short.)" : "")
+        + " 6λ is a rule of thumb; sources say 5–10λ.";
     }
 
     function setArch(a) {

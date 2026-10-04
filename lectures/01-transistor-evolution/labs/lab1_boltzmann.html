@@ -10,7 +10,7 @@
   <header>
     <div class="kicker">Live lab 1</div>
     <h1>Boltzmann's fence</h1>
-    <p>Drag the gate voltage and watch electrons get over the hill. Then change the temperature and the gate's grip, and see what happens to the 60 mV.</p>
+    <p>Drag the gate voltage and watch electrons get over the hill. Then change the temperature and the gate's grip, and see what happens to the 60 mV. (The electrons are illustrative; the plot is the ideal model.)</p>
   </header>
 
   <main class="grid">
@@ -20,8 +20,8 @@
       <div class="readouts">
         <div><span>Barrier</span> <b id="rEb"></b></div>
         <div><span>Thermal energy k<sub>B</sub>T</span> <b id="rKt"></b></div>
-        <div><span>Share over the hill</span> <b id="rFrac"></b></div>
-        <div><span>Crossing now</span> <b id="rRate"></b></div>
+        <div><span>Boltzmann factor e<sup>−E<sub>b</sub>/k<sub>B</sub>T</sup></span> <b id="rFrac"></b></div>
+        <div><span>Crossing (illustrative)</span> <b id="rRate"></b></div>
       </div>
     </section>
     <section class="panel">
@@ -51,7 +51,7 @@
     <div class="control">
       <div class="row"><span>Gate grip, m = 1 + C<sub>dep</sub>/C<sub>ox</sub></span><output id="oM"></output></div>
       <input id="m" type="range" min="1" max="2" step="0.01" value="1" aria-label="Body factor m">
-      <div class="hint">1 is a perfect gate. Planar transistors sat around 1.2–1.5.</div>
+      <div class="hint">1 is a perfect gate. Planar transistors sat around 1.2–1.5. Real cold devices fall short of the ideal slope.</div>
     </div>
     <button id="sweep">Sweep the gate</button>
   </footer>
@@ -72,7 +72,9 @@
     const ui = { vg: $("vg"), temp: $("temp"), m: $("m") };
     const state = () => ({ vg: +ui.vg.value, T: +ui.temp.value, m: +ui.m.value });
     const barrier = (s) => Math.max(0, E_T + (VT - s.vg) / s.m);
-    const current = (v, T, m) => P.drainCurrent(v, VT, T, m, I_SPEC);
+    // EKV's specific current is 2 m beta U_T^2: scale it with T and m, or the on-current would
+    // grow as 1/T^2 when the chip cools, an artefact of the normalisation.
+    const current = (v, T, m) => P.drainCurrent(v, VT, T, m, P.specificCurrent(I_SPEC, T, m));
 
     const SUP = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
     const pow10 = (n) => "10" + String(n).split("").map((c) => SUP[c] || c).join("");
@@ -237,7 +239,7 @@
         ctx.moveTo(X(v0), y0); ctx.lineTo(X(v0 + ss), y0); ctx.lineTo(X(v0 + ss), y1); ctx.stroke();
         ctx.fillStyle = C.gate; ctx.textAlign = "center";
         ctx.fillText((ss * 1e3).toFixed(0) + " mV", (X(v0) + X(v0 + ss)) / 2, y0 + 16);
-        ctx.textAlign = "left"; ctx.fillText("×10", X(v0 + ss) + 5, (y0 + y1) / 2 + 4);
+        ctx.textAlign = "left"; ctx.fillText("≈×10", X(v0 + ss) + 5, (y0 + y1) / 2 + 4);
       }
 
       const lg = Math.log10(current(s.vg, s.T, s.m));

@@ -98,18 +98,21 @@ class Ch07FinFET(Chapter, ThreeDSlide):
             self.play(FadeIn(dot, scale=0.5), FadeIn(y), FadeIn(fin), FadeIn(body, shift=UP * 0.1), run_time=0.9)
 
         fig = figure(IMAGES / "hu_finfet_US6413802_fig1.png", 4.3,
-                     "C. Hu, T.-J. King, J. Bokor et al. (University of California), US patent 6,413,802, filed 2000, Fig. 1")
+                     "C. Hu, T.-J. King, J. Bokor et al. (University of California), US patent 6,413,802, filed 2000, Fig. 1: a double-gate FinFET")
         fig.move_to([0, -0.35, 0])
         self.show_figure(say(
             """
             Here's the Berkeley patent, filed in 2000. Look at figure 1: a source and a drain, and
-            between them a thin silicon fin standing up on the wafer. The gate goes over the top
-            of the fin and down both sides. Every FinFET since is this picture.
+            between them a thin silicon fin standing up on the wafer. The gate runs over the fin
+            and down both sides, but a thick hard mask sits on the fin's top, so the gate controls
+            the two sidewalls: a double-gate FinFET. Intel's tri-gate, a decade later, let the top
+            conduct as well.
             """,
             """
             এই যে Berkeley-র patent, 2000-এ file করা। Figure 1 দেখেন: একটা source আর একটা drain, আর মাঝে wafer-এর উপর
-            খাড়া একটা পাতলা silicon fin। Gate fin-এর উপর দিয়া গিয়া দুই পাশ বেয়ে নামছে। এর পরের প্রত্যেকটা FinFET
-            এই ছবিটাই।
+            খাড়া একটা পাতলা silicon fin। Gate fin-এর উপর দিয়া গিয়া দুই পাশ বেয়ে নামছে, কিন্তু fin-এর মাথায় একটা মোটা hard
+            mask বসানো, তাই gate control করে দুইটা sidewall: একটা double-gate FinFET। দশ বছর পরে Intel-এর tri-gate
+            fin-এর মাথা দিয়াও current চালাইছে।
             """,
         ), "The FinFET patent, 2000", fig, clear=VGroup(*[m for m in self.mobjects]))
         self.fig = fig
@@ -173,15 +176,15 @@ class Ch07FinFET(Chapter, ThreeDSlide):
             """
             Now cut it across, right through the gate, and look at the cut face. There are the two
             fins, and the gate wraps over the top and down both sides of each one: three faces
-            instead of one. In the language of the last chapter, N is about three. With a 6
-            nanometre fin, lambda is about 2.4 nanometres, and this model's 18 nanometre gate is
-            more than seven lambda long. The grip is back.
+            instead of one. In the toy model of the last chapter, N is roughly three. With a 6
+            nanometre fin, lambda comes out at about 2.4 nanometres, and this model's 18 nanometre
+            gate is about seven lambda long. The grip is back.
             """,
             """
             এবার এইটারে আড়াআড়ি কাটেন, ঠিক gate-এর মাঝখান দিয়া, আর কাটা মুখটা দেখেন। এই যে দুইটা fin, আর gate
             প্রত্যেকটার উপর দিয়া আর দুই পাশ দিয়া মুড়ে আছে: এক দিকের বদলে তিন দিক। আগের chapter-এর ভাষায়, N প্রায়
-            তিন। 6 nanometre fin-এ lambda প্রায় 2.4 nanometre, আর এই model-এর 18 nanometre gate সাত lambda-রও বেশি
-            লম্বা। Grip ফিরে আসছে।
+            তিন, মোটামুটি। 6 nanometre fin-এ lambda আসে প্রায় 2.4 nanometre, আর এই model-এর 18 nanometre gate প্রায় সাত
+            lambda লম্বা। Grip ফিরে আসছে।
             """,
         ))
         lam = phys.natural_length_nm(W_FIN, 1, 3)
@@ -217,17 +220,19 @@ class Ch07FinFET(Chapter, ThreeDSlide):
     def width(self):
         self.slide(say(
             """
-            So what's the width of a FinFET? Current flows along every face the gate touches: up
-            one sidewall, across the top, down the other. So each fin is worth two heights plus
-            its width: 96 nanometres here. Two fins, 192. Notice what happened: the fin is tall
-            and thin, so you get a lot of width from very little floor space. Most of it is
-            standing up.
+            So what's the width of a FinFET? Current flows from source to drain along the fin, in
+            a thin layer on every face the gate touches: both sidewalls and the top. To get the
+            width, trace that perimeter: up one sidewall, across the top, down the other. So each
+            fin is worth two heights plus its width: 96 nanometres here. Two fins, 192, on two fin
+            pitches of floor. Notice what happened: the fin is tall and thin, so you get a lot of
+            width from very little floor space. Most of it is standing up.
             """,
             """
-            তাহলে FinFET-এর width কত? Gate যে মুখগুলা ছোঁয়, সবগুলা বরাবর current যায়: এক sidewall বেয়ে উপরে, top
-            পার হয়ে, অন্য পাশ দিয়া নিচে। তাই প্রত্যেকটা fin-এর দাম দুইটা height যোগ তার width: এইখানে 96 nanometre।
-            দুইটা fin, 192। কী হইলো খেয়াল করেন: fin লম্বা আর পাতলা, তাই অল্প জায়গায় অনেক width পাওয়া যায়। বেশিরভাগটা
-            খাড়া দাঁড়ায়ে আছে।
+            তাহলে FinFET-এর width কত? Current যায় source থেকে drain-এ, fin বরাবর, gate যে মুখগুলা ছোঁয় তার প্রত্যেকটার
+            গায়ে একটা পাতলা layer-এ: দুইটা sidewall আর top। Width পাইতে ওই perimeter-টা ধরে যান: এক sidewall বেয়ে উপরে,
+            top পার হয়ে, অন্য পাশ দিয়া নিচে। তাই প্রত্যেকটা fin-এর দাম দুইটা height যোগ তার width: এইখানে 96 nanometre।
+            দুইটা fin, 192, দুইটা fin pitch-এর জায়গায়। কী হইলো খেয়াল করেন: fin লম্বা আর পাতলা, তাই অল্প জায়গায় অনেক width
+            পাওয়া যায়। বেশিরভাগটা খাড়া দাঁড়ায়ে আছে।
             """,
         ))
         self.play(FadeOut(self.cut_parts))
@@ -259,7 +264,7 @@ class Ch07FinFET(Chapter, ThreeDSlide):
         e1[0].set_color(ELECTRON)
         e2 = eq(r"=", rf"2\times(2\cdot{H_FIN}+{W_FIN})", r"=", rf"{weff}\ \text{{nm}}", size=44)
         e2[3].set_color(ELECTRON)
-        e3 = text(f"on {2 * PITCH} nm of floor", size=26, color=MUTED)
+        e3 = text(f"on two fin pitches ({2 * PITCH} nm) of floor", size=26, color=MUTED)
         VGroup(e1, e2, e3).arrange(DOWN, buff=0.35, aligned_edge=LEFT).move_to([3.3, 0.5, 0])
         self.play(FadeIn(title), FadeIn(sub), FadeIn(sti), FadeIn(fins), FadeIn(gate), FadeIn(gate_l))
         self.play(FadeIn(h_br), FadeIn(h_l), FadeIn(w_l), FadeIn(p_l))
@@ -349,16 +354,16 @@ class Ch07FinFET(Chapter, ThreeDSlide):
         self.slide(say(
             """
             A quick myth while we're here. What does "3 nanometres" measure on a 3 nanometre chip?
-            Nothing. Here's the roadmap's 3 nanometre node, to scale: gates on a 48 nanometre
-            pitch, the tightest metal on a 24 nanometre pitch. And here's 3 nanometres: this dot.
-            Node names stopped matching any length in the late 1990s. Today they're just labels,
-            meaning "the next one".
+            Not any one physical dimension. Here's the roadmap's 3 nanometre node, to scale: gates
+            on a 48 nanometre pitch, the tightest metal on a 24 nanometre pitch. And here's 3
+            nanometres: this dot. Node names stopped tracking the gate length in the late 1990s.
+            Today they're labels for a generation, meaning "the next one".
             """,
             """
-            এই ফাঁকে একটা ভুল ধারণা। 3 nanometre chip-এ "3 nanometre" কী মাপে? কিছুই না। এই যে roadmap-এর 3 nanometre
-            node, scale মেনে আঁকা: gate 48 nanometre pitch-এ, সবচেয়ে চাপা metal 24 nanometre pitch-এ। আর এই হইলো 3
-            nanometre: এই ছোট্ট dot-টা। 1990-এর দশকের শেষ থেকেই node-এর নাম আর কোনো length-এর সাথে মিলে না। এখন এগুলা
-            শুধু label, মানে "পরেরটা"।
+            এই ফাঁকে একটা ভুল ধারণা। 3 nanometre chip-এ "3 nanometre" কী মাপে? কোনো একটা নির্দিষ্ট physical মাপ না। এই যে
+            roadmap-এর 3 nanometre node, scale মেনে আঁকা: gate 48 nanometre pitch-এ, সবচেয়ে চাপা metal 24 nanometre
+            pitch-এ। আর এই হইলো 3 nanometre: এই ছোট্ট dot-টা। 1990-এর দশকের শেষ থেকেই node-এর নাম আর gate length-এর সাথে
+            মিলে না। এখন এগুলা একটা generation-এর label, মানে "পরেরটা"।
             """,
         ))
         self.clear()
@@ -376,8 +381,9 @@ class Ch07FinFET(Chapter, ThreeDSlide):
         three_l = text("3 nm", size=26, color=INK, weight="SEMIBOLD").move_to([5.9, 1.0, 0])
         three_a = Arrow(three_l.get_bottom(), three.get_top(), buff=0.1, stroke_color=INK, stroke_width=3, tip_length=0.15)
         three_l = VGroup(three_l, three_a)
-        cap = text("IRDS 2021 roadmap, the \"3 nm\" node (G48M24), drawn to scale. TSMC's N3: 45 nm gate pitch, 23 nm metal pitch.",
-                   size=16, color=MUTED).to_edge(DOWN, buff=0.35)
+        cap = text("IRDS 2021 More Moore roadmap, \"3 nm\" ground rules (G48M24), to scale: a roadmap target, not a measured chip.\n"
+                   "TSMC at IEDM 2022: N3, 45 nm contacted gate pitch; N3E, 23 nm minimum metal pitch.",
+                   size=16, color=MUTED).to_edge(DOWN, buff=0.3)
         self.play(FadeIn(title))
         self.play(FadeIn(gates), FadeIn(g_br), FadeIn(g_l))
         self.play(FadeIn(metals), FadeIn(m_br), FadeIn(m_l))
@@ -389,29 +395,31 @@ class Ch07FinFET(Chapter, ThreeDSlide):
         self.slide(say(
             """
             The FinFET carried the industry for a decade, from 22 nanometres down to 3. But the
-            fin ran out of room. It can't get much thinner: below about 5 nanometres, atom-scale
-            roughness on the walls starts to scatter the electrons, and mobility falls roughly as
-            the sixth power of the thickness. Going from 5 to 4 nanometres would cost about three
-            quarters of that part of the mobility. It can't easily get taller: tall, thin fins are
-            hard to etch straight, and they add capacitance. And the width still comes in whole
-            fins.
+            fin ran out of room. It's hard to make much thinner: in very thin silicon, atom-scale
+            fluctuations in the thickness scatter the electrons, and theory puts that part of the
+            mobility at about the sixth power of the thickness, so going from 5 to 4 nanometres
+            would cost it about three quarters. Other effects push the other way, and real mobility
+            depends on the details, but thinner keeps getting harder: confinement also shifts the
+            threshold, and variation grows. It can't easily get taller: tall, thin fins are hard to
+            etch straight, and they add capacitance. And the width still comes in whole fins.
             """,
             """
-            FinFET দশ বছর industry-রে টানছে, 22 nanometre থেকে 3 পর্যন্ত। কিন্তু fin-এর জায়গা ফুরায়ে গেল। এইটা আর
-            খুব একটা পাতলা হইতে পারে না: প্রায় 5 nanometre-এর নিচে দেয়ালের atom-মাপের খাঁজ electron-গুলারে ছিটকায়ে দেয়,
-            আর mobility thickness-এর মোটামুটি sixth power হারে কমে। 5 থেকে 4 nanometre-এ গেলে mobility-র ওই অংশের প্রায়
-            চার ভাগের তিন ভাগ চলে যাবে। সহজে আরও উঁচুও হইতে পারে না: লম্বা পাতলা fin সোজা করে etch করা কঠিন, আর
-            capacitance বাড়ায়। আর width এখনো whole fin-এ আসে।
+            FinFET দশ বছর industry-রে টানছে, 22 nanometre থেকে 3 পর্যন্ত। কিন্তু fin-এর জায়গা ফুরায়ে গেল। এইটা আরও
+            পাতলা করা কঠিন: খুব পাতলা silicon-এ thickness-এর atom-মাপের ওঠানামা electron-গুলারে ছিটকায়ে দেয়, আর theory বলে
+            mobility-র ওই অংশ thickness-এর প্রায় sixth power হারে চলে, তাই 5 থেকে 4 nanometre-এ গেলে ওই অংশের প্রায় চার ভাগের
+            তিন ভাগ যাবে। অন্য কিছু effect উল্টা দিকে টানে, আর আসল mobility খুঁটিনাটির উপর নির্ভর করে, কিন্তু যত পাতলা তত
+            কঠিন: confinement threshold-ও সরায়, আর variation বাড়ে। সহজে আরও উঁচুও হইতে পারে না: লম্বা পাতলা fin সোজা করে
+            etch করা কঠিন, আর capacitance বাড়ায়। আর width এখনো whole fin-এ আসে।
             """,
         ))
         self.clear()
         title = heading("Where the fin runs out of room")
         r = phys.roughness_mobility_ratio(4, 5)
         cards = VGroup(
-            self.card_box("Can't get thinner", [
+            self.card_box("Hard to get thinner", [
                 MathTex(r"\mu_{rough}\ \propto\ t^6", font_size=40, color=ELECTRON),
                 text(f"5 → 4 nm: ×{r:.2f}", size=24, color=DRAIN),
-                text("(illustrative; Uchida 2002)", size=16, color=MUTED)]),
+                text("one part of the mobility (theory);\nillustrative", size=16, color=MUTED)]),
             self.card_box("Can't easily get taller", [
                 text("tall, thin fins are hard\nto etch straight, and\nadd capacitance", size=22, color=INK)]),
             self.card_box("Width in whole fins", [

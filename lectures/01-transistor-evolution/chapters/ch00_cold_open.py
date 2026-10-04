@@ -50,13 +50,15 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
     def counter(self):
         self.slide(say(
             """
-            In December 1947 there was exactly one of these in the world. Since then, we have
-            made about thirteen sextillion of them. That's a 13 followed by 21 zeros: more than
-            a trillion and a half for every person alive.
+            In December 1947, the first working transistor sat on a lab bench at Bell Labs. By
+            2018, by the Computer History Museum's estimate, we had made about thirteen sextillion
+            of them. That's a 13 followed by 21 zeros: spread over everyone alive, more than a
+            trillion and a half each.
             """,
             """
-            1947-এর ডিসেম্বরে পুরা দুনিয়ায় এই জিনিস ছিল ঠিক একটা। তারপর থেকে আমরা বানাইছি প্রায় তেরো
-            sextillion। মানে 13-এর পরে 21টা শূন্য: দুনিয়ার প্রত্যেকটা মানুষের জন্য দেড় trillion-এরও বেশি।
+            1947-এর ডিসেম্বরে প্রথম চালু transistor-টা ছিল Bell Labs-এর একটা lab bench-এ। 2018 পর্যন্ত, Computer
+            History Museum-এর হিসাবে, আমরা বানাইছি প্রায় তেরো sextillion। মানে 13-এর পরে 21টা শূন্য: দুনিয়ার
+            সব মানুষের মধ্যে ভাগ করলে প্রত্যেকে দেড় trillion-এরও বেশি।
             """,
         ))
         field = VGroup(*[Dot([x * 0.32, y * 0.32, 0], radius=0.035, color=ELECTRON) for x in range(-24, 25) for y in range(-13, 14)])
@@ -69,7 +71,7 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
 
         e = ValueTracker(0.0)
         number = always_redraw(lambda: display(big_count(e.get_value()), size=58, color=INK).move_to(UP * 1.3))
-        caption = text("transistors made", size=28, color=MUTED).move_to(UP * 0.45)
+        caption = text("transistors made, by 2018", size=28, color=MUTED).move_to(UP * 0.45)
         field.scale(12, about_point=ORIGIN)
         self.add(field)
         self.play(FadeOut(one), FadeOut(halo), FadeOut(year), field.animate.scale(1 / 12, about_point=ORIGIN).set_opacity(0.18), run_time=1.5)
@@ -88,14 +90,14 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
             """,
         ))
         sci = MathTex(r"\approx 1.3\times10^{22}", font_size=48, color=ELECTRON).next_to(caption, DOWN, buff=0.4)
-        per = text("about 1.6 trillion for every person alive", size=28, color=MUTED).next_to(sci, DOWN, buff=0.3)
+        per = text("≈ 1.6 trillion per person (the 2018 count ÷ 8.1 billion people)", size=26, color=MUTED).next_to(sci, DOWN, buff=0.3)
         self.play(Write(sci))
         self.play(FadeIn(per))
         self.play(field.animate.set_opacity(0.07))
         quote = text("“The most frequently manufactured human artifact in history.”", size=30, color=GATE, slant="ITALIC")
         who = text("David C. Brock, historian, Computer History Museum", size=20, color=MUTED)
         VGroup(quote, who).arrange(DOWN, buff=0.15).to_edge(DOWN, buff=1.0)
-        src = source("Count: Jim Handy's estimate of transistors made through 2018, via the Computer History Museum")
+        src = source("Count: Jim Handy's estimate, Computer History Museum, 2 April 2018")
         self.play(FadeIn(quote, shift=UP * 0.2), FadeIn(who), FadeIn(src))
 
     # --- from a phone to one transistor ------------------------------------------------------
@@ -126,11 +128,12 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
     def dive_in(self):
         self.slide(say(
             """
-            Where are they? Some of them are in your pocket. This is a phone. Inside it is a chip
-            the size of a fingernail.
+            Where are they? Some of them are in your pocket. Take the newest phone, Apple's
+            iPhone 18 Pro, from September 2026. Inside it is a chip the size of a fingernail.
             """,
             """
-            এরা আছে কোথায়? কিছু আছে আপনার পকেটেই। এইটা একটা phone। এর ভিতরে নখের সমান একটা chip।
+            এরা আছে কোথায়? কিছু আছে আপনার পকেটেই। সবচেয়ে নতুন phone-টা ধরেন, Apple-এর iPhone 18 Pro, 2026-এর
+            September-এর। এর ভিতরে নখের সমান একটা chip।
             """,
         ))
         self.clear()
@@ -144,7 +147,7 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
             *[Line(chip_pt + [x, 0.21, 0], chip_pt + [x, 0.28, 0], stroke_color=GATE, stroke_width=2) for x in np.linspace(-0.15, 0.15, 5)],
             *[Line(chip_pt + [x, -0.21, 0], chip_pt + [x, -0.28, 0], stroke_color=GATE, stroke_width=2) for x in np.linspace(-0.15, 0.15, 5)],
         )
-        p_lbl = text("a phone", size=26, color=MUTED).next_to(phone, DOWN, buff=0.3)
+        p_lbl = text("iPhone 18 Pro (2026)", size=26, color=MUTED).next_to(phone, DOWN, buff=0.3)
         level1 = VGroup(phone, chip, p_lbl)
         self.play(Create(phone[0]), FadeIn(phone[1]), run_time=1.2)
         self.play(FadeIn(chip, scale=0.5), FadeIn(p_lbl))
@@ -152,11 +155,14 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
         self.slide(say(
             """
             Zoom in, and the chip is a city: processor cores, graphics, memory, all wired
-            together. Apple's A17 Pro, from 2023, has nineteen billion transistors on it.
+            together. This one is Apple's A20 Pro, made by TSMC on its N2 process: the first iPhone
+            chip whose transistors are gate-all-around nanosheets. The drawing is schematic, not
+            the real floor plan.
             """,
             """
-            Zoom করেন, chip-টা একটা শহর: processor core, graphics, memory, সব wire দিয়া জোড়া। Apple-এর
-            2023-এর A17 Pro-তে উনিশ billion transistor।
+            Zoom করেন, chip-টা একটা শহর: processor core, graphics, memory, সব wire দিয়া জোড়া। এইটা Apple-এর
+            A20 Pro, TSMC ওদের N2 process-এ বানায়: প্রথম iPhone chip যার transistor-গুলা gate-all-around
+            nanosheet। ছবিটা schematic, আসল floor plan না।
             """,
         ))
         die = Square(5.6, stroke_color=GATE, stroke_width=3, fill_color=PANEL, fill_opacity=1)
@@ -176,7 +182,7 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
             text("GPU", size=22).move_to(blocks[3]),
             text("memory", size=20).move_to(blocks[5]),
         )
-        d_lbl = text("Apple A17 Pro (2023): 19 billion transistors", size=24, color=MUTED).next_to(die, DOWN, buff=0.15)
+        d_lbl = text("Apple A20 Pro (2026): TSMC N2, nanosheet transistors · schematic", size=22, color=MUTED).next_to(die, DOWN, buff=0.15)
         level2 = VGroup(die, blocks, cache, names, d_lbl)
         self.dive(level1, level2, chip_pt, die.width / 0.42)
 
@@ -202,7 +208,7 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
                 *[Line([x, y - 0.38, 0], [x, y + 0.38, 0], stroke_color=GATE, stroke_width=5) for x in np.arange(-5.2, 5.4, 0.4)],
             ))
         rows.add(Line([-5.5, -2.55, 0], [5.5, -2.55, 0], stroke_color=METAL, stroke_width=4))
-        c_lbl = text("standard cells", size=24, color=MUTED).to_edge(DOWN, buff=0.3)
+        c_lbl = text("standard cells (schematic)", size=24, color=MUTED).to_edge(DOWN, buff=0.3)
         level3 = VGroup(rows, c_lbl)
         self.dive(level2, level3, blocks[0].get_center() + np.array([0.3, -0.2, 0]), 5.0)
 
@@ -240,17 +246,19 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
     def device(self):
         self.slide(say(
             """
-            Here is one in three dimensions. This is a nanosheet transistor, the kind in the
-            newest chips. At the bottom, the silicon wafer. Then the channel: three sheets of
-            silicon, each five nanometres thick. Then the gate wraps all the way around every
-            sheet: a thin oxide, then metal. Then insulating spacers, and the source and drain on
-            either side.
+            Here is what such a transistor looks like, in three dimensions. It's a model, FET
+            Lab's illustrative nanosheet transistor, not the measured N2 geometry. The gate is
+            all around, so it's called a GAAFET; the channel is made of nanosheets. At the bottom,
+            the silicon wafer. Then the channel: three sheets of silicon, each five nanometres
+            thick. Then the gate wraps all the way around every sheet: a thin oxide, then metal.
+            Then insulating spacers, and the source and drain on either side.
             """,
             """
-            এইটা three dimension-এ একটা। Nanosheet transistor, সবচেয়ে নতুন chip-গুলায় যেটা থাকে। নিচে
-            silicon wafer। তারপর channel: silicon-এর তিনটা sheet, প্রত্যেকটা পাঁচ nanometre পুরু। তারপর gate
-            প্রত্যেকটা sheet-রে পুরা ঘিরে ফেলে: আগে পাতলা oxide, তারপর metal। তারপর insulating spacer, আর দুই
-            পাশে source আর drain।
+            এই রকম একটা transistor three dimension-এ দেখতে কেমন, এই যে। এইটা একটা model, FET Lab-এর illustrative
+            nanosheet transistor, N2-এর মাপা geometry না। Gate চারদিক ঘিরে থাকে, তাই এর নাম GAAFET; channel
+            বানানো nanosheet দিয়া। নিচে silicon wafer। তারপর channel: silicon-এর তিনটা sheet, প্রত্যেকটা পাঁচ
+            nanometre পুরু। তারপর gate প্রত্যেকটা sheet-রে পুরা ঘিরে ফেলে: আগে পাতলা oxide, তারপর metal।
+            তারপর insulating spacer, আর দুই পাশে source আর drain।
             """,
         ))
         self.play(FadeOut(self.level4))
@@ -268,12 +276,12 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
         kw = dict(scale=0.048, groups=order, skip=contacts, recolor={f"sheet{i}": CHANNEL for i in (1, 2, 3)})
         back, back_g = build_device(GEOMETRY, keep="back", **kw)
         front, front_g = build_device(GEOMETRY, keep="front", **kw)
-        shift = -VGroup(back, front).get_center() + np.array([0, 0, -0.3])
+        shift = -VGroup(back, front).get_center() + np.array([0, 0, 0.05])  # clear of the source line
         back.shift(shift)
         front.shift(shift)
         lst = VGroup(*[text(c, size=20, color=MUTED) for c in captions]).arrange(DOWN, aligned_edge=LEFT, buff=0.16)
         lst.to_corner(UL, buff=0.5)
-        src = source("Model: FET Lab's nanosheet nFET (15 nm gate, 5 nm sheets), contacts left off")
+        src = source("Illustrative model: FET Lab's nanosheet nFET (15 nm gate, 5 nm sheets), contacts left off")
         self.add_fixed_in_frame_mobjects(lst, src)
         self.remove(lst, src)
         self.play(FadeIn(src))
@@ -321,15 +329,15 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
     def hook(self):
         self.slide(say(
             """
-            Every one of them has one job: let current through, or stop it. On, off. And here's
-            the thing that surprised me. Turning a transistor on is easy. Turning it off, so that
-            it really stops, has been the hard part for a hundred years. Almost every big change in
-            how transistors are built was about turning them off.
+            Every one of them has one job: let current through, or stop it. On, off. This lecture
+            is the story of how we got a switch like that to work at all, and then shrank it a
+            thousand times over. And here's the thread I want you to follow: again and again, as
+            it shrank, what got hard was keeping it properly off.
             """,
             """
-            এদের সবার কাজ একটাই: current যাইতে দেওয়া, নয়তো আটকানো। On, off। আর যে জিনিসটা আমারে অবাক
-            করছে: transistor on করা সহজ। Off করা, মানে সত্যি সত্যি বন্ধ করা, সেইটাই একশ বছর ধরে কঠিন কাজ।
-            Transistor বানানোর প্রায় প্রত্যেকটা বড় পরিবর্তন আসছে off করার জন্য।
+            এদের সবার কাজ একটাই: current যাইতে দেওয়া, নয়তো আটকানো। On, off। এই lecture হইলো এমন একটা switch-রে
+            আদৌ কাজ করানো, আর তারপর হাজার গুণ ছোট করার গল্প। আর যে সুতাটা ধরে রাখতে বলবো: বারবার, ছোট করতে গিয়া
+            কঠিন হইছে switch-টারে ঠিকমতো off রাখা।
             """,
         ))
         self.play(FadeOut(self.device_mob), FadeOut(self.device_labels))
@@ -365,14 +373,16 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
 
         self.slide(say(
             """
-            Turning it on is easy. Turning it off has been the hard part for a hundred years.
+            First, make a switch that works. Then shrink it a thousandfold, and keep it turning
+            on hard. And again and again, the hardest part has been keeping it off.
             """,
             """
-            Transistor on করা সহজ, কিন্তু off করা কঠিন। একশ বছর ধরে।
+            আগে এমন switch বানান যেটা কাজ করে। তারপর হাজার গুণ ছোট করেন, আর on যেন জোরেই হয়। আর বারবার, সবচেয়ে
+            কঠিন কাজ ছিল এইটারে off রাখা।
             """,
         ))
-        easy = text("Turning it on is easy.", size=36, weight="SEMIBOLD")
-        hard = text("Turning it off has been the hard part for 100 years.", size=36, weight="SEMIBOLD", color=GATE)
+        easy = text("Make a switch that works. Then shrink it a thousandfold.", size=34, weight="SEMIBOLD")
+        hard = text("Again and again, the hardest part: keeping it off.", size=34, weight="SEMIBOLD", color=GATE)
         VGroup(easy, hard).arrange(DOWN, buff=0.4).move_to(DOWN * 1.9)
         self.play(FadeIn(easy, shift=UP * 0.2))
         self.wait(0.6)
@@ -382,12 +392,12 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
     def shapes(self):
         self.slide(say(
             """
-            To keep their switches off, engineers have rebuilt the transistor again and again.
-            First flat: a gate on one side of the channel.
+            To keep shrinking the switch and still keep it under control, engineers have rebuilt
+            the transistor again and again. First flat: a gate on one side of the channel.
             """,
             """
-            Switch-গুলারে off রাখার জন্য engineer-রা transistor-রে বারবার নতুন করে বানাইছেন। প্রথমে flat:
-            channel-এর এক পাশে gate।
+            Switch-টারে ছোট করতে করতেও control-এ রাখার জন্য engineer-রা transistor-রে বারবার নতুন করে বানাইছেন।
+            প্রথমে flat: channel-এর এক পাশে gate।
             """,
         ))
         self.clear()
@@ -395,7 +405,7 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
             ("planar", "Planar MOSFET", "1960 →", "gate on 1 side"),
             ("finfet", "FinFET", "2011 →", "gate on 3 sides"),
             ("nanosheet", "Nanosheet", "2022 →", "gate on all 4 sides"),
-            ("forksheet", "Forksheet", "~2030 (projected)", "n and p squeezed against a wall"),
+            ("forksheet", "Forksheet", "~2030 (projected)", "a wall between n and p (the first, inner-wall concept)"),
             ("cfet", "CFET", "~2033 (projected)", "n stacked on top of p"),
         ]
         notes = [
@@ -404,15 +414,18 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
                 "তারপর channel দাঁড়ায়ে গেল fin হয়ে, তিন পাশে gate।"),
             say("Then the fin was sliced into sheets, with the gate all the way around.",
                 "তারপর fin কেটে sheet বানানো হইলো, gate চারদিক ঘিরে।"),
-            say("Next, probably: the two kinds of transistor pressed against a wall between them.",
-                "এরপর, সম্ভবত: দুই রকম transistor একটা wall-এর দুই পাশে চাপাচাপি করে।"),
+            say("Next, probably: transistors pressed against a thin wall. This drawing is the first, inner-wall "
+                "version, with n and p on either side; chapter 9 shows the variant on today's roadmap.",
+                "এরপর, সম্ভবত: transistor-গুলা একটা পাতলা wall-এর গায়ে চাপা। এই ছবিটা প্রথম, inner-wall version, n আর p "
+                "দুই পাশে; আজকের roadmap-এর variant-টা chapter 9-এ।"),
             say("""
-                And after that, stacked: one kind of transistor on top of the other. Every one of
-                these changes was forced by physics. This lecture is the story of those forces.
+                And after that, stacked: one kind of transistor on top of the other. Each change
+                answered a problem: of physics, or of fitting more into less space. This lecture is the
+                story of those problems.
                 """,
                 """
-                আর তার পরে stack: এক রকম transistor আরেকটার মাথার উপরে। প্রত্যেকটা পরিবর্তন physics-এর চাপে
-                আসছে। এই lecture হইলো সেই চাপগুলার গল্প।
+                আর তার পরে stack: এক রকম transistor আরেকটার মাথার উপরে। প্রত্যেকটা পরিবর্তন একটা সমস্যার উত্তর:
+                physics-এর, নয়তো কম জায়গায় বেশি ঢোকানোর। এই lecture হইলো সেই সমস্যাগুলার গল্প।
                 """),
         ]
 
@@ -451,10 +464,11 @@ class Ch00ColdOpen(Chapter, ThreeDSlide):
     def title(self):
         self.slide(say(
             """
-            The story starts in 1925, with a patent for a transistor that nobody could build.
+            The story starts in 1925, with a patent for a field-effect device that nobody could
+            make work at the time.
             """,
             """
-            গল্পটা শুরু 1925-এ, এমন একটা transistor-এর patent দিয়া যেটা কেউ বানাইতে পারে নাই।
+            গল্পটা শুরু 1925-এ, এমন একটা field-effect device-এর patent দিয়া যেটা তখন কেউ কাজ করাইতে পারে নাই।
             """,
         ))
         self.clear()

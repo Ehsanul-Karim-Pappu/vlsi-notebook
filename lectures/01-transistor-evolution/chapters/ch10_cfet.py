@@ -1,8 +1,8 @@
 """Chapter 10 · CFET: build upward (2018–, projected for about 2033).
 
-The nFET stacked on the pFET, one gate through both: the n-to-p space disappears. The cell's
-height drops, the power moves to the back of the wafer, and the heat has to go somewhere. Then
-the cliffhanger: silicon itself is the next limit.
+The nFET stacked on the pFET (here with one common gate; split gates exist too): the n-to-p
+space disappears. The cell's height drops; backside power, already in production without CFET,
+frees the front; and the heat needs a defined path. Then the cliffhanger: silicon's own limits.
 """
 
 import sys
@@ -46,13 +46,16 @@ class Ch10CFET(Chapter, ThreeDSlide):
         self.slide(say(
             """
             Every transistor so far has been built in one layer: n and p side by side, across the
-            wafer. The CFET, the complementary FET, stacks them: the n transistor right on top of
-            the p. Like the forksheet, it's on the roadmap, not yet in products.
+            wafer. If you skipped the forksheet, here's all you need: by now, the space between
+            the n and the p transistors is a big part of the cell. The CFET, the complementary
+            FET, removes it by stacking them: the n transistor right on top of the p. It's on the
+            roadmap, not yet in products.
             """,
             """
-            এখন পর্যন্ত প্রত্যেকটা transistor এক layer-এ বানানো: n আর p পাশাপাশি, wafer জুড়ে। CFET, মানে complementary
-            FET, এগুলারে স্তূপ করে: n transistor সোজা p-এর উপরে। Forksheet-এর মতো এইটাও roadmap-এ আছে, product-এ এখনো
-            আসে নাই।
+            এখন পর্যন্ত প্রত্যেকটা transistor এক layer-এ বানানো: n আর p পাশাপাশি, wafer জুড়ে। Forksheet বাদ দিয়া থাকলে,
+            এইটুকু জানলেই চলবে: এখন n আর p transistor-এর মাঝের জায়গাটা cell-এর একটা বড় অংশ। CFET, মানে complementary FET,
+            ওই জায়গাটা সরায়ে দেয় এগুলারে স্তূপ করে: n transistor সোজা p-এর উপরে। এইটা roadmap-এ আছে, product-এ এখনো আসে
+            নাই।
             """,
         ))
         self.card_group = self.open_chapter(10, 2033, 2030, "CFET", "Build upward (projected)")
@@ -79,7 +82,7 @@ class Ch10CFET(Chapter, ThreeDSlide):
         line = Line([-5.6, -0.2, 0], [5.6, -0.2, 0], stroke_color=FAINT, stroke_width=3)
         events = [
             (-4.4, "2018", "imec proposes it", "CMOS scaling\nbeyond 3 nm", "J. Ryckaert et al., VLSI 2018"),
-            (0.0, "2023–24", "Stacked demos", "Intel, TSMC, Samsung;\nworking inverters", "IEDM 2023 and 2024"),
+            (0.0, "2023–24", "Stacked demos", "Intel, TSMC, Samsung;\nworking inverters", "IEDM 2023 (Intel, 60 nm);\nIEDM 2024 (TSMC, 48 nm)"),
             (4.4, "~2033", "On the roadmap", "monolithic CFET,\nimec's A7 node", "imec (projection)"),
         ]
         self.play(FadeIn(title), Create(line))
@@ -117,20 +120,23 @@ class Ch10CFET(Chapter, ThreeDSlide):
             Here it is in 3D. The wafer and an insulating layer. The lower tier: the p
             transistor, two pink sheets with its source and drain. An insulating layer between
             the tiers. The upper tier: the n transistor, two blue sheets. One gate, running
-            down through both tiers. Spacers, and the contacts, one of them reaching down past
-            the upper tier to the lower one.
+            down through both tiers: that's this model's choice, the one an inverter wants. Other
+            designs split the gate, so the two tiers can be driven separately. Spacers, and the
+            contacts, one of them reaching down past the upper tier to the lower one.
             """,
             """
             এই যে 3D-তে। Wafer আর একটা insulating layer। নিচের tier: p transistor, দুইটা গোলাপি sheet, তার source আর
             drain সহ। দুই tier-এর মাঝে একটা insulating layer। উপরের tier: n transistor, দুইটা নীল sheet। একটা gate, দুই
-            tier-এর ভিতর দিয়াই নেমে গেছে। Spacer, আর contact-গুলা, তার একটা উপরের tier পার হয়ে নিচেরটায় পৌঁছায়।
+            tier-এর ভিতর দিয়াই নেমে গেছে: এইটা এই model-এর choice, inverter-এর যেটা দরকার। অন্য design-এ gate ভাগ করা
+            থাকে, যাতে দুই tier আলাদা করে চালানো যায়। Spacer, আর contact-গুলা, তার একটা উপরের tier পার হয়ে নিচেরটায়
+            পৌঁছায়।
             """,
         ))
         self.play(FadeOut(self.fig), FadeOut(VGroup(*[m for m in self.mobjects if m is not self.fig])))
         self.set_camera_orientation(phi=64 * DEGREES, theta=-58 * DEGREES, zoom=0.72, frame_center=beside(-58 * DEGREES, 2.0))
         order = ["Substrate & isolation", "Lower tier (p)", "Tier isolation", "Upper tier (n)", "Gate electrode", "Spacers", "Contacts"]
         captions = ["the wafer and an insulating layer", "lower tier: the pFET (pink sheets)", "isolation between the tiers",
-                    "upper tier: the nFET (blue sheets)", "one gate through both tiers", "spacers", "contacts"]
+                    "upper tier: the nFET (blue sheets)", "one gate through both tiers (in this model)", "spacers", "contacts"]
         recolor = {"sheet_p1": P_CHANNEL, "sheet_p2": P_CHANNEL, "sheet_n1": CHANNEL, "sheet_n2": CHANNEL}
         kw = dict(scale=0.042, groups=order, recolor=recolor)
         back, back_g = build_device(CFET, clip={"x": (None, 0.0)}, **kw)
@@ -165,7 +171,7 @@ class Ch10CFET(Chapter, ThreeDSlide):
         ))
         info = VGroup(text("cut across the gate", size=26, color=GATE),
                       text("n above (blue)\np below (pink)", size=24, weight="SEMIBOLD"),
-                      text("one gate around all four sheets", size=22),
+                      text("one gate around all four sheets\n(this model; split gates exist too)", size=22),
                       text("two transistors,\none footprint", size=24, color=GOOD),
                       ).arrange(DOWN, buff=0.35, aligned_edge=LEFT).move_to([4.6, 0.4, 0])
         self.add_fixed_in_frame_mobjects(info)
@@ -179,14 +185,15 @@ class Ch10CFET(Chapter, ThreeDSlide):
         self.slide(say(
             """
             There are two ways to build one. Monolithic: grow one tall stack of sheets and make
-            both transistors from it, together, sharing one gate. That's the model you just saw.
+            both transistors from it, together, often sharing one gate. That's the model you just
+            saw.
             Sequential: make the bottom transistor, bond a second thin layer of silicon on top,
             and build the top transistor in that. Sequential lets each tier be made its own way,
             but the top tier has to be made cool enough that the bottom one survives.
             """,
             """
             বানানোর দুইটা উপায়। Monolithic: একটা লম্বা sheet-এর stack grow করেন, আর দুইটা transistor একসাথে ওইটা থেকেই
-            বানান, একটা gate share করে। এইমাত্র যে model দেখলেন সেইটা। Sequential: নিচের transistor বানান, উপরে silicon-এর
+            বানান, অনেক সময় একটা gate share করে। এইমাত্র যে model দেখলেন সেইটা। Sequential: নিচের transistor বানান, উপরে silicon-এর
             আরেকটা পাতলা layer bond করেন, আর উপরের transistor ওইটাতে বানান। Sequential-এ প্রত্যেক tier নিজের মতো করে বানানো
             যায়, কিন্তু উপরের tier এমন ঠান্ডায় বানাইতে হয় যাতে নিচেরটা টিকে থাকে।
             """,
@@ -201,7 +208,7 @@ class Ch10CFET(Chapter, ThreeDSlide):
         seq_gate_gap = Line(seq[1].get_left(), seq[1].get_right(), stroke_color=BG, stroke_width=8).move_to(seq[3])
         seq_pic = VGroup(seq, seq_gate_gap, bond)
         c1 = VGroup(mono, text("Monolithic", size=30, weight="SEMIBOLD"),
-                    text("one stack, both tiers made together;\none shared gate", size=22, color=MUTED)).arrange(DOWN, buff=0.3)
+                    text("one stack, both tiers made together;\noften one shared gate", size=22, color=MUTED)).arrange(DOWN, buff=0.3)
         c2 = VGroup(seq_pic, text("Sequential", size=30, weight="SEMIBOLD"),
                     text("bottom tier first, a new layer bonded\non top (dashed), the top tier made cool", size=22, color=MUTED)).arrange(DOWN, buff=0.3)
         VGroup(c1, c2).arrange(RIGHT, buff=2.2).move_to([0, -0.4, 0])
@@ -255,16 +262,19 @@ class Ch10CFET(Chapter, ThreeDSlide):
             Every wire has resistance, R equals rho L over width times thickness, and the supply
             current through it drops voltage: I times R. Front-side wires have to be thin to fit
             the signals. So move the power to the back of the wafer, where the rails can be
-            thick: four times wider and twice as thick is eight times less resistance. Intel
-            ships this today, in 18A, as PowerVia. In its 2023 test chip, the voltage droop fell
-            by over 30 percent.
+            thick. As an illustration, for the same length and the same metal, four times wider
+            and twice as thick is eight times less resistance; real thin wires and vias change
+            the numbers. And this doesn't wait for the CFET: Intel already ships it with
+            nanosheets, in 18A, as PowerVia. On its 2023 test chip, the voltage droop fell by
+            over 30 percent.
             """,
             """
             CFET cell-এর rail-গুলা দেখেন: এগুলা আর সামনে নাই। Power-এর একটা সমস্যা আছে। প্রত্যেকটা wire-এর resistance আছে, R
             সমান rho L বাই width গুণ thickness, আর এর ভিতর দিয়া supply current গেলে voltage কমে: I গুণ R। সামনের দিকের wire
-            পাতলা রাখতে হয়, signal-এর জায়গা দিতে। তাই power-রে wafer-এর পেছনে নিয়া যান, যেখানে rail মোটা হইতে পারে: চার গুণ
-            চওড়া আর দুই গুণ পুরু মানে আট গুণ কম resistance। Intel আজকেই এইটা ship করতেছে, 18A-তে, নাম PowerVia। ওদের 2023-এর
-            test chip-এ voltage droop 30 percent-এর বেশি কমছে।
+            পাতলা রাখতে হয়, signal-এর জায়গা দিতে। তাই power-রে wafer-এর পেছনে নিয়া যান, যেখানে rail মোটা হইতে পারে। একটা
+            উদাহরণ হিসাবে, একই length আর একই metal-এ, চার গুণ চওড়া আর দুই গুণ পুরু মানে আট গুণ কম resistance; আসল পাতলা wire
+            আর via সংখ্যাগুলা বদলায়ে দেয়। আর এইটার জন্য CFET-এর অপেক্ষা লাগে না: Intel nanosheet-এর সাথেই এইটা ship করতেছে,
+            18A-তে, নাম PowerVia। ওদের 2023-এর test chip-এ voltage droop 30 percent-এর বেশি কমছে।
             """,
         ))
         self.clear()
@@ -274,7 +284,7 @@ class Ch10CFET(Chapter, ThreeDSlide):
         dev_l = text("transistors", size=22, color=INK).move_to(dev)
         front = VGroup(*[Line([-5.8, 0.55 + 0.32 * i, 0], [-0.2, 0.55 + 0.32 * i, 0], stroke_color="#F2C1A2", stroke_width=3 + i)
                          for i in range(6)])
-        front_l = text("front: signal wiring only", size=22, color="#F2C1A2").next_to(front, UP, buff=0.15)
+        front_l = text("front: mostly signal wiring", size=22, color="#F2C1A2").next_to(front, UP, buff=0.15)
         back = VGroup(*[Rectangle(width=1.1, height=0.55, fill_color=THERMAL, fill_opacity=0.8, stroke_width=0)
                         .move_to([-5.2 + 1.55 * i, -0.75, 0]) for i in range(4)])
         back_l = text("back: thick power rails", size=22, color=THERMAL).next_to(back, DOWN, buff=0.2)
@@ -285,74 +295,108 @@ class Ch10CFET(Chapter, ThreeDSlide):
         e1[0].set_color(DRAIN)
         e2 = text(f"thin front rail, 20 × 40 nm:  {r_front:.0f} Ω per µm\n4× wider, 2× thicker, on the back:  {r_front / thin:.1f} Ω per µm",
                   size=21, color=INK)
-        e2_tag = VGroup(text("illustrative, ρ = 2 × 10⁻⁸ Ω m", size=16, color=MUTED))
-        e3 = text("Intel PowerVia (in 18A), 2023 test chip:\n>30% less voltage droop, 6% higher clock", size=22, color=GOOD)
-        VGroup(e1, e2, e2_tag, e3).arrange(DOWN, buff=0.35, aligned_edge=LEFT).move_to([3.4, 0.0, 0])
+        e2_tag = VGroup(text("illustrative: same length, ρ = 2 × 10⁻⁸ Ω m;\nreal thin wires and vias differ", size=16, color=MUTED))
+        e3 = text("Intel PowerVia, 2023 test chip:\n>30% less voltage droop, 6% higher clock.\nIn production in 18A (nanosheets, no CFET).", size=22, color=GOOD)
+        col = VGroup(e1, e2, e2_tag, e3).arrange(DOWN, buff=0.3, aligned_edge=LEFT).move_to([3.4, 0.0, 0])
+        col.shift(RIGHT * (0.35 - col.get_left()[0]))
         self.play(FadeIn(title), FadeIn(dev), FadeIn(dev_l))
         self.play(Create(front), FadeIn(front_l))
         self.play(FadeIn(back, shift=UP * 0.2), Create(vias), FadeIn(back_l))
         self.play(Write(e1))
         self.play(FadeIn(e2), FadeIn(e2_tag))
         self.play(FadeIn(e3))
-        note = layout_note("With power on the back, the front metal is all signal: no V_DD and GND rails "
-                           "in the cell's M0, and taps and power straps move with them.", size=20, width=46)
+        note = layout_note("With power on the back, this model's front M0 has no V_DD and GND rails. "
+                           "What happens to taps and other power features depends on the process.", size=20, width=46)
         note.to_corner(DL, buff=0.35)
         self.play(FadeIn(note, shift=UP * 0.15))
 
     def heat(self):
         self.slide(say(
             """
-            And there's heat. Two transistors in the footprint of one is twice the power in the
-            same area. The temperature rise is power times thermal resistance, and the top tier
-            sits further from where the heat leaves the chip, through more layers of material
-            that don't conduct heat well. Stacking packs in more switches, and it also stacks the
-            heat.
+            And there's heat. Two transistors in the footprint of one can mean up to twice the
+            power in the same area, if both switch as often, at the same voltage; it depends on
+            what the circuit is doing. The temperature rise is power times thermal resistance,
+            and the thermal resistance depends on the path the heat takes. Picture a heat sink
+            under the wafer. The upper tier's heat has to cross the lower tier and more layers
+            that conduct heat poorly, so the upper tier runs hotter. Put the sink on the other
+            side and the order changes, but the stack still lengthens somebody's path. Stacking
+            packs in more switches, and it stacks the heat too.
             """,
             """
-            আর আছে heat। একটার জায়গায় দুইটা transistor মানে একই area-তে দুইগুণ power। Temperature কতটা বাড়বে সেটা হইলো
-            power গুণ thermal resistance, আর উপরের tier chip থেকে heat যেখান দিয়া বের হয় সেখান থেকে আরও দূরে, এমন আরও কয়েক
-            layer material-এর ভিতর দিয়া যেগুলা heat ভালো conduct করে না। Stack করলে বেশি switch ঢুকে, আর heat-ও stack হয়।
+            আর আছে heat। একটার জায়গায় দুইটা transistor মানে একই area-তে দুইগুণ পর্যন্ত power হইতে পারে, যদি দুইটাই সমান
+            ঘন ঘন switch করে, একই voltage-এ; এইটা circuit কী করতেছে তার উপর নির্ভর করে। Temperature কতটা বাড়বে সেটা হইলো
+            power গুণ thermal resistance, আর thermal resistance নির্ভর করে heat কোন পথে যায় তার উপর। ধরেন heat sink-টা
+            wafer-এর নিচে। উপরের tier-এর heat-রে নিচের tier আর আরও কয়েক layer পার হইতে হয়, যেগুলা heat ভালো conduct করে
+            না, তাই উপরের tier বেশি গরম হয়। Sink অন্য দিকে বসালে ক্রম উল্টায়, কিন্তু stack কারো না কারো পথ লম্বা করেই। Stack
+            করলে বেশি switch ঢুকে, আর heat-ও stack হয়।
             """,
         ))
         self.clear()
         title = heading("Stacking stacks the heat too")
-        e = eq(r"\Delta T", r"=", r"P", r"\;R_{th}", size=80)
+        e = eq(r"\Delta T", r"=", r"P", r"\;R_{th}", size=72)
         e[0].set_color(THERMAL)
-        e.move_to([0, 1.0, 0])
         lines = VGroup(
-            text("twice the transistors per area: up to twice the power density", size=26),
-            text("the upper tier is further from the heat path, through poor heat conductors", size=26),
-        ).arrange(DOWN, buff=0.3).move_to([0, -1.2, 0])
-        tag = text("Qualitative", size=18, color=MUTED).to_corner(DR, buff=0.35)
+            text("Up to 2× the power per area,\nif both tiers switch as much:\nit depends on the workload", size=22),
+            text("R_th depends on the path.\nWith the sink below, the upper\ntier's heat crosses more layers.", size=22),
+        ).arrange(DOWN, buff=0.45, aligned_edge=LEFT)
+        VGroup(e, lines).arrange(DOWN, buff=0.6, aligned_edge=LEFT).move_to([-3.2, -0.2, 0])
+
+        # A side view: wiring, upper tier, isolation, lower tier, wafer, heat sink.
+        x0, w = 3.4, 4.2
+        layers = [("wiring", "#F2C1A2", 0.45, 0.5), ("upper tier (n)", CHANNEL, 0.4, 0.9), ("", WALL, 0.18, 0.9),
+                  ("lower tier (p)", P_CHANNEL, 0.4, 0.9), ("wafer", SUBSTRATE, 0.75, 1.0)]
+        stack, y = VGroup(), 1.75
+        for name, color, h, op in layers:
+            r = Rectangle(width=w, height=h, fill_color=color, fill_opacity=op, stroke_width=0).move_to([x0, y - h / 2, 0])
+            lbl = text(name, size=18, color=BG if color in (CHANNEL, P_CHANNEL, "#F2C1A2") else INK).move_to(r) if name else VMobject()
+            stack.add(VGroup(r, lbl))
+            y -= h
+        base = Rectangle(width=w, height=0.25, fill_color=METAL, fill_opacity=0.9, stroke_width=0).move_to([x0, y - 0.125, 0])
+        fins = VGroup(*[Rectangle(width=0.16, height=0.5, fill_color=METAL, fill_opacity=0.9, stroke_width=0)
+                        .move_to([x0 - w / 2 + 0.25 + i * (w - 0.5) / 9, y - 0.5, 0]) for i in range(10)])
+        sink = VGroup(base, fins)
+        sink_l = text("heat sink", size=18, color=MUTED).next_to(sink, DOWN, buff=0.1)
+        hot = Arrow(stack[1][0].get_center() + RIGHT * 1.3, [x0 + 1.3, base.get_top()[1], 0], buff=0.05,
+                    stroke_color=THERMAL, stroke_width=6, max_tip_length_to_length_ratio=0.12)
+        warm = Arrow(stack[3][0].get_center() + LEFT * 1.3, [x0 - 1.3, base.get_top()[1], 0], buff=0.05,
+                     stroke_color=THERMAL, stroke_width=4, max_tip_length_to_length_ratio=0.18)
+        hot_l = text("longer\npath", size=18, color=THERMAL).next_to(stack, RIGHT, buff=0.12).set_y(hot.get_y())
+        tag = text("Qualitative; one heat-sink arrangement", size=16, color=MUTED).to_corner(DR, buff=0.3)
         self.play(FadeIn(title), Write(e))
-        for ln in lines:
-            self.play(FadeIn(ln, shift=UP * 0.1))
+        self.play(FadeIn(stack), FadeIn(sink), FadeIn(sink_l))
+        self.play(FadeIn(lines[0], shift=UP * 0.1))
+        self.play(GrowArrow(warm), GrowArrow(hot), FadeIn(hot_l), FadeIn(lines[1], shift=UP * 0.1))
         self.play(FadeIn(tag))
 
     # --- cliffhanger -------------------------------------------------------------------------
     def cliffhanger(self):
         self.slide(say(
             """
-            Step back and look at chapters 6 to 10 together. Every step did the same two things:
-            a thinner channel, and more gate around it. We're now at sheets 5 nanometres thick,
-            about 37 layers of silicon atoms. Thinner than that, and silicon's electrons stop moving
-            well. So the next question is radical: what if the channel weren't silicon at all, but
-            a material just one molecule thick? And what if the switch didn't have to climb
-            Boltzmann's hill? That's chapter 11.
+            Step back and look at chapters 6 to 10 together. The fin and the sheet won back the
+            gate's grip, and gave more current for the floor they take. The forksheet and the
+            CFET did something else: they packed the n and the p closer. We're now at sheets 5
+            nanometres thick, about 37 layers of silicon atoms. Making silicon much thinner gets
+            hard: the surfaces start to matter, and the electrons tend to slow down. So the
+            research question is: what if the channel weren't silicon at all, but a material just
+            a few atoms thick? And what if the switch didn't have to climb Boltzmann's hill?
+            That's chapter 11.
             """,
             """
-            একটু পিছায়ে chapter 6 থেকে 10 একসাথে দেখেন। প্রত্যেক ধাপে একই দুইটা কাজ: channel আরও পাতলা, আর তার চারপাশে আরও
-            gate। আমরা এখন 5 nanometre পুরু sheet-এ, মোটামুটি silicon atom-এর 37টা layer। এর চেয়ে পাতলা হলে silicon-এর electron
-            আর ভালো চলে না। তাই পরের প্রশ্নটা অনেক বড়: channel যদি silicon না হয়ে একটা মাত্র molecule পুরু কোনো material হয়?
-            আর switch-রে যদি Boltzmann-এর hill বাইতেই না হয়? সেইটা chapter 11।
+            একটু পিছায়ে chapter 6 থেকে 10 একসাথে দেখেন। Fin আর sheet gate-এর grip ফিরায়ে আনছে, আর যতটুকু জায়গা নেয়
+            তার তুলনায় বেশি current দিছে। Forksheet আর CFET অন্য একটা কাজ করছে: n আর p-রে আরও কাছে ঠাসছে। আমরা এখন 5
+            nanometre পুরু sheet-এ, মোটামুটি silicon atom-এর 37টা layer। Silicon-রে এর চেয়ে অনেক পাতলা করা কঠিন: surface-গুলা
+            বড় হয়ে ওঠে, আর electron ধীর হয়ে যাওয়ার দিকে যায়। তাই research-এর প্রশ্নটা: channel যদি silicon না হয়ে মাত্র
+            কয়েকটা atom পুরু কোনো material হয়? আর switch-রে যদি Boltzmann-এর hill বাইতেই না হয়? সেইটা chapter 11।
             """,
         ))
         self.clear()
-        a = text("Thinner channel. More gate. Every time.", size=42, weight="SEMIBOLD").to_edge(UP, buff=0.7)
+        a = text("First more grip. Then tighter packing.", size=42, weight="SEMIBOLD").to_edge(UP, buff=0.7)
         shapes = VGroup(*[xsection(k).scale_to_fit_height(1.3) for k in ("planar", "finfet", "nanosheet", "forksheet", "cfet")])
         shapes.arrange(RIGHT, buff=0.6, aligned_edge=DOWN).move_to([0, 0.4, 0])
-        years = VGroup(*[text(y, size=20, color=MUTED).next_to(s, DOWN, buff=0.2)
-                         for y, s in zip(("planar", "2011", "2022", "~2030", "~2033"), shapes)])
+        gains = (("planar", "one face"), ("2011", "three faces"), ("2022", "four faces"),
+                 ("~2030", "n and p closer"), ("~2033", "n on p"))
+        years = VGroup(*[VGroup(text(y, size=20, color=MUTED), text(g, size=18, color=GATE)).arrange(DOWN, buff=0.08).next_to(s, DOWN, buff=0.2)
+                         for (y, g), s in zip(gains, shapes)])
         b = text("Next: beyond silicon, and beyond Boltzmann.", size=34, color=GATE).to_edge(DOWN, buff=0.9)
         self.play(FadeIn(a))
         self.play(LaggedStart(*[FadeIn(VGroup(s, y), shift=UP * 0.15) for s, y in zip(shapes, years)], lag_ratio=0.3), run_time=2.5)

@@ -1,8 +1,9 @@
 """Chapter 9 · Forksheet: a wall between n and p (2017–, projected for about 2030).
 
-The n and p sheet stacks pushed against a thin insulating wall. Each sheet gives up one face
-of gate to the wall: a little grip traded, on purpose, for a shorter cell. Optional on the
-core path.
+The n and p sheet stacks pushed against a thin insulating wall (the original inner-wall
+design), and the outer-wall variant on imec's roadmap. Each sheet gives one face to the wall; in
+imec's 2021 devices that cost little measured control, and it buys a shorter cell. Optional on
+the core path.
 """
 
 import sys
@@ -14,7 +15,6 @@ sys.path[:0] = [str(LECTURE.parents[1]), str(LECTURE)]
 from manim import *  # noqa: E402,F403
 from manim_slides import ThreeDSlide  # noqa: E402
 
-import physics as phys  # noqa: E402
 from devicedata import device, rail_span_nm  # noqa: E402
 from kit.devices3d import LAYOUT_OPACITY, beside, build_device, plan_view  # noqa: E402
 from kit.motifs import xsection  # noqa: E402
@@ -25,7 +25,6 @@ CHANNEL = "#7FD8E4"
 P_CHANNEL = "#E88BB8"  # the pFET's sheets, picked out in the hole colour
 FORK = device("fs")
 LAYOUT_NS, LAYOUT_FS = device("show_ns"), device("show_fs")
-T_SH = 5
 
 
 class Ch09Forksheet(Chapter, ThreeDSlide):
@@ -60,15 +59,18 @@ class Ch09Forksheet(Chapter, ThreeDSlide):
         self.slide(say(
             """
             The forksheet comes from imec, the research centre in Belgium. They proposed it in
-            2017. In 2021 they built working forksheets with the n and p transistors just 17
-            nanometres apart, each with its own gate metal. imec's roadmap now has a version with
-            the wall at the edge of the cell, called the outer-wall forksheet, at around the A10
-            node: roughly 2030, if the roadmap holds.
+            2017, with the wall inside the cell, between the n and the p: the inner-wall
+            forksheet. In 2021 they built working ones with the n and p transistors just 17
+            nanometres apart, each with its own gate metal. imec's roadmap now has a different
+            version, with the wall at the edge of the cell between two transistors of the same
+            type, called the outer-wall forksheet, at around the A10 node: roughly 2030, if the
+            roadmap holds.
             """,
             """
-            Forksheet আসছে imec থেকে, Belgium-এর research centre। ওরা 2017-এ এইটা প্রস্তাব করে। 2021-এ ওরা চালু
-            forksheet বানায়, n আর p transistor মাত্র 17 nanometre দূরে, প্রত্যেকটার নিজের gate metal সহ। imec-এর roadmap-এ
-            এখন একটা version আছে যেখানে wall-টা cell-এর কিনারায়, নাম outer-wall forksheet, মোটামুটি A10 node-এ: roadmap
+            Forksheet আসছে imec থেকে, Belgium-এর research centre। ওরা 2017-এ এইটা প্রস্তাব করে, wall-টা cell-এর ভিতরে,
+            n আর p-এর মাঝখানে: inner-wall forksheet। 2021-এ ওরা চালু forksheet বানায়, n আর p transistor মাত্র 17
+            nanometre দূরে, প্রত্যেকটার নিজের gate metal সহ। imec-এর roadmap-এ এখন একটা আলাদা version আছে, যেখানে wall-টা
+            cell-এর কিনারায়, একই type-এর দুইটা transistor-এর মাঝে, নাম outer-wall forksheet, মোটামুটি A10 node-এ: roadmap
             ঠিক থাকলে প্রায় 2030।
             """,
         ))
@@ -76,31 +78,36 @@ class Ch09Forksheet(Chapter, ThreeDSlide):
         title = heading("An idea from imec")
         line = Line([-5.6, -0.2, 0], [5.6, -0.2, 0], stroke_color=FAINT, stroke_width=3)
         events = [
-            (-4.4, "2017", "imec proposes it", "for denser SRAM\nand logic cells", "P. Weckx et al., IEDM 2017"),
-            (0.0, "2021", "Working forksheets", "n and p just 17 nm\napart, two gate metals", "H. Mertens et al., VLSI 2021"),
-            (4.4, "~2030", "On the roadmap", "outer-wall forksheet,\nimec's A10 node", "imec (projection)"),
+            (-4.4, "2017", "imec proposes it", "inner wall: n | p,\nfor denser cells", "P. Weckx et al., IEDM 2017", "forksheet"),
+            (0.0, "2021", "Working forksheets", "n and p just 17 nm\napart, two gate metals", "H. Mertens et al., VLSI 2021", "forksheet"),
+            (4.4, "~2030", "On the roadmap", "outer wall: n | n at the\ncell edge, imec's A10 node", "imec roadmap, 2025 (projection)", "forksheet_outer"),
         ]
         self.play(FadeIn(title), Create(line))
-        for x, year, what, why, who in events:
+        for x, year, what, why, who, kind in events:
             dot = Dot([x, -0.2, 0], color=GATE, radius=0.1)
             y = display(year, size=48, color=GATE).move_to([x, 0.75, 0])
             body = VGroup(text(what, size=26, weight="SEMIBOLD"), text(why, size=22, color=MUTED),
                           text(who, size=16, color=MUTED)).arrange(DOWN, buff=0.15).next_to(dot, DOWN, buff=0.4)
-            icon = xsection("forksheet").scale_to_fit_height(0.75).next_to(y, UP, buff=0.3)
+            icon = xsection(kind).scale_to_fit_height(0.75).next_to(y, UP, buff=0.3)
             self.play(FadeIn(dot, scale=0.5), FadeIn(y), FadeIn(icon), FadeIn(body, shift=UP * 0.1), run_time=0.9)
 
         fig = figure(IMAGES / "forksheet_US11862700_fig12.png", 5.2,
-                     "TSMC, US patent 11,862,700 (granted 2024), Fig. 12: stacks of sheets with dielectric walls between them")
+                     "TSMC, US patent 11,862,700 (granted 2024), Fig. 12, a stage during manufacture:\n"
+                     "sheet stacks, dielectric walls, and a sacrificial gate (142) that is replaced later")
         fig.move_to([0, -0.4, 0])
         self.show_figure(say(
             """
             And the foundries are patenting their own versions. This is from a TSMC patent granted
-            in 2024: stacks of sheets, the striped layers, with thin dielectric walls standing
-            between them, and the gate coming down over the top.
+            in 2024, at a stage partway through manufacture: stacks of sheets, the striped layers,
+            with thin dielectric walls standing between them. The block coming down over the top
+            is a sacrificial gate, number 142, a placeholder. Like the dummy gate in the last
+            chapter, it's pulled out and replaced by the real gate later.
             """,
             """
-            আর foundry-গুলাও নিজেদের version patent করতেছে। এইটা 2024-এ grant হওয়া TSMC-র একটা patent থেকে: sheet-এর
-            stack, ডোরাকাটা layer-গুলা, মাঝে মাঝে পাতলা dielectric wall দাঁড়ানো, আর gate উপর দিয়া নেমে আসছে।
+            আর foundry-গুলাও নিজেদের version patent করতেছে। এইটা 2024-এ grant হওয়া TSMC-র একটা patent থেকে, বানানোর
+            মাঝপথের একটা ধাপ: sheet-এর stack, ডোরাকাটা layer-গুলা, মাঝে মাঝে পাতলা dielectric wall দাঁড়ানো। উপর দিয়া যে
+            block-টা নেমে আসছে সেটা একটা sacrificial gate, নম্বর 142, জায়গা ধরে রাখার জন্য। আগের chapter-এর dummy gate-এর
+            মতোই, পরে এইটা তুলে আসল gate বসানো হয়।
             """,
         ), "A forksheet patent", fig, clear=VGroup(*self.mobjects))
         self.fig = fig
@@ -109,14 +116,14 @@ class Ch09Forksheet(Chapter, ThreeDSlide):
     def model(self):
         self.slide(say(
             """
-            Here's the forksheet in 3D, an n and a p transistor side by side. Down the middle,
-            the wall: silicon nitride, 8 nanometres thick. The n sheets, in blue, are pressed
+            Here's the forksheet in 3D, the inner-wall kind: an n and a p transistor side by side.
+            Down the middle, the wall: silicon nitride, 8 nanometres thick. The n sheets, in blue, are pressed
             against one side of it, the p sheets, in pink, against the other. One gate runs
             across both, with a different gate metal on each side.
             """,
             """
-            এই যে 3D-তে forksheet, একটা n আর একটা p transistor পাশাপাশি। মাঝখান বরাবর wall: silicon nitride, 8
-            nanometre পুরু। n sheet-গুলা, নীল রঙে, এর এক পাশে চাপা, p sheet-গুলা, গোলাপি, অন্য পাশে। একটা gate দুইটার
+            এই যে 3D-তে forksheet, inner-wall ধরনের: একটা n আর একটা p transistor পাশাপাশি। মাঝখান বরাবর wall: silicon
+            nitride, 8 nanometre পুরু। n sheet-গুলা, নীল রঙে, এর এক পাশে চাপা, p sheet-গুলা, গোলাপি, অন্য পাশে। একটা gate দুইটার
             উপর দিয়াই যায়, দুই পাশে দুই রকম gate metal।
             """,
         ))
@@ -150,13 +157,13 @@ class Ch09Forksheet(Chapter, ThreeDSlide):
             """
             Cut it across the gate. There's the wall, and there are the sheets touching it.
             Look at each sheet: the gate wraps the top, the bottom and the outer side, but not the
-            side against the wall. Three faces, not four. The forksheet gives up a little grip
-            to save space.
+            side against the wall. Three faces, not four. The forksheet gives up a face to save
+            space.
             """,
             """
             Gate-এর মাঝখান দিয়া আড়াআড়ি কাটেন। এই যে wall, আর এই যে sheet-গুলা ওইটা ছুঁয়ে আছে। প্রত্যেকটা sheet
             দেখেন: gate উপরে, নিচে আর বাইরের দিকে মুড়ে আছে, কিন্তু wall-এর দিকটায় না। চার দিক না, তিন দিক।
-            Forksheet জায়গা বাঁচাইতে একটু grip ছেড়ে দেয়।
+            Forksheet জায়গা বাঁচাইতে একটা দিক ছেড়ে দেয়।
             """,
         ))
         info = VGroup(text("cut across the gate", size=26, color=GATE),
@@ -174,52 +181,55 @@ class Ch09Forksheet(Chapter, ThreeDSlide):
     def tradeoff(self):
         self.slide(say(
             """
-            How much grip does that cost? Back to lambda. A nanosheet, four faces, 5 nanometres
-            thick: lambda is 1.9 nanometres. A forksheet sheet, three faces: 2.2. The shortest
-            workable gate grows from about 12 nanometres to about 13. It's the first time in this
-            story that the control gets a little worse, and it's done on purpose. imec's 2021
-            forksheets showed short-channel control about as good as nanosheets', down to 22
-            nanometre gates.
+            How much grip does that cost? Counting faces, as in our toy model, you'd guess a
+            little. But the face count is a toy, and the real answer depends on the exact shape:
+            how wide the sheets are, how thick, where the wall sits. So look at a measurement.
+            imec's 2021 forksheets switched with 66 to 68 millivolts per decade, about as sharply
+            as the nanosheets they built alongside them, with gates down to 22 nanometres. In
+            those devices, at least, the price was small.
             """,
             """
-            এতে grip কতটা যায়? আবার lambda-য় ফিরি। Nanosheet, চার দিক, 5 nanometre পুরু: lambda 1.9 nanometre। Forksheet-এর
-            sheet, তিন দিক: 2.2। সবচেয়ে ছোট কাজের gate প্রায় 12 nanometre থেকে প্রায় 13 হয়। এই গল্পে এই প্রথম control
-            একটু খারাপ হইলো, আর সেটা ইচ্ছা করে। imec-এর 2021-এর forksheet 22 nanometre gate পর্যন্ত nanosheet-এর প্রায়
-            সমান short-channel control দেখাইছে।
+            এতে grip কতটা যায়? আমাদের toy model-এর মতো দিক গুনলে মনে হবে, একটু। কিন্তু দিক গোনা একটা toy, আসল উত্তর
+            নির্ভর করে ঠিক আকারের উপর: sheet কত চওড়া, কত পুরু, wall কোথায় বসা। তাই একটা measurement দেখি। imec-এর 2021-এর
+            forksheet 66 থেকে 68 millivolt per decade-এ switch করছে, পাশাপাশি বানানো nanosheet-এর প্রায় সমান তীক্ষ্ণভাবে,
+            22 nanometre পর্যন্ত gate-এ। অন্তত ওই device-গুলাতে দামটা কম ছিল।
             """,
         ))
         self.play(FadeOut(self.parts3d))
         self.flat()
         title = heading("Three faces instead of four")
         cols = VGroup()
-        for kind, n, name in (("nanosheet", 4, "nanosheet: four faces"), ("forksheet", 3, "forksheet: three faces")):
+        for kind, name in (("nanosheet", "nanosheet: four faces"), ("forksheet", "forksheet: three faces")):
             pic = xsection(kind).scale_to_fit_height(2.4)
-            lam = phys.natural_length_nm(T_SH, 1, n)
-            lbl = VGroup(text(name, size=26, weight="SEMIBOLD"),
-                         MathTex(rf"N = {n},\quad \lambda = {lam:.1f}\ \text{{nm}}", font_size=36, color=GATE),
-                         text(f"shortest gate ≈ 6λ = {6 * lam:.0f} nm", size=22, color=DRAIN)).arrange(DOWN, buff=0.2)
-            cols.add(VGroup(pic, lbl).arrange(DOWN, buff=0.45))
-        cols.arrange(RIGHT, buff=2.0).move_to([0, -0.3, 0])
-        tag = VGroup(model_tag(), text("5 nm sheets, 1 nm oxide (EOT)", size=18, color=MUTED)).arrange(RIGHT, buff=0.2).to_edge(DOWN, buff=0.35)
+            cols.add(VGroup(pic, text(name, size=26, weight="SEMIBOLD")).arrange(DOWN, buff=0.4))
+        cols.arrange(RIGHT, buff=2.4).move_to([0, 0.35, 0])
+        meas = VGroup(text("Measured, imec 2021: SS = 66–68 mV/dec,", size=24, color=GOOD),
+                      text("comparable to nanosheets built alongside them", size=24, color=GOOD),
+                      text("H. Mertens et al., VLSI 2021; those devices and dimensions, not every forksheet", size=16, color=MUTED),
+                      ).arrange(DOWN, buff=0.12).next_to(cols, DOWN, buff=0.5)
         self.play(FadeIn(title), FadeIn(cols[0]))
-        self.play(FadeIn(cols[1], shift=LEFT * 0.2), FadeIn(tag))
-        dip = text("a little less grip, on purpose", size=26, color=GATE).next_to(cols[1], UP, buff=0.35)
-        self.play(FadeIn(dip))
+        self.play(FadeIn(cols[1], shift=LEFT * 0.2))
+        self.play(FadeIn(meas, shift=UP * 0.1))
 
     def area(self):
         self.slide(say(
             """
             And what does it buy? Here are FET Lab's two inverter layouts at the same scale. The
             nanosheet cell, rail to rail: 136 nanometres in this model. The forksheet: 106. About a
-            fifth shorter, because the n-to-p space is now just the wall. imec's newer variant
-            moves the wall to the edge of the cell, where neighbouring cells share it, which is
-            easier to build.
+            fifth shorter, because the n-to-p space is now just the wall. These are schematic
+            models, not a foundry's cells. And this is the inner-wall layout. imec's newer
+            outer-wall variant moves the wall to the edge of the cell. There it stands between
+            two transistors of the same type, from neighbouring cells, so it can be thicker and
+            easier to build, and the gate can wrap part of the way round the wall side too. They
+            are two different structures; the one on the roadmap for 2030 is the outer wall.
             """,
             """
             আর বিনিময়ে কী পাই? এই যে FET Lab-এর দুইটা inverter layout, একই scale-এ। Nanosheet cell, rail থেকে rail: এই
-            model-এ 136 nanometre। Forksheet: 106। প্রায় পাঁচ ভাগের এক ভাগ ছোট, কারণ n-to-p space এখন শুধু wall-টা। imec-এর
-            নতুন variant wall-টারে cell-এর কিনারায় নিয়া যায়, যেখানে পাশের cell-গুলা ওইটা share করে, আর ওইটা বানানো
-            সহজ।
+            model-এ 136 nanometre। Forksheet: 106। প্রায় পাঁচ ভাগের এক ভাগ ছোট, কারণ n-to-p space এখন শুধু wall-টা। এগুলা
+            schematic model, কোনো foundry-র cell না। আর এইটা inner-wall layout। imec-এর নতুন outer-wall variant wall-টারে
+            cell-এর কিনারায় নিয়া যায়। সেখানে এইটা পাশের cell-এর একই type-এর দুইটা transistor-এর মাঝে দাঁড়ায়, তাই এইটা
+            আরও পুরু আর বানানো সহজ হইতে পারে, আর gate wall-এর দিকটাতেও খানিকটা মুড়ে যাইতে পারে। এই দুইটা আলাদা structure;
+            2030-এর roadmap-এ যেটা আছে সেটা outer wall।
             """,
         ))
         self.clear()
@@ -244,15 +254,21 @@ class Ch09Forksheet(Chapter, ThreeDSlide):
         wall_l = text("← wall", size=20, color=WALL).next_to(fs, RIGHT, buff=0.12).set_y(wall.get_y())
         cut = 1 - rail_span_nm("show_fs") / rail_span_nm("show_ns")
         res = VGroup(display(f"−{cut * 100:.0f}%", size=60, color=GOOD), text("cell height (model)", size=22, color=MUTED)).arrange(DOWN, buff=0.1)
-        res.move_to([4.5, 1.1, 0])
-        note = layout_note("In a forksheet the n-to-p space is the wall, a fixed feature, so n and p pair up "
-                           "across it. imec's outer-wall version puts the wall at the cell edge instead.", size=20, width=30)
-        note.move_to([4.6, -1.3, 0])
+        res.move_to([4.5, 1.6, 0])
+        variants = VGroup()
+        for kind, name, what in (("forksheet", "inner wall", "n | p,\ninside the cell\n(this layout)"),
+                                 ("forksheet_outer", "outer wall", "n | n or p | p,\nat the cell edge\n(roadmap)")):
+            icon = xsection(kind).scale_to_fit_height(1.05)
+            variants.add(VGroup(icon, text(name, size=22, weight="SEMIBOLD"), text(what, size=17, color=MUTED))
+                         .arrange(DOWN, buff=0.12))
+        variants.arrange(RIGHT, buff=0.6, aligned_edge=UP).move_to([4.4, -0.45, 0])
+        note = text("Schematic models, not foundry cells", size=18, color=MUTED).next_to(variants, DOWN, buff=0.35)
         self.play(FadeIn(title), FadeIn(ns), FadeIn(l1), FadeIn(s1))
         self.play(FadeIn(fs), FadeIn(l2), FadeIn(s2))
         self.play(Indicate(wall, color=INK), FadeIn(wall_l))
         self.play(FadeIn(res))
-        self.play(FadeIn(note, shift=UP * 0.15))
+        self.play(FadeIn(variants[0]), FadeIn(note))
+        self.play(FadeIn(variants[1], shift=LEFT * 0.15))
 
     # --- cliffhanger -------------------------------------------------------------------------
     def cliffhanger(self):

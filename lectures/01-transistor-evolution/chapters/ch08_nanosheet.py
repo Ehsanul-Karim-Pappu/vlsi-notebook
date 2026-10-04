@@ -25,6 +25,8 @@ CHANNEL = "#7FD8E4"  # the channel sheets, picked out from the rest of the silic
 SIGE = "#B37FA0"  # FET Lab's SiGe
 INNER = "#D8C06A"  # inner spacer (SiBCN)
 FILL = "#5A6270"  # oxide fill over the source and drain
+GE_RICH = "#7A4A6E"  # the Ge-rich SiGe layer that becomes the bottom isolation
+BOTTOM_ISO = "#C9D4DE"  # bottom dielectric isolation
 N_SH, W_SH, T_SH = 3, 30, 5  # FET Lab's nanosheet model, nm
 LAYOUT_FIN, LAYOUT_NS = device("show_fin"), device("show_ns")
 
@@ -104,13 +106,17 @@ class Ch08Nanosheet(Chapter, ThreeDSlide):
             Remember the nanosheet transistor from the start of the lecture? Here it is again, and
             this time we cut it across, through the gate. Three sheets of silicon, five nanometres
             thick and thirty wide. And around every one of them, all four sides: the oxide, the
-            high-k, the work-function metal, then the gate fill. N equals four. With five
-            nanometre sheets, lambda is under two nanometres.
+            high-k, the work-function metal, then the gate fill. In our toy model, N sits
+            somewhere between two and four: a wide, thin sheet is gated mostly from above and
+            below, and the narrow edges help less. So lambda is roughly two to two and a half
+            nanometres. It's a toy number; real designs use a model for the real shape.
             """,
             """
             Lecture-এর শুরুর nanosheet transistor-টা মনে আছে? এই যে আবার, আর এইবার gate-এর মাঝখান দিয়া আড়াআড়ি কাটি। তিনটা
             silicon sheet, পাঁচ nanometre পুরু, ত্রিশ চওড়া। আর প্রত্যেকটার চারপাশে, চার দিকেই: oxide, high-k,
-            work-function metal, তারপর gate fill। N সমান চার। পাঁচ nanometre sheet-এ lambda দুই nanometre-এরও কম।
+            work-function metal, তারপর gate fill। আমাদের toy model-এ N দুই থেকে চারের মাঝামাঝি কোথাও: চওড়া, পাতলা
+            sheet-রে gate মূলত উপর আর নিচ থেকে ধরে, সরু কিনারাগুলা কম সাহায্য করে। তাই lambda মোটামুটি দুই থেকে আড়াই
+            nanometre। এইটা toy সংখ্যা; আসল design-এ আসল আকারের জন্য model লাগে।
             """,
         ))
         self.clear()
@@ -124,12 +130,13 @@ class Ch08Nanosheet(Chapter, ThreeDSlide):
         back.shift(shift)
         front.shift(shift)
         src = source("Model: FET Lab's nanosheet nFET (5 nm sheets, 30 nm wide), after IBM US 2023/0420457 A1")
-        lam = phys.natural_length_nm(T_SH, 1, 4)
+        lam_hi, lam_lo = phys.natural_length_nm(T_SH, 1, 2), phys.natural_length_nm(T_SH, 1, 4)
         cut = text("cut across the gate", size=26, color=GATE)
         info = VGroup(cut, text("the gate covers all four\nfaces of every sheet", size=26, weight="SEMIBOLD"),
-                      MathTex(r"N = 4", font_size=36, color=GATE),
-                      MathTex(rf"\lambda \approx {lam:.1f}\ \text{{nm}}", font_size=36, color=GATE),
-                      MathTex(rf"6\lambda \approx {6 * lam:.0f}\ \text{{nm}}", font_size=36, color=GATE),
+                      MathTex(r"N \approx 2\text{ to }4", font_size=36, color=GATE),
+                      MathTex(rf"\lambda \approx {lam_lo:.1f}\text{{ to }}{lam_hi:.1f}\ \text{{nm}}", font_size=36, color=GATE),
+                      MathTex(rf"6\lambda \approx {6 * lam_lo:.0f}\text{{ to }}{6 * lam_hi:.0f}\ \text{{nm}}", font_size=36, color=GATE),
+                      text("toy model, not a design value", size=18, color=MUTED),
                       ).arrange(DOWN, buff=0.3, aligned_edge=LEFT).move_to([4.6, 0.3, 0])
         self.add_fixed_in_frame_mobjects(src, info)
         self.remove(src, info)
@@ -145,11 +152,15 @@ class Ch08Nanosheet(Chapter, ThreeDSlide):
             """
             Its width: current flows on all four faces of each sheet, so each sheet is worth twice
             its width plus twice its thickness. Three sheets, 30 by 5: 210 nanometres. That's
-            more than the two-fin FinFET's 192, on less floor.
+            more than the two-fin FinFET's 192, on about the same floor: two fins at a 27
+            nanometre pitch are given 54 nanometres, and one 30 nanometre sheet needs a little
+            room on each side.
             """,
             """
             এর width: প্রত্যেকটা sheet-এর চার মুখ দিয়াই current যায়, তাই প্রত্যেকটা sheet-এর দাম দুইগুণ width যোগ দুইগুণ
-            thickness। তিনটা sheet, 30 বাই 5: 210 nanometre। দুই fin-এর FinFET-এর 192-এর চেয়ে বেশি, কম জায়গায়।
+            thickness। তিনটা sheet, 30 বাই 5: 210 nanometre। দুই fin-এর FinFET-এর 192-এর চেয়ে বেশি, মোটামুটি একই
+            জায়গায়: 27 nanometre pitch-এ দুইটা fin-রে 54 nanometre ধরা হয়, আর 30 nanometre-এর একটা sheet-এর দুই পাশে
+            একটু ফাঁক লাগে।
             """,
         ))
         self.play(FadeOut(self.parts3d))
@@ -212,16 +223,19 @@ class Ch08Nanosheet(Chapter, ThreeDSlide):
         self.slide(say(
             """
             How do you put a gate under a sheet of silicon? You don't. You grow the space for it
-            first, and fill it later. Start with the wafer and grow a stack: silicon-germanium,
-            silicon, silicon-germanium, silicon, a few nanometres each. The silicon layers will be
-            the channels. The silicon-germanium is just a placeholder. We're looking from the
-            side now, along the channel.
+            first, and fill it later. Here's one common route, for an n-type device. Start with
+            the wafer. First a thin layer of silicon-germanium with extra germanium in it:
+            remember it, it has a job later. Then grow a stack: silicon-germanium, silicon,
+            silicon-germanium, silicon, a few nanometres each. The silicon layers will be the
+            channels. The silicon-germanium is just a placeholder. We're looking from the side
+            now, along the channel.
             """,
             """
-            Silicon-এর একটা sheet-এর নিচে gate বসাবেন কীভাবে? বসান না। আগে ওই জায়গাটা grow করেন, পরে ভরেন। Wafer দিয়া
-            শুরু করেন, আর একটা stack grow করেন: silicon-germanium, silicon, silicon-germanium, silicon, প্রত্যেকটা কয়েক
-            nanometre। Silicon layer-গুলা হবে channel। Silicon-germanium শুধু জায়গা ধরে রাখে। এখন আমরা পাশ থেকে দেখতেছি,
-            channel বরাবর।
+            Silicon-এর একটা sheet-এর নিচে gate বসাবেন কীভাবে? বসান না। আগে ওই জায়গাটা grow করেন, পরে ভরেন। এইটা একটা
+            প্রচলিত পথ, n-type device-এর জন্য। Wafer দিয়া শুরু করেন। প্রথমে silicon-germanium-এর একটা পাতলা layer, যেটাতে
+            germanium একটু বেশি: এইটা মনে রাখেন, পরে এর একটা কাজ আছে। তারপর একটা stack grow করেন: silicon-germanium,
+            silicon, silicon-germanium, silicon, প্রত্যেকটা কয়েক nanometre। Silicon layer-গুলা হবে channel।
+            Silicon-germanium শুধু জায়গা ধরে রাখে। এখন আমরা পাশ থেকে দেখতেছি, channel বরাবর।
             """,
         ))
         self.clear()
@@ -230,34 +244,47 @@ class Ch08Nanosheet(Chapter, ThreeDSlide):
         X = 4.4
         sige_y = [(-2.0, -1.68), (-1.46, -1.14), (-0.92, -0.60)]
         si_y = [(-1.68, -1.46), (-1.14, -0.92), (-0.60, -0.38)]
-        sub = box(-X, X, -3.0, -2.0, SUBSTRATE)
+        sub = box(-X, X, -3.0, -2.3, SUBSTRATE)
+        rich = box(-X, X, -2.3, -2.0, GE_RICH)
         sige = VGroup(*[box(-X, X, a, b, SIGE) for a, b in sige_y])
         si = VGroup(*[box(-X, X, a, b, CHANNEL) for a, b in si_y])
-        key = VGroup(
-            VGroup(Square(0.22, fill_color=CHANNEL, fill_opacity=1, stroke_width=0), text("silicon: the channels", size=18, color=MUTED)).arrange(RIGHT, buff=0.12),
-            VGroup(Square(0.22, fill_color=SIGE, fill_opacity=1, stroke_width=0), text("silicon-germanium: a placeholder", size=18, color=MUTED)).arrange(RIGHT, buff=0.12),
-        ).arrange(RIGHT, buff=0.5).move_to([0, 2.65, 0])
+
+        def swatch(color, label):
+            return VGroup(Square(0.22, fill_color=color, fill_opacity=1, stroke_width=0),
+                          text(label, size=18, color=MUTED)).arrange(RIGHT, buff=0.12)
+
+        key = VGroup(swatch(CHANNEL, "silicon: the channels"), swatch(SIGE, "SiGe: a placeholder"),
+                     swatch(BOTTOM_ISO, "bottom insulator"), swatch(INNER, "inner spacer")).arrange(RIGHT, buff=0.45)
+        key.move_to([0, 2.65, 0])
+        late = (key[3].width + 0.45) / 2  # the inner spacer joins the key later; centre the rest until then
+        key[:3].shift(RIGHT * late)
+        rich_key = swatch(GE_RICH, "Ge-rich SiGe").move_to(key[2], aligned_edge=LEFT)
         cap = text("1 · Grow a stack: SiGe and Si, a few nanometres each", size=24, color=INK).to_edge(DOWN, buff=0.4)
         self.play(FadeIn(sub), FadeIn(cap))
+        self.play(GrowFromEdge(rich, DOWN), run_time=0.45)
         for a, b in zip(sige, si):
             self.play(GrowFromEdge(a, DOWN), run_time=0.45)
             self.play(GrowFromEdge(b, DOWN), run_time=0.45)
-        self.play(FadeIn(key))
+        self.play(FadeIn(key[:2]), FadeIn(rich_key))
 
         self.slide(say(
             """
             Next, a dummy gate: a block of polysilicon that marks where the real gate will go,
-            with insulating spacers on its sides. Then etch the stack away everywhere outside the
-            spacers. Now the trick's first half: a selective etch eats a little way into the
-            silicon-germanium layers only, from the sides, leaving notches under the spacers. Fill
-            the notches with insulator: these are the inner spacers. They'll keep the gate away
-            from the source and drain.
+            with insulating spacers on its sides. Now that germanium-rich layer at the bottom: an
+            etch that attacks only it takes it away, and insulator fills the gap. That's the
+            bottom isolation. It will cut the transistor off from the wafer. Then etch the stack
+            away outside the spacers, down to that insulator. Now the trick's first half: a
+            selective etch eats a little way into the silicon-germanium layers only, from the
+            sides, leaving notches under the spacers. Fill the notches with insulator: these are
+            the inner spacers. They'll keep the gate away from the source and drain.
             """,
             """
             এরপর একটা dummy gate: polysilicon-এর একটা block, আসল gate কোথায় বসবে সেটা চিহ্ন দিয়া রাখে, দুই পাশে
-            insulating spacer। তারপর spacer-এর বাইরে সব জায়গা থেকে stack-টা etch করে ফেলেন। এবার কৌশলের প্রথম অর্ধেক:
-            একটা selective etch শুধু silicon-germanium layer-গুলারে পাশ থেকে একটু খেয়ে ফেলে, spacer-এর নিচে খাঁজ রেখে।
-            খাঁজগুলা insulator দিয়া ভরেন: এইগুলা inner spacer। এগুলা gate-রে source আর drain থেকে দূরে রাখবে।
+            insulating spacer। এবার নিচের ওই germanium-বেশি layer-টা: একটা etch শুধু ওইটারেই খায়, সরায়ে ফেলে, আর ফাঁকটা
+            insulator দিয়া ভরে যায়। এইটা bottom isolation। এইটা transistor-রে wafer থেকে আলাদা করে দিবে। তারপর spacer-এর
+            বাইরে stack-টা etch করে ফেলেন, ওই insulator পর্যন্ত। এবার কৌশলের প্রথম অর্ধেক: একটা selective etch শুধু
+            silicon-germanium layer-গুলারে পাশ থেকে একটু খেয়ে ফেলে, spacer-এর নিচে খাঁজ রেখে। খাঁজগুলা insulator দিয়া
+            ভরেন: এইগুলা inner spacer। এগুলা gate-রে source আর drain থেকে দূরে রাখবে।
             """,
         ))
         dummy = box(-0.7, 0.7, -0.38, 1.4, "#8FA67A")
@@ -267,36 +294,40 @@ class Ch08Nanosheet(Chapter, ThreeDSlide):
                   Transform(cap, text("2 · A dummy gate, with spacers", size=24).to_edge(DOWN, buff=0.4)))
         self.play(FadeIn(sp))
         self.wait(0.3)
+        bdi = box(-X, X, -2.3, -2.0, BOTTOM_ISO)
+        self.play(FadeOut(rich), Transform(cap, text("3 · Swap the Ge-rich layer for insulator: bottom isolation", size=24).to_edge(DOWN, buff=0.4)))
+        self.play(FadeIn(bdi), ReplacementTransform(rich_key, key[2]))
         si_c = VGroup(*[box(-1.0, 1.0, a, b, CHANNEL) for a, b in si_y])
         sige_c = VGroup(*[box(-1.0, 1.0, a, b, SIGE) for a, b in sige_y])
         self.play(ReplacementTransform(si, si_c), ReplacementTransform(sige, sige_c),
-                  Transform(cap, text("3 · Etch the stack away outside the spacers", size=24).to_edge(DOWN, buff=0.4)), run_time=1.5)
+                  Transform(cap, text("4 · Etch the stack away outside the spacers, down to the insulator", size=24).to_edge(DOWN, buff=0.4)), run_time=1.5)
         sige_i = VGroup(*[box(-0.75, 0.75, a, b, SIGE) for a, b in sige_y])
         self.play(ReplacementTransform(sige_c, sige_i),
-                  Transform(cap, text("4 · Etch a notch into the SiGe only, from the sides", size=24).to_edge(DOWN, buff=0.4)), run_time=1.5)
+                  Transform(cap, text("5 · Etch a notch into the SiGe only, from the sides", size=24).to_edge(DOWN, buff=0.4)), run_time=1.5)
         inner = VGroup(*[VGroup(box(-1.0, -0.75, a, b, INNER), box(0.75, 1.0, a, b, INNER)) for a, b in sige_y])
-        self.play(FadeIn(inner), Transform(cap, text("5 · Fill the notches: inner spacers", size=24).to_edge(DOWN, buff=0.4)))
-        key2 = VGroup(Square(0.22, fill_color=INNER, fill_opacity=1, stroke_width=0), text("inner spacer", size=18, color=MUTED)).arrange(RIGHT, buff=0.12)
-        key2.next_to(key, RIGHT, buff=0.5)
-        self.play(FadeIn(key2))
+        self.play(FadeIn(inner), Transform(cap, text("6 · Fill the notches: inner spacers", size=24).to_edge(DOWN, buff=0.4)))
+        self.play(key[:3].animate.shift(LEFT * late), FadeIn(key[3]))
 
         self.slide(say(
             """
             Grow the source and drain, silicon full of donor atoms, from the exposed ends of the
-            sheets. They're connected to the sheets, and only to the sheets. Then cover
-            everything with oxide.
+            sheets. They sit on the bottom insulator, so they're connected to the sheets, and
+            only to the sheets, not to the wafer. Then cover everything with oxide. Real flows
+            also polish the top flat here, and do much else; we're leaving those steps out.
             """,
             """
-            Sheet-গুলার খোলা মাথা থেকে source আর drain grow করেন: donor atom-এ ভরা silicon। এগুলা sheet-গুলার সাথে
-            জোড়া, শুধু sheet-গুলার সাথেই। তারপর সবকিছু oxide দিয়া ঢেকে দেন।
+            Sheet-গুলার খোলা মাথা থেকে source আর drain grow করেন: donor atom-এ ভরা silicon। এগুলা নিচের insulator-এর
+            উপর বসা, তাই এগুলা sheet-গুলার সাথে জোড়া, শুধু sheet-গুলার সাথেই, wafer-এর সাথে না। তারপর সবকিছু oxide
+            দিয়া ঢেকে দেন। আসল process-এ এইখানে উপরটা polish করে সমানও করা হয়, আরও অনেক কিছু হয়; ওই ধাপগুলা আমরা বাদ
+            দিতেছি।
             """,
         ))
         epi = VGroup(box(-3.9, -1.0, -2.0, 0.0, ELECTRON, 0.55), box(1.0, 3.9, -2.0, 0.0, ELECTRON, 0.55))
         epi_l = VGroup(text("source", size=22, color=INK).move_to(epi[0]), text("drain", size=22, color=INK).move_to(epi[1]))
         fill = VGroup(box(-X, -1.0, 0.0, 1.7, FILL), box(1.0, X, 0.0, 1.7, FILL))
         self.play(GrowFromEdge(epi[0], DOWN), GrowFromEdge(epi[1], DOWN), FadeIn(epi_l),
-                  Transform(cap, text("6 · Grow the source and drain from the sheets' ends", size=24).to_edge(DOWN, buff=0.4)), run_time=1.5)
-        self.play(FadeIn(fill), Transform(cap, text("7 · Cover with oxide", size=24).to_edge(DOWN, buff=0.4)))
+                  Transform(cap, text("7 · Grow the source and drain from the sheets' ends", size=24).to_edge(DOWN, buff=0.4)), run_time=1.5)
+        self.play(FadeIn(fill), Transform(cap, text("8 · Cover with oxide", size=24).to_edge(DOWN, buff=0.4)))
 
         self.slide(say(
             """
@@ -312,8 +343,8 @@ class Ch08Nanosheet(Chapter, ThreeDSlide):
             """,
         ))
         self.play(FadeOut(dummy, shift=UP * 0.4), FadeOut(hm, shift=UP * 0.4),
-                  Transform(cap, text("8 · Pull out the dummy gate", size=24).to_edge(DOWN, buff=0.4)))
-        self.play(FadeOut(sige_i, scale=0.6), Transform(cap, text("9 · Dissolve the SiGe: the sheets are released", size=24, color=GATE).to_edge(DOWN, buff=0.4)),
+                  Transform(cap, text("9 · Pull out the dummy gate", size=24).to_edge(DOWN, buff=0.4)))
+        self.play(FadeOut(sige_i, scale=0.6), Transform(cap, text("10 · Dissolve the SiGe: the sheets are released", size=24, color=GATE).to_edge(DOWN, buff=0.4)),
                   run_time=2.0)
         float_l = text("hanging between source and drain", size=20, color=GATE).move_to([0, 2.15, 0])
         self.play(FadeIn(float_l), FadeOut(key[1]))
@@ -321,24 +352,27 @@ class Ch08Nanosheet(Chapter, ThreeDSlide):
         self.slide(say(
             """
             Finally, coat every exposed surface with oxide and high-k, then fill the trench and
-            every gap with metal. The gate now wraps all the way around each sheet. That's how
-            every gate-all-around transistor is made: by building the space for the gate out of
-            a material you'll later dissolve.
+            every gap with metal. The gate now wraps all the way around each sheet. That's one
+            common way to make stacked nanosheets. A p-type device often takes a slightly
+            different path, and real flows have many more steps. But the idea at the heart of it
+            is the same: build the space for the gate out of a material you'll later dissolve.
             """,
             """
             শেষে খোলা সব surface-এ oxide আর high-k-এর আস্তর দেন, তারপর trench আর প্রত্যেকটা ফাঁক metal দিয়া ভরেন। Gate
-            এখন প্রত্যেকটা sheet-এর চারপাশ ঘিরে আছে। প্রত্যেকটা gate-all-around transistor এভাবেই বানানো হয়: gate-এর
-            জায়গাটা এমন একটা material দিয়া বানায়ে, যেটা পরে গলায়ে ফেলবেন।
+            এখন প্রত্যেকটা sheet-এর চারপাশ ঘিরে আছে। Stacked nanosheet বানানোর এইটা একটা প্রচলিত পথ। p-type device অনেক
+            সময় একটু অন্য পথে যায়, আর আসল process-এ আরও অনেক ধাপ থাকে। কিন্তু মূল idea-টা একই: gate-এর জায়গাটা এমন একটা
+            material দিয়া বানান, যেটা পরে গলায়ে ফেলবেন।
             """,
         ))
         liners = VGroup(*[Rectangle(width=1.5, height=b - a + 0.08, stroke_color=HIGHK, stroke_width=5).move_to([0, (a + b) / 2, 0])
                           for a, b in si_y])
         metal = VGroup(box(-0.7, 0.7, -0.38, 1.7, GATE), *[box(-0.75, 0.75, a, b, GATE) for a, b in sige_y])
-        self.play(Create(liners), Transform(cap, text("10 · Line every surface: oxide and high-k", size=24).to_edge(DOWN, buff=0.4)))
+        self.play(Create(liners), Transform(cap, text("11 · Line every surface: oxide and high-k", size=24).to_edge(DOWN, buff=0.4)))
         self.play(FadeIn(metal), liners.animate.set_z_index(3), si_c.animate.set_z_index(4), FadeOut(float_l),
-                  Transform(cap, text("11 · Fill with metal: the gate, all the way around", size=24, color=GATE).to_edge(DOWN, buff=0.4)), run_time=1.5)
-        src = text("After FET Lab's nanosheet process (IBM US 2023/0420457 A1); simplified, not to scale",
-                   size=16, color=MUTED).move_to([0, 2.2, 0])
+                  Transform(cap, text("12 · Fill with metal: the gate, all the way around", size=24, color=GATE).to_edge(DOWN, buff=0.4)), run_time=1.5)
+        src = text("One common nFET route, after IBM US 2023/0420457 A1 (which also describes a SiGe pFET branch).\n"
+                   "Simplified: polishing and other steps left out; not to scale.",
+                   size=16, color=MUTED, line_spacing=0.9).move_to([0, 2.12, 0])
         self.play(FadeIn(src))
 
     # --- layout ------------------------------------------------------------------------------
@@ -373,18 +407,21 @@ class Ch08Nanosheet(Chapter, ThreeDSlide):
     def limits(self):
         self.slide(say(
             """
-            So what stops the nanosheet? Look at the cell's height, rail to rail. It's set by
-            the routing: the number of metal tracks times the metal pitch. Six tracks at 24
-            nanometres is 144. To make the cell shorter you take tracks away, and then everything
+            So what stops the nanosheet? Look at the cell's height. It's set by the routing: the
+            number of metal tracks times the metal pitch. For example, six tracks at 24
+            nanometres is 144, and five is 120. This model's rails sit 136 nanometres apart,
+            centre to centre: a different example, and people draw the cell's edge in slightly
+            different places. To make the cell shorter you take tracks away, and then everything
             inside has to squeeze. And look at the gap between the n sheets and the p sheets.
             Here it's 46 nanometres, a third of the cell. It can't shrink much, because the n
             and the p transistors need different gate metals, and those have to be patterned
             apart with room to spare.
             """,
             """
-            তাহলে nanosheet-রে আটকায় কে? Cell-এর height দেখেন, rail থেকে rail। এইটা routing দিয়া ঠিক হয়: metal track-এর
-            সংখ্যা গুণ metal pitch। 24 nanometre-এ ছয়টা track মানে 144। Cell ছোট করতে track কমাইতে হয়, আর তখন ভিতরের
-            সবকিছু চাপতে হয়। আর n sheet আর p sheet-এর মাঝের ফাঁকটা দেখেন। এইখানে 46 nanometre, cell-এর তিন ভাগের এক
+            তাহলে nanosheet-রে আটকায় কে? Cell-এর height দেখেন। এইটা routing দিয়া ঠিক হয়: metal track-এর সংখ্যা গুণ
+            metal pitch। যেমন, 24 nanometre-এ ছয়টা track মানে 144, আর পাঁচটা মানে 120। এই model-এর rail দুইটা
+            center থেকে center 136 nanometre দূরে: এইটা আরেকটা উদাহরণ, আর cell-এর কিনারা সবাই ঠিক একই জায়গায় ধরে না।
+            Cell ছোট করতে track কমাইতে হয়, আর তখন ভিতরের সবকিছু চাপতে হয়। আর n sheet আর p sheet-এর মাঝের ফাঁকটা দেখেন। এইখানে 46 nanometre, cell-এর তিন ভাগের এক
             ভাগ। এইটা খুব একটা কমানো যায় না, কারণ n আর p transistor-এর আলাদা gate metal লাগে, আর সেগুলারে যথেষ্ট জায়গা
             রেখে আলাদা করে pattern করতে হয়।
             """,
@@ -400,11 +437,13 @@ class Ch08Nanosheet(Chapter, ThreeDSlide):
         r0, r1 = by["m0_gnd"].get_center()[1], by["m0_vdd"].get_center()[1]
         xl = by["m0_gnd"].get_left()[0] - 0.3
         h = DoubleArrow([xl, r0, 0], [xl, r1, 0], buff=0, stroke_color=GATE, stroke_width=4, tip_length=0.14)
-        h_l = text("cell height", size=20, color=GATE).rotate(PI / 2).next_to(h, LEFT, buff=0.1)
+        span = round((r1 - r0) / 0.029)  # rail centre to rail centre, in nm (plan_view scale)
+        h_l = text(f"rail to rail\n{span} nm (model)", size=20, color=GATE).rotate(PI / 2).next_to(h, LEFT, buff=0.1)
         e1 = eq(r"H_{cell}", r"=", r"\text{tracks}", r"\times", r"\text{metal pitch}", size=42)
         e1[0].set_color(GATE)
-        e2 = text(f"6 tracks × 24 nm = {phys.cell_height_nm(6, 24)} nm\n5 tracks × 24 nm = {phys.cell_height_nm(5, 24)} nm",
-                  size=24, color=INK)
+        e2 = VGroup(text("For example:", size=20, color=MUTED),
+                    text(f"6 tracks × 24 nm = {phys.cell_height_nm(6, 24)} nm\n5 tracks × 24 nm = {phys.cell_height_nm(5, 24)} nm",
+                         size=24, color=INK)).arrange(DOWN, buff=0.12, aligned_edge=LEFT)
         e3 = text("Take a track away and everything\ninside must squeeze, including\nthe space between n and p.", size=22, color=MUTED)
         VGroup(e1, e2, e3).arrange(DOWN, buff=0.4, aligned_edge=LEFT).move_to([3.7, 0.0, 0])
         self.play(GrowFromCenter(h), FadeIn(h_l))

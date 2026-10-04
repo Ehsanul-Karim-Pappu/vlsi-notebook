@@ -1,4 +1,4 @@
-"""Chapter 2 · The accidental transistor (1947–1951).
+"""Chapter 2 · The unexpected transistor (1947–1951).
 
 The point-contact transistor, Shockley's junction transistor and its energy hill, the
 exponential I_C(V_BE) with its 60 mV per decade (planted here, explained in chapter 5), the
@@ -38,15 +38,18 @@ class Ch02AccidentalTransistor(Chapter, Slide):
         self.slide(say(
             """
             Bell Labs, December 1947. Bardeen and Brattain are pressing metal points into a crystal
-            of germanium to understand its surface. They are not trying to build an amplifier.
+            of germanium. They want amplification, and they want to understand the surface that
+            ruined the field effect. What they get does amplify, but not in the way anyone
+            predicted.
             """,
             """
             Bell Labs, December 1947। Bardeen আর Brattain একটা germanium crystal-এ metal point চাপ দিয়া
-            ধরতেছেন, শুধু surface-টা বোঝার জন্য। Amplifier বানানোর কোনো plan তাদের ছিল না।
+            ধরতেছেন। ওনারা amplification চান, আর field effect-রে যে surface নষ্ট করছিল সেইটা বুঝতে চান। যা পাইলেন
+            সেইটা amplify করে ঠিকই, কিন্তু যেভাবে কেউ ভাবে নাই সেভাবে।
             """,
         ))
         self.card_group = self.open_chapter(
-            2, 1947, 1925, "The accidental transistor",
+            2, 1947, 1925, "The unexpected transistor",
             "Gold foil, a plastic wedge and a paper clip",
         )
 
@@ -74,15 +77,15 @@ class Ch02AccidentalTransistor(Chapter, Slide):
             wrapped around its tip, and the foil slit with a razor, so there are two gold contacts a
             hair's width apart. A spring made from a paper clip presses it down. Put a small signal
             into one contact, and a bigger copy comes out of the other. On the 16th of December 1947
-            it amplified; on the 23rd they showed it to Bell Labs management. The transistor was
-            born, out of an experiment on surfaces.
+            it amplified; on the 23rd they showed it to Bell Labs management. The first working
+            transistor was born, out of experiments on surfaces.
             """,
             """
             জিনিসটা কীভাবে বানানো, দেখেন। একটা germanium block। উপরে একটা plastic wedge, তার মাথায় gold
             foil মোড়ানো, আর razor দিয়ে foil-টা চিরে দেওয়া, যাতে একটা চুলের সমান দূরে দুইটা gold contact
             হয়। Paper clip বাঁকায়ে বানানো একটা spring সেটারে নিচে চেপে রাখে। এক contact-এ ছোট একটা signal
             দিলে, আরেকটা দিয়া তার বড় একটা copy বের হয়। 16 December 1947-এ এইটা amplify করল; 23 তারিখে
-            Bell Labs management-রে দেখানো হইল। Transistor-এর জন্ম হইলো, surface নিয়া একটা experiment থেকে।
+            Bell Labs management-রে দেখানো হইল। প্রথম চালু transistor-এর জন্ম হইলো, surface নিয়া experiment থেকে।
             """,
         ))
         self.play(FadeOut(pics))

@@ -41,19 +41,19 @@ class Ch05Boltzmann(Chapter, Slide):
         self.slide(say(
             """
             For forty years, shrinking worked. Every new generation was smaller, faster and
-            cheaper. Then, around 2005, something stopped: clock speeds flattened out, and they
-            have stayed flat ever since. This chapter is about why. And the reason is not
-            engineering. It's thermodynamics.
+            cheaper. Then, around 2005, something stopped: clock speeds stopped their steady
+            climb. This chapter is about why. And a big part of the reason isn't engineering. It's
+            thermodynamics.
             """,
             """
             চল্লিশ বছর ধরে ছোট করা কাজ করছে। প্রত্যেকটা নতুন generation আরও ছোট, আরও fast, আরও সস্তা।
-            তারপর 2005-এর দিকে একটা জিনিস থেমে গেল: clock speed সমান হয়ে গেল, আর তখন থেকে সমানই আছে। এই
-            chapter হইলো কেন, সেটা নিয়া। আর কারণটা engineering না। কারণটা thermodynamics।
+            তারপর 2005-এর দিকে একটা জিনিস থেমে গেল: clock speed-এর একটানা বাড়া বন্ধ হইলো। এই chapter হইলো কেন,
+            সেটা নিয়া। আর কারণের বড় একটা অংশ engineering না। সেইটা thermodynamics।
             """,
         ))
         self.card_group = self.open_chapter(
             5, 2005, 1965, "Boltzmann's tyranny",
-            "The one law no transistor has broken",
+            "The thermal limit every ordinary transistor lives with",
         )
 
     # --- a transistor is a hill --------------------------------------------------------------
@@ -130,16 +130,18 @@ class Ch05Boltzmann(Chapter, Slide):
             """
             Here's the question that matters: when the switch is off, how many electrons still
             make it over? Those electrons are leakage, and leakage is wasted power. Thermal energy
-            isn't shared out evenly: most electrons have very little, a few have a lot. This is the
-            Boltzmann distribution. The number of electrons falls off exponentially with energy,
-            on a scale of k-B-T, the thermal energy: about 26 milli-electron-volts at room
-            temperature.
+            isn't shared out evenly: most electrons have very little, a few have a lot. For the
+            high-energy ones that matter here, the number falls off exponentially with energy: the
+            Boltzmann tail, on a scale of k-B-T, the thermal energy, about 26
+            milli-electron-volts at room temperature. It's a simplified picture, but it's the one
+            that sets the numbers.
             """,
             """
             আসল প্রশ্নটা হইলো: switch off থাকলে কয়টা electron তবুও পার হয়ে যায়? ওই electron-গুলাই leakage, আর
             leakage মানে power নষ্ট। Thermal energy সবার মধ্যে সমান ভাগ হয় না: বেশিরভাগ electron-এর energy কম,
-            অল্প কয়েকটার অনেক। এইটাই Boltzmann distribution। Energy বাড়ার সাথে electron-এর সংখ্যা exponential-ভাবে
-            কমে, k-B-T-এর scale-এ, মানে thermal energy: room temperature-এ প্রায় 26 milli-electron-volt।
+            অল্প কয়েকটার অনেক। এখানে যে বেশি-energy-র electron-গুলা দরকার, energy বাড়ার সাথে তাদের সংখ্যা
+            exponential-ভাবে কমে: Boltzmann tail, k-B-T-এর scale-এ, মানে thermal energy, room temperature-এ প্রায় 26
+            milli-electron-volt। এইটা একটা সরল ছবি, কিন্তু সংখ্যাগুলা এইটাই ঠিক করে।
             """,
         ))
         self.bar.stop()
@@ -313,14 +315,15 @@ class Ch05Boltzmann(Chapter, Slide):
             Put the two pieces together, the Boltzmann tail and the divider, and you get the
             subthreshold swing: how much gate voltage it takes to change the current ten times. A
             perfect gate, m equal to one, at room temperature, still needs 60 millivolts per
-            decade. No transistor that works by lifting electrons over a hill can do better. People
-            call it the Boltzmann tyranny.
+            decade. No transistor that works by lifting electrons over a hill, with an ordinary
+            gate and no internal gain, can do better at room temperature. People call it the
+            Boltzmann tyranny.
             """,
             """
             দুইটা টুকরা একসাথে করেন, Boltzmann tail আর divider, তাহলে পাবেন subthreshold swing: current দশ গুণ
             বদলাইতে কত gate voltage লাগে। একদম perfect gate, মানে m এক, room temperature-এ, তবুও লাগে প্রতি
-            decade-এ 60 millivolt। যে transistor electron-রে hill পার করায়ে কাজ করে, সে এর চেয়ে ভালো পারবে না।
-            এইটারে বলে Boltzmann tyranny।
+            decade-এ 60 millivolt। যে transistor electron-রে hill পার করায়ে কাজ করে, সাধারণ gate দিয়া, ভিতরে কোনো
+            gain ছাড়া, room temperature-এ সে এর চেয়ে ভালো পারবে না। এইটারে বলে Boltzmann tyranny।
             """,
         ))
         self.play(FadeOut(self.screen))
@@ -345,19 +348,21 @@ class Ch05Boltzmann(Chapter, Slide):
 
         self.slide(say(
             """
-            The only knob is temperature: cool the chip to liquid nitrogen and the swing drops to 15
-            millivolts per decade. And remember the bipolar transistor from chapter two, whose
+            The only knob is temperature: cool the chip to liquid nitrogen and, in this ideal
+            formula, the swing drops to 15 millivolts per decade. Real cold transistors don't get
+            all the way there, but they do get steeper. And remember the bipolar transistor from chapter two, whose
             current rises ten times for every 60 millivolts? Not a coincidence. It's the same
             Boltzmann tail.
             """,
             """
-            হাতে knob একটাই: temperature। Chip-রে liquid nitrogen-এ ঠান্ডা করেন, swing নেমে আসবে প্রতি decade-এ 15
-            millivolt-এ। আর chapter two-এর bipolar transistor মনে আছে, যার current প্রতি 60 millivolt-এ দশ গুণ
+            হাতে knob একটাই: temperature। Chip-রে liquid nitrogen-এ ঠান্ডা করেন, এই ideal formula-য় swing নেমে আসবে
+            প্রতি decade-এ 15 millivolt-এ। আসল ঠান্ডা transistor পুরাটা পৌঁছায় না, কিন্তু slope আরও খাড়া হয়। আর chapter two-এর bipolar transistor মনে আছে, যার current প্রতি 60 millivolt-এ দশ গুণ
             বাড়ে? এইটা কাকতালীয় না। সেই একই Boltzmann tail।
             """,
         ))
         cold = VGroup(text("Cool it to 77 K (liquid nitrogen):", size=28, color=MUTED),
-                      MathTex(r"SS = 15\ \text{mV/decade}", font_size=44, color=ELECTRON)).arrange(RIGHT, buff=0.3).to_edge(DOWN, buff=1.0)
+                      MathTex(r"SS = 15\ \text{mV/decade}", font_size=44, color=ELECTRON),
+                      text("(ideal)", size=24, color=MUTED)).arrange(RIGHT, buff=0.3).to_edge(DOWN, buff=1.0)
         bjt = text("The same 60 mV sets a bipolar transistor's current: one Boltzmann tail, two devices.", size=22, color=MUTED).to_edge(DOWN, buff=0.4)
         self.play(FadeIn(cold, shift=UP * 0.2))
         self.play(FadeIn(bjt))
@@ -412,7 +417,7 @@ class Ch05Boltzmann(Chapter, Slide):
         p2 = axes.c2p(v0 + ss, logi(v0 + ss))
         tri = VGroup(Line(p0, p1), Line(p1, p2)).set_stroke(GATE, 3)
         tri_l = VGroup(text(f"{ss * 1e3:.0f} mV", size=22, color=GATE).next_to(Line(p0, p1), DOWN, buff=0.08),
-                       text("×10", size=22, color=GATE).next_to(Line(p1, p2), RIGHT, buff=0.08))
+                       text("≈×10", size=22, color=GATE).next_to(Line(p1, p2), RIGHT, buff=0.08))
         a, b = axes.c2p(0.10, logi(0.10)), axes.c2p(0.24, logi(0.24))
         ang = np.arctan2(b[1] - a[1], b[0] - a[0])
         weak = text("weak inversion", size=20, color=MUTED).rotate(ang).move_to(axes.c2p(0.17, logi(0.17)) + rotate_vector(UP * 0.3, ang))
@@ -447,41 +452,48 @@ class Ch05Boltzmann(Chapter, Slide):
         self.slide(say(
             """
             And here's the trap. Each time we lower the threshold by one swing, about 70 millivolts,
-            the off current goes up ten times. Lower it by three swings and the switch leaks a
-            thousand times more when it's supposed to be off. Billions of transistors, all leaking.
+            the off current goes up about ten times. Lower it by three swings and the switch leaks
+            about a thousand times more when it's supposed to be off. Billions of transistors, all leaking.
             So the threshold voltage stopped falling, and so did the supply voltage: it has sat near
             one volt, give or take, since the mid-2000s.
             """,
             """
-            আর এইখানেই ফাঁদ। প্রতিবার threshold এক swing কমাইলে, মানে প্রায় 70 millivolt, off current দশ গুণ বাড়ে।
-            তিন swing কমাইলে switch-টা off থাকার কথা যখন, তখন হাজার গুণ বেশি leak করে। Billion billion transistor,
+            আর এইখানেই ফাঁদ। প্রতিবার threshold এক swing কমাইলে, মানে প্রায় 70 millivolt, off current প্রায় দশ গুণ
+            বাড়ে। তিন swing কমাইলে switch-টা off থাকার কথা যখন, তখন প্রায় হাজার গুণ বেশি leak করে। Billion billion transistor,
             সবগুলা leak করতেছে। তাই threshold voltage কমা বন্ধ হইলো, supply voltage-ও: 2000-এর দশকের মাঝামাঝি থেকে
             এইটা মোটামুটি এক volt-এর আশেপাশেই আটকে আছে।
             """,
         ))
+        def leak_ratio():
+            """The off current against the starting one, read off the plotted model."""
+            r = 10 ** (logi(0) - log10(phys.drain_current(0, 0.40, 300, m, I_SPEC)) - LOG0)
+            return float(f"{r:.2g}")
+
         leak = always_redraw(lambda: VGroup(
             text("leakage", size=22, color=DRAIN),
-            display(f"×{phys.off_current_ratio(0.40 - vt.get_value(), ss):,.0f}", size=54, color=DRAIN),
+            display(f"≈ ×{leak_ratio():,.0f}", size=54, color=DRAIN),
         ).arrange(DOWN, buff=0.08).move_to([4.75, -2.4, 0]))
         self.play(FadeIn(leak))
         for k in (1, 2, 3):
             self.play(vt.animate.set_value(0.40 - k * ss), run_time=1.6)
             self.wait(0.4)
-        self.play(Transform(title, heading(f"Every {ss * 1e3:.0f} mV off V_T: ten times the leakage")))
+        self.play(Transform(title, heading(f"Every {ss * 1e3:.0f} mV off V_T: about ten times the leakage")))
 
     # --- the power wall ----------------------------------------------------------------------
     def power_wall(self):
         self.slide(say(
             """
             You can see it in the clock speed. For thirty years it rose about a thousandfold. Then
-            around 2004 it hit three to four gigahertz and stopped. With the voltage stuck,
+            around 2004 base clocks reached three to four gigahertz and stopped climbing. Turbo modes
+            reach higher today, about 6 gigahertz at the very top, but the steady climb was over. With the voltage stuck,
             Dennard's bargain broke: shrinking no longer kept power density constant, and faster
             clocks meant more heat than a chip could get rid of. So the industry went sideways, to
             more cores instead of faster ones.
             """,
             """
             Clock speed-এ এইটা পরিষ্কার দেখা যায়। তিরিশ বছর ধরে এইটা প্রায় হাজার গুণ বাড়ছে। তারপর 2004-এর দিকে
-            তিন থেকে চার gigahertz-এ গিয়া থেমে গেল। Voltage আটকে যাওয়ায় Dennard-এর চুক্তি ভেঙে গেল: ছোট করলে আর
+            base clock তিন থেকে চার gigahertz-এ পৌঁছায়ে আর উঠল না। আজ turbo mode আরও উপরে যায়, সবচেয়ে উপরে প্রায় 6
+            gigahertz, কিন্তু একটানা বাড়াটা শেষ। Voltage আটকে যাওয়ায় Dennard-এর চুক্তি ভেঙে গেল: ছোট করলে আর
             power density একই থাকে না, আর clock বাড়াইলে এত heat হয় যে chip সেটা বের করতে পারে না। তাই industry পাশে
             সরে গেল: দ্রুত core-এর বদলে বেশি core।
             """,
@@ -497,7 +509,7 @@ class Ch05Boltzmann(Chapter, Slide):
         axes.y_axis.add_labels({1: text("1 MHz", size=16, color=MUTED), 2: text("10 MHz", size=16, color=MUTED),
                                 3: text("100 MHz", size=16, color=MUTED), 4: text("1 GHz", size=16, color=MUTED),
                                 5: text("10 GHz", size=16, color=MUTED)}, font_size=16)
-        title = heading("Clock speed stopped rising")
+        title = heading("Clock speed stopped climbing")
         dots = VGroup(*[Dot(axes.c2p(y, log10(f) + 1), color=THERMAL, radius=0.07) for y, f in clocks])
         trail = VMobject(stroke_color=THERMAL, stroke_width=3).set_points_as_corners([d.get_center() for d in dots])
         cap = text("Intel desktop processors, base clock (approximate)", size=18, color=MUTED).next_to(axes, DOWN, buff=0.35)
@@ -507,7 +519,7 @@ class Ch05Boltzmann(Chapter, Slide):
         x0, x1 = axes.c2p(2004, 1)[0], axes.c2p(2022, 1)[0]
         y0, y1 = axes.c2p(1970, log10(2500) + 1)[1], axes.c2p(1970, log10(4500) + 1)[1]
         band = Rectangle(width=x1 - x0, height=y1 - y0, fill_color=DRAIN, fill_opacity=0.15, stroke_width=0).move_to([(x0 + x1) / 2, (y0 + y1) / 2, 0])
-        flat = text("~3–4 GHz since 2004", size=24, color=DRAIN, weight="SEMIBOLD").next_to(band, UP, buff=0.12)
+        flat = text("base clocks ~3–4 GHz since 2004", size=22, color=DRAIN, weight="SEMIBOLD").next_to(band, UP, buff=0.12)
         self.play(FadeIn(band), FadeIn(flat))
         side = VGroup(
             text("V_DD stuck near 1 V", size=22),
@@ -519,28 +531,28 @@ class Ch05Boltzmann(Chapter, Slide):
 
         self.slide(say(
             """
-            Intel saw this coming. In 2001, Pat Gelsinger told the ISSCC conference that if
-            processors kept going the way they were, their power density would match a nuclear
-            reactor by 2005, a rocket nozzle by 2010, and the surface of the Sun by 2015. None of
-            that happened, because the industry changed course. But it shows how hard the wall was.
+            Intel saw this coming. In his keynote at the ISSCC conference in 2001, Pat Gelsinger
+            showed a chart: if processors kept going the way they were, their power density would
+            climb past a hot plate toward a nuclear reactor, then a rocket nozzle, then the surface
+            of the Sun. None of that happened, because the industry changed course. But it shows
+            how hard the wall was.
             """,
             """
-            Intel এইটা আগেই দেখছিল। 2001-এ Pat Gelsinger ISSCC conference-এ বলছিলেন, processor যদি এভাবেই চলতে থাকে,
-            তাহলে এদের power density 2005-এ হবে nuclear reactor-এর সমান, 2010-এ rocket nozzle-এর, আর 2015-এ সূর্যের
-            surface-এর। এগুলার কিছুই হয় নাই, কারণ industry রাস্তা বদলাইছে। কিন্তু দেয়ালটা কত শক্ত ছিল, এইটা তাই
+            Intel এইটা আগেই দেখছিল। 2001-এ ISSCC conference-এর keynote-এ Pat Gelsinger একটা chart দেখান: processor যদি
+            এভাবেই চলতে থাকে, তাহলে এদের power density hot plate পার হয়ে যাবে nuclear reactor-এর দিকে, তারপর rocket
+            nozzle, তারপর সূর্যের surface। এগুলার কিছুই হয় নাই, কারণ industry রাস্তা বদলাইছে। কিন্তু দেয়ালটা কত শক্ত ছিল, এইটা তাই
             দেখায়।
             """,
         ))
         self.clear()
         title = heading("Where the heat was heading")
-        rungs = [("hot plate", "2001"), ("nuclear reactor", "2005"),
-                 ("rocket nozzle", "2010"), ("surface of the Sun", "2015")]
+        rungs = ["hot plate", "nuclear reactor", "rocket nozzle", "surface of the Sun"]
         ladder = VGroup()
-        for i, (thing, year) in enumerate(rungs):
+        for i, thing in enumerate(rungs):
             bar = Rectangle(width=1.6 + 1.5 * i, height=0.55, fill_color=THERMAL, fill_opacity=0.25 + 0.2 * i, stroke_width=0)
-            ladder.add(VGroup(text(year, size=26, color=MUTED), bar, text(thing, size=30, weight="MEDIUM")).arrange(RIGHT, buff=0.35))
+            ladder.add(VGroup(bar, text(thing, size=30, weight="MEDIUM")).arrange(RIGHT, buff=0.35))
         ladder.arrange(UP, aligned_edge=LEFT, buff=0.35).move_to([0, -0.1, 0])
-        quote = text("Pat Gelsinger (Intel), ISSCC 2001 keynote: where power density was heading if scaling went on as it was.", size=18, color=MUTED).to_edge(DOWN, buff=0.35)
+        quote = text("Pat Gelsinger (Intel), ISSCC 2001 keynote talk: where power density was heading if trends held.", size=18, color=MUTED).to_edge(DOWN, buff=0.35)
         self.play(FadeIn(title), FadeIn(quote))
         for row in ladder:
             self.play(FadeIn(row, shift=UP * 0.15), run_time=0.7)
@@ -601,15 +613,19 @@ class Ch05Boltzmann(Chapter, Slide):
             """
             The fix was a new material. A capacitor's strength is the permittivity, k, over the
             thickness. Hafnium oxide has a k around 20, five times silicon dioxide's. So about 6
-            nanometres of hafnium oxide grips the channel like 1.2 nanometres of SiO2, and it's far
-            too thick to tunnel through easily. Intel shipped hafnium-based high-k with metal gates
-            at 45 nanometres in 2007. That wall, we got around.
+            nanometres of hafnium oxide grips the channel like 1.2 nanometres of SiO2, in an ideal
+            single layer, and it's far too thick to tunnel through easily. Real stacks keep a thin
+            layer of SiO2 underneath, which adds to the EOT. Intel shipped hafnium-based high-k with
+            metal gates at 45 nanometres in 2007. That wall, we got around: high-k cut the gate's
+            leakage. It did nothing about the drain.
             """,
             """
             Fix-টা ছিল নতুন একটা material। Capacitor কতটা শক্তিশালী সেটা হইলো permittivity, k, বাই thickness।
             Hafnium oxide-এর k প্রায় 20, silicon dioxide-এর পাঁচ গুণ। তাই প্রায় 6 nanometre hafnium oxide channel-রে
-            ততটাই ধরে যতটা 1.2 nanometre SiO2, আর এত পুরু যে tunnelling সহজে হয় না। Intel 2007-এ 45 nanometre-এ
-            hafnium-based high-k আর metal gate ship করে। এই দেয়ালটা আমরা পার হইছি।
+            ততটাই ধরে যতটা 1.2 nanometre SiO2, একটা ideal single layer হিসাবে, আর এত পুরু যে tunnelling সহজে হয় না।
+            আসল stack-এ নিচে SiO2-এর একটা পাতলা layer থাকে, যেটা EOT-এ যোগ হয়। Intel 2007-এ 45 nanometre-এ
+            hafnium-based high-k আর metal gate ship করে। এই দেয়ালটা আমরা পার হইছি: high-k gate-এর leakage কমাইছে।
+            Drain-এর ব্যাপারে কিছুই করে নাই।
             """,
         ))
         self.clear()
@@ -628,8 +644,8 @@ class Ch05Boltzmann(Chapter, Slide):
         same = text("same grip on the channel", size=22, color=MUTED).next_to(VGroup(sio2, hfo2), DOWN, buff=0.25)
         f1 = eq(r"C_{ox}", r"=", r"\frac{\varepsilon_0\,k}{t}", size=46)
         f1[0].set_color(OXIDE_TEXT)
-        f2 = eq(r"\text{EOT}", r"=", r"t_{hk}\,\frac{3.9}{k}", size=46)
-        f3 = text(f"k ≈ 20: {t_hk:.1f} nm of HfO₂ acts\nlike 1.2 nm of SiO₂", size=26)
+        f2 = eq(r"\text{EOT}", r"\approx", r"t_{IL} + t_{hk}\,\frac{3.9}{k}", size=46)
+        f3 = text(f"k ≈ 20: {t_hk:.1f} nm of HfO₂ acts\nlike 1.2 nm of SiO₂ (ideal, t_IL = 0)", size=24)
         f4 = text("Far less tunnelling.\nIntel 45 nm, 2007.", size=26, color=GOOD, weight="SEMIBOLD")
         VGroup(f1, f2, f3, f4).arrange(DOWN, buff=0.4).move_to([3.6, 0.0, 0])
         self.play(FadeIn(title), FadeIn(sio2))
@@ -646,14 +662,15 @@ class Ch05Boltzmann(Chapter, Slide):
             So that's the state of things in the mid-2000s. We fixed the oxide. We could not fix
             Boltzmann: 60 millivolts per decade is a law of nature for this kind of switch. The only
             thing left to fight for is m, the gate's grip, getting it as close to one as we can. And
-            just then, the transistor got so short that the drain started pulling the hill down by
-            itself. That's the next chapter. But first, try it yourself.
+            as transistors kept getting shorter, an old problem became the main one: the drain
+            started pulling the hill down by itself. That's the next chapter. But first, try it
+            yourself.
             """,
             """
             তো 2000-এর দশকের মাঝামাঝি অবস্থা এই। Oxide আমরা ঠিক করছি। Boltzmann-রে ঠিক করতে পারি নাই: এই ধরনের switch-এর
             জন্য প্রতি decade-এ 60 millivolt প্রকৃতির law। লড়াই করার মতো বাকি থাকল শুধু m, gate-এর grip, যতটা সম্ভব এক-এর
-            কাছে আনা। আর ঠিক তখনই transistor এত ছোট হয়ে গেল যে drain নিজেই hill-টারে টেনে নামাইতে শুরু করল। সেইটা পরের
-            chapter। কিন্তু তার আগে, নিজে একবার try করে দেখেন।
+            কাছে আনা। আর transistor যত ছোট হইতে থাকল, একটা পুরান সমস্যা হয়ে উঠল প্রধান সমস্যা: drain নিজেই hill-টারে টেনে
+            নামাইতে শুরু করল। সেইটা পরের chapter। কিন্তু তার আগে, নিজে একবার try করে দেখেন।
             """,
         ))
         self.clear()
