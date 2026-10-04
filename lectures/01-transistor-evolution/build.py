@@ -58,10 +58,28 @@ SEQUENCE = [
         ),
     ),
     ("scene", "chapters/ch06_losing_grip.py", "Ch06LosingGrip"),
+    (
+        "lab",
+        "lab2_barrier.html",
+        "Live lab 2: Who controls the barrier?",
+        (
+            "Live lab. It opens on a planar transistor with a 30 nm gate: about four and a half "
+            "lambda, in the red. Raise the drain voltage and watch the hill sink and the leakage "
+            "climb. Now press FinFET: the same gate length, but lambda drops to 2.4 nm and the gate "
+            "is back in control. Try the nanosheet and the 2D layer. Then press Shrink the gate and "
+            "watch where each one gives up.",
+            "এইটা live lab। শুরু হয় 30 nm gate-এর একটা planar transistor দিয়া: প্রায় সাড়ে চার lambda, লাল "
+            "অংশে। Drain voltage বাড়ান, দেখেন hill নেমে যায় আর leakage বাড়ে। এবার FinFET চাপেন: gate length "
+            "একই, কিন্তু lambda নেমে 2.4 nm, আর gate আবার control-এ। Nanosheet আর 2D layer try করেন। তারপর "
+            "Shrink the gate চাপেন, দেখেন কোনটা কোথায় হাল ছাড়ে।",
+        ),
+    ),
     ("scene", "chapters/ch07_finfet.py", "Ch07FinFET"),
     ("scene", "chapters/ch08_nanosheet.py", "Ch08Nanosheet"),
     ("scene", "chapters/ch09_forksheet.py", "Ch09Forksheet"),
     ("scene", "chapters/ch10_cfet.py", "Ch10CFET"),
+    ("scene", "chapters/ch11_beyond.py", "Ch11Beyond"),
+    ("scene", "chapters/ch12_outro.py", "Ch12Outro"),
 ]
 
 # Manim settings per quality. Use long options: manim-slides reads the "h" in "-qh" as its own

@@ -7,7 +7,7 @@ Animated slides built with Manim, with live simulations and the theory behind ev
 
 | # | Lecture | Status |
 |---|---|---|
-| 1 | [The Switch That Wouldn't Turn Off](lectures/01-transistor-evolution/): the transistor from Lilienfeld's 1925 patent to the MOSFET, FinFET, nanosheet, forksheet, CFET and beyond | Chapters 0–10 and Live Lab 1 |
+| 1 | [The Switch That Wouldn't Turn Off](lectures/01-transistor-evolution/): the transistor from Lilienfeld's 1925 patent to the MOSFET, FinFET, nanosheet, forksheet, CFET and beyond | Chapters 0–12 and Live Labs 1–2 |
 | 2 | Analog layout | Planned |
 | 3 | Analog building blocks, with simulation | Planned |
 

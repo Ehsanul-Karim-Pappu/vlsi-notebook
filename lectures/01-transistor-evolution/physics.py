@@ -27,7 +27,9 @@ def thermal_voltage(T=300.0):
 
 
 def body_factor(c_dep, c_ox):
-    """m = 1 + C_dep / C_ox: how much of the gate voltage reaches the channel surface (1/m)."""
+    """m = 1 + C_dep / C_ox: how much of the gate voltage reaches the channel surface (1/m).
+    A negative-capacitance insulator (C_ox < 0, chapter 11) gives m < 1, and a swing below
+    60 mV/decade (S. Salahuddin and S. Datta, Nano Lett. 8, 405 (2008))."""
     return 1.0 + c_dep / c_ox
 
 
@@ -265,3 +267,26 @@ def self_gain_from_dibl(dibl_mV_per_V):
     resistance: the drain moves the current like eta = DIBL (V/V) times the gate, so
     g_ds = eta g_m and g_m r_o = 1/eta. A model: channel-length modulation lowers it further."""
     return 1000.0 / dibl_mV_per_V
+
+
+# --- Chapter 11: beyond silicon, beyond Boltzmann ---------------------------------------------
+def source_drain_tunnelling(length_nm, barrier_eV=0.4, m_eff=0.2):
+    """WKB share of electrons that tunnel straight through the channel's barrier, source to
+    drain, rather than climbing over it. m_eff ~0.2 m0 for electrons in silicon."""
+    return tunnel_transmission(length_nm, barrier_eV, m_eff)
+
+
+def tunnelling_crossover_nm(barrier_eV=0.4, m_eff=0.2, T=300.0):
+    """The channel length at which tunnelling through the barrier equals the thermal leak over
+    it: exp(-2 kappa L) = exp(-E_b / k_B T)."""
+    return barrier_eV / thermal_voltage(T) / tunnel_decay_per_m(barrier_eV, m_eff) * 1e9
+
+
+def landauer_limit_J(T=300.0):
+    """The least energy to erase one bit: k_B T ln 2 (R. Landauer, IBM J. Res. Dev. 5, 183 (1961))."""
+    return K_B * T * log(2)
+
+
+def switching_energy_J(c_fF, v):
+    """The energy one switching event draws from the supply into a node: C V^2 / 2."""
+    return 0.5 * c_fF * 1e-15 * v**2

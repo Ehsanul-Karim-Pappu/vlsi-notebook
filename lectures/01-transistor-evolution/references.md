@@ -158,3 +158,37 @@ photos and patent drawings, with their sources and licences, are listed in
 | PowerVia: >30% less platform voltage droop, 6% frequency benefit, >90% cell utilization (test chip) | Intel, VLSI Symposium 2023 (June 2023) |
 | ΔT = P R_th; the upper tier is further from the heat path | Qualitative |
 | 5 nm of silicon is about 37 atomic layers | Si (100) layer spacing a/4 = 0.136 nm |
+
+## Live Lab 2 · Who controls the barrier?
+
+| Claim | Source |
+|---|---|
+| The barrier, λ, DIBL and swing it shows | Chapter 6's quasi-2D model, ported line for line to `labs/lab-physics.js`; `tests/test_physics.py` checks the port against `physics.py` |
+| Channel thickness per architecture (planar 15 nm effective depth, double gate 10, fin 6, sheets 5, 2D 0.65) | Illustrative values, as in chapter 6; every channel uses silicon's permittivity |
+
+## Chapter 11 · Beyond silicon, beyond Boltzmann
+
+| Claim | Source |
+|---|---|
+| Mobility falls about as t⁶ in very thin silicon (5 → 3 nm: ×0.05) | K. Uchida et al., IEDM 2002 (see chapter 7). Illustrative ratio in `physics.roughness_mobility_ratio` |
+| A MoS₂ monolayer is about 0.65 nm thick; 2D surfaces have no dangling bonds | B. Radisavljevic et al., "Single-layer MoS₂ transistors", *Nature Nanotechnology* 6, 147 (2011) |
+| λ ≈ 1.0 nm for a 0.65 nm layer gated on both sides (1 nm oxide), against 1.9 nm for a 5 nm silicon sheet | Model: `physics.natural_length_nm`, with silicon's permittivity for both |
+| 2D channels on imec's roadmap after the CFET, around the A2 node, early 2040s (projection) | imec, "Introducing 2D-material based devices in the logic scaling roadmap" (https://www.imec-int.com/en/articles/introducing-2d-material-based-devices-logic-scaling-roadmap) |
+| Fermi-level pinning at metal contacts to 2D semiconductors | Y. Liu et al., "Approaching the Schottky–Mott limit in van der Waals metal–semiconductor junctions", *Nature* 557, 696 (2018), and references there |
+| Semimetal (bismuth) contacts on MoS₂ with contact resistance near the quantum limit, 2021 | P.-C. Shen et al., "Ultralow contact resistance between semimetal and monolayer semiconductors", *Nature* 593, 211 (2021) |
+| Tunnel FETs: band-to-band tunnelling cuts off the Boltzmann tail; swings below 60 mV/dec shown, on-currents low | A. M. Ionescu and H. Riel, "Tunnel field-effect transistors as energy-efficient electronic switches", *Nature* 479, 329 (2011) |
+| Negative capacitance: a ferroelectric gate layer can give m < 1 | S. Salahuddin and S. Datta, "Use of negative capacitance to provide voltage amplification for low power nanoscale devices", *Nano Letters* 8, 405 (2008). m = 1 + C_dep/C_ins, `physics.body_factor` |
+| Source-to-drain tunnelling equals the thermal leak at about 5 nm (0.4 eV barrier, m* = 0.2 m₀) | Model: WKB in `physics.source_drain_tunnelling` and `physics.tunnelling_crossover_nm` |
+| Landauer's limit k_BT ln 2 ≈ 2.9 zJ at 300 K | R. Landauer, "Irreversibility and heat generation in the computing process", *IBM J. Res. Dev.* 5, 183 (1961); measured: A. Bérut et al., *Nature* 483, 187 (2012) |
+| A logic node's switching energy, ½CV² ≈ 25 aJ (0.1 fF at 0.7 V) | Illustrative estimate, `physics.switching_energy_J` |
+| Vertical-transport FET (VTFET), 2021 | IBM and Samsung, announced at IEDM, December 2021 |
+| RV16X-NANO: a 16-bit RISC-V processor of more than 14,000 carbon-nanotube transistors | G. Hills et al., "Modern microprocessor built from complementary carbon nanotube transistors", *Nature* 572, 595 (2019) |
+| A tunnel FET's source and drain are doped p⁺ and n⁺, so it is asymmetric | Ionescu and Riel (2011) |
+
+## Chapter 12 · Outro
+
+| Claim | Source |
+|---|---|
+| The table of eras | Chapters 1 to 11 of this lecture, and their sources above |
+| Shortest gates ≈ 6λ: 40, 15, 12, 13, 12 and 6 nm | Model: `physics.natural_length_nm`, 1 nm oxide (EOT) |
+| (k_BT/q) ln 10 = 59.5 mV per decade at 300 K | `physics.subthreshold_swing` |

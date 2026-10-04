@@ -145,6 +145,28 @@ class ArchitectureChapters(unittest.TestCase):
         self.assertTrue(5 < short < 8 and long_ > 100, (short, long_))
 
 
+class BeyondChapters(unittest.TestCase):
+    def test_a_2d_layer_halves_lambda(self):
+        self.assertAlmostEqual(p.natural_length_nm(0.65, 1, 2), 0.99, places=2)
+
+    def test_negative_capacitance_gives_m_below_one(self):
+        self.assertAlmostEqual(p.body_factor(1.0, 4.0), 1.25)
+        m = p.body_factor(1.0, -5.0)
+        self.assertAlmostEqual(m, 0.8)
+        self.assertLess(p.subthreshold_swing(300, m), 0.05)
+
+    def test_tunnelling_matches_the_thermal_leak_near_5_nm(self):
+        L = p.tunnelling_crossover_nm()
+        self.assertTrue(4.5 < L < 6.0, L)
+        self.assertAlmostEqual(p.source_drain_tunnelling(L), p.fraction_over_barrier(0.4), places=12)
+        self.assertGreater(p.source_drain_tunnelling(3), p.fraction_over_barrier(0.4))
+
+    def test_landauer_and_today(self):
+        self.assertAlmostEqual(p.landauer_limit_J() * 1e21, 2.87, places=2)
+        ratio = p.switching_energy_J(0.1, 0.7) / p.landauer_limit_J()
+        self.assertTrue(5e3 < ratio < 2e4, ratio)
+
+
 class LabPortAgrees(unittest.TestCase):
     def js(self, expr):
         script = (
@@ -161,6 +183,11 @@ class LabPortAgrees(unittest.TestCase):
             ("P.drainCurrent(0.25, 0.4, 300, 1.3)", p.drain_current(0.25, 0.4, 300, 1.3)),
             ("P.drainCurrent(40, 0.4)", p.drain_current(40, 0.4)),
             ("P.offCurrentRatio(0.12, 0.06)", p.off_current_ratio(0.12, 0.06)),
+            ("P.naturalLength(6, 1, 3)", p.natural_length_nm(6, 1, 3)),
+            ("P.channelPotential(1.3, 4, 1.2, 1.0, 0.6)", p.channel_potential(1.3, 4, 1.2, 1.0, 0.6)),
+            ("P.barrierHeight(5, 1, 1.0, 0.75)", p.barrier_height(5, 1, 1.0, 0.75)),
+            ("P.diblMVperV(6, 1)", p.dibl_mV_per_V(6, 1)),
+            ("P.shortChannelSwing(7, 1.1)", p.short_channel_swing(7, 1.1)),
         ]
         for expr, want in cases:
             with self.subTest(expr=expr):

@@ -6,10 +6,10 @@ forksheet, the CFET and beyond. It's built with **Manim** and **manim-slides**, 
 Veritasium, and heavy on theory: each architecture shows up as the answer to a physics problem
 that we state with its equations.
 
-Status: **Phases 1 to 3 are built**: the style kit, Chapters 0 to 10 and Live Lab 1, with
-English slides, speaker notes in English and Bangla, and a speaker view that shows each
-animation's progress. See `README.md` to build and present it. Next: Chapters 11 and 12, and
-Live Labs 2 to 5.
+Status: **Phases 1 to 3 are built, and most of 4**: the style kit, all thirteen chapters
+(0 to 12) and Live Labs 1 and 2, with English slides, speaker notes in English and Bangla, and a
+speaker view that shows each animation's progress. See `README.md` to build and present it.
+Next: Live Labs 3 to 5, then the polish (Phase 5).
 
 The device data in `data/` and the 3D models in `models/` are copied from
 [FET Lab](https://github.com/Ehsanul-Karim-Pappu/fet-lab), so the deck's devices match that
@@ -392,7 +392,7 @@ deck is a build output.
 2. ✅ **The history arc**: Ch 1–4, with notes in both languages and the speaker view.
 3. ✅ **The architecture arc**: Ch 6–10, with the 3D devices, the layouts from above and the
    nanosheet process animation.
-4. **The frontier**: Ch 11–12 and Labs 2–5.
+4. **The frontier**: ✅ Ch 11–12 and Lab 2; Labs 3–5 to come.
 5. **Polish**: transitions, pacing, a speaker-notes script for every slide, an accuracy audit,
    final 1080p renders, HTML + PPTX + the documentary cut, and the README.
 

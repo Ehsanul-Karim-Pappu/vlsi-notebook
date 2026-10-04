@@ -6,12 +6,13 @@ bipolar transistor and the MOSFET, to the FinFET, the nanosheet, the forksheet, 
 what comes after. Each architecture shows up as the answer to a physics problem, with its
 equations.
 
-**Status: chapters 0 to 10 and Live Lab 1 are built**: the cold open,
+**Status: all thirteen chapters (0 to 12) and Live Labs 1 and 2 are built**: the cold open,
 the vacuum tube and Lilienfeld (1), the bipolar transistor (2), the oxide, the MOSFET and CMOS
 (3), Moore and Dennard (4), Boltzmann's tyranny (5), short channels and the natural length λ
-(6), the FinFET (7), nanosheets and how they're made (8), the forksheet (9) and the CFET with
-backside power (10). Chapters 11 and 12 and the other labs follow the storyboard in
-[PLAN.md](PLAN.md).
+(6), the FinFET (7), nanosheets and how they're made (8), the forksheet (9), the CFET with
+backside power (10), 2D channels, steep-slope switches and the hard floors (11), and the
+outro (12). Lab 1 (Boltzmann's fence) follows chapter 5 and Lab 2 (who controls the barrier?)
+follows chapter 6. Labs 3 to 5 and the polish follow the storyboard in [PLAN.md](PLAN.md).
 
 It's pitched at analog layout engineers: each chapter ties its physics to something they draw
 (W and L, common-centroid pairs, taps and guard rings, threshold flavours, λ and DRC rules). The
