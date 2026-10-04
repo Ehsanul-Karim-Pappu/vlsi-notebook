@@ -6,9 +6,8 @@ forksheet, the CFET and beyond. It's built with **Manim** and **manim-slides**, 
 Veritasium, and heavy on theory: each architecture shows up as the answer to a physics problem
 that we state with its equations.
 
-Status: **plan only, nothing built yet.** The toolchain has been checked: Manim 0.21,
-manim-slides 5.7, LaTeX equations, 3D devices built from `data/geometry.json`, and HTML export
-all render.
+Status: **Phase 1 (the first sample) is built**: the style kit, Chapter 0 (cold open), Chapter
+5 (Boltzmann's tyranny) and Live Lab 1. See `README.md` to build and present it.
 
 The device data in `data/` and the 3D models in `models/` are copied from
 [FET Lab](https://github.com/Ehsanul-Karim-Pappu/fet-lab), so the deck's devices match that
@@ -338,17 +337,17 @@ vlsi-notebook/
   requirements.txt        manim, manim-slides (pinned), shared by every lecture
   kit/                    shared by every lecture
     style.py              palette, fonts, title cards, timeline ribbon, control meter
+    fonts/                Inter (SIL OFL), registered at import
     motifs.py             band diagrams, field lines, the hill and marbles, the grip
     devices3d.py          3D devices built from a lecture's geometry data
   lectures/01-transistor-evolution/
     PLAN.md               this file
     README.md             build and present instructions
-    manim.cfg             frame rate, background, quality presets
     physics.py            every equation in this lecture, as functions (unit-tested)
     data/                 device geometry, process steps and references, from FET Lab
     models/               FET Lab's 3D models (.glb) for the 3D slides and Lab 5
     chapters/             ch00_cold_open.py … ch12_outro.py, one Slide class per chapter
-    labs/                 lab1_boltzmann.html … lab5_models.html (+ shared lab.css/lab.js)
+    labs/                 lab1_boltzmann.html … lab5_models.html (+ shared lab.css, lab.js, lab-physics.js)
     template/deck.html    reveal.js template that adds the labs and the 3D viewer
     references.md         a source for every date and number (reuses data/references.json R-ids)
     build.py              render (draft/final) → manim-slides convert → html/pptx/mp4

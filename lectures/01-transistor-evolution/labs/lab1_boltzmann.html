@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boltzmann's Fence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="lab.css">
+</head>
+<body>
+  <header>
+    <div class="kicker">Live lab 1</div>
+    <h1>Boltzmann's fence</h1>
+    <p>Drag the gate voltage and watch electrons get over the hill. Then change the temperature and the gate's grip, and see what happens to the 60 mV.</p>
+  </header>
+
+  <main class="grid">
+    <section class="panel">
+      <h2>The hill: electron energy from source to drain</h2>
+      <canvas id="hill" aria-label="Energy barrier with thermal electrons"></canvas>
+      <div class="readouts">
+        <div>Barrier <b id="rEb"></b></div>
+        <div>Thermal energy k<sub>B</sub>T <b id="rKt"></b></div>
+        <div>Share over the hill <b id="rFrac"></b></div>
+        <div>Crossing now <b id="rRate"></b></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Drain current against gate voltage (log scale)</h2>
+      <canvas id="iv" aria-label="Drain current against gate voltage"></canvas>
+      <div class="readouts">
+        <div class="big">Subthreshold swing <b id="rSS"></b></div>
+        <div class="big">Off to on <b id="rDec"></b></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="controls">
+    <label class="control">
+      <div class="row"><span>Gate voltage V<sub>G</sub></span><output id="oVg"></output></div>
+      <input id="vg" type="range" min="0" max="0.8" step="0.005" value="0.2">
+    </label>
+    <div class="control">
+      <div class="row"><span>Temperature</span><output id="oT"></output></div>
+      <input id="temp" type="range" min="50" max="400" step="1" value="300" aria-label="Temperature">
+      <div class="presets">
+        <button class="ghost" data-t="77">77 K liquid N₂</button>
+        <button class="ghost" data-t="300">300 K room</button>
+        <button class="ghost" data-t="400">400 K hot chip</button>
+      </div>
+    </div>
+    <div class="control">
+      <div class="row"><span>Gate grip, m = 1 + C<sub>dep</sub>/C<sub>ox</sub></span><output id="oM"></output></div>
+      <input id="m" type="range" min="1" max="2" step="0.01" value="1" aria-label="Body factor m">
+      <div class="hint">1 is a perfect gate. Planar transistors sat around 1.2–1.5.</div>
+    </div>
+    <button id="sweep">Sweep the gate</button>
+  </footer>
+
+  <script src="lab-physics.js"></script>
+  <script src="lab.js"></script>
+  <script>
+  (function () {
+    const P = window.LabPhysics;
+    const C = {
+      bg: Lab.css("--bg"), ink: Lab.css("--ink"), muted: Lab.css("--muted"), faint: Lab.css("--faint"),
+      electron: Lab.css("--electron"), gate: Lab.css("--gate"), drain: Lab.css("--drain"), thermal: Lab.css("--thermal"),
+    };
+
+    // Device: the threshold voltage, the barrier left at threshold, the drain's drop.
+    const VT = 0.40, E_T = 0.06, DRAIN = 0.25, I_SPEC = 2e-7, VMAX = 0.8;
+    const $ = (id) => document.getElementById(id);
+    const ui = { vg: $("vg"), temp: $("temp"), m: $("m") };
+    const state = () => ({ vg: +ui.vg.value, T: +ui.temp.value, m: +ui.m.value });
+    const barrier = (s) => Math.max(0, E_T + (VT - s.vg) / s.m);
+    const current = (v, T, m) => P.drainCurrent(v, VT, T, m, I_SPEC);
+
+    const SUP = { "-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+    const pow10 = (n) => "10" + String(n).split("").map((c) => SUP[c] || c).join("");
+    function sci(x) {
+      if (x >= 0.01) return x.toFixed(x >= 0.1 ? 2 : 3);
+      if (x < 1e-99) return "≈ 0";
+      const e = Math.floor(Math.log10(x));
+      return (x / Math.pow(10, e)).toFixed(1) + " × " + pow10(e);
+    }
+    let seed = 1;
+    const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+    const gauss = () => Math.sqrt(-2 * Math.log(rand() + 1e-12)) * Math.cos(2 * Math.PI * rand());
+
+    // --- the hill and its electrons --------------------------------------------------------
+    const SRC_L = 0.04, SRC_R = 0.40, MID = 0.50, CH_R = 0.60, END = 0.98;
+    const E_MIN = -0.34, E_MAX = 0.58;
+    const smooth = (t) => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
+    function ec(xf, b) {
+      if (xf < SRC_R) return 0;
+      if (xf < MID) return b * smooth((xf - SRC_R) / (MID - SRC_R));
+      if (xf < CH_R) return b + (-DRAIN - b) * smooth((xf - MID) / (CH_R - MID));
+      return -DRAIN;
+    }
+
+    const N = 220;
+    const px = new Float64Array(N), pe = new Float64Array(N), vx = new Float64Array(N), mode = new Uint8Array(N);
+    function spawn(i, kT, left) {
+      px[i] = left ? SRC_L + 0.01 + 0.08 * rand() : SRC_L + 0.01 + (SRC_R - SRC_L - 0.02) * rand();
+      pe[i] = -kT * Math.log(rand() + 1e-12);
+      vx[i] = 0.1 * gauss();
+      mode[i] = 0;
+    }
+    for (let i = 0; i < N; i++) spawn(i, P.thermalVoltage(300), false);
+    const crossings = [];
+
+    function step(dt, s) {
+      const kT = P.thermalVoltage(s.T), b = barrier(s);
+      const tau = 0.35, dif = (kT * kT) / tau;
+      for (let i = 0; i < N; i++) {
+        if (mode[i] === 0) {
+          pe[i] = Math.abs(pe[i] - (dif / kT) * dt + Math.sqrt(2 * dif * dt) * gauss());
+          vx[i] += 0.3 * Math.sqrt(dt) * gauss() - 0.6 * vx[i] * dt;
+          px[i] += vx[i] * dt;
+          if (px[i] < SRC_L + 0.005) { px[i] = 2 * (SRC_L + 0.005) - px[i]; vx[i] = Math.abs(vx[i]); }
+          if (px[i] > SRC_R) {
+            if (pe[i] > b) { mode[i] = 1; vx[i] = 0.22; }
+            else { px[i] = 2 * SRC_R - px[i]; vx[i] = -Math.abs(vx[i]); }
+          }
+        } else {
+          px[i] += vx[i] * dt;
+          if (mode[i] === 1 && px[i] > CH_R) { mode[i] = 2; crossings.push(performance.now()); }
+          if (mode[i] === 2) {
+            pe[i] = Math.max(ec(px[i], b), pe[i] - 1.5 * dt);
+            if (px[i] > END - 0.01) spawn(i, kT, true);
+          }
+        }
+      }
+      const cut = performance.now() - 2000;
+      while (crossings.length && crossings[0] < cut) crossings.shift();
+    }
+
+    const hill = Lab.fitCanvas($("hill"));
+    function drawHill(s) {
+      const { ctx, w, h } = hill;
+      const top = 46, bot = h - 18, left = 30, right = w - 10;
+      const X = (f) => left + f * (right - left);
+      const Y = (e) => top + ((E_MAX - e) / (E_MAX - E_MIN)) * (bot - top);
+      const b = barrier(s);
+      ctx.clearRect(0, 0, w, h);
+
+      // gate electrode over the channel
+      ctx.font = "600 13px Inter, system-ui, sans-serif";
+      const label = "gate  " + s.vg.toFixed(2) + " V";
+      const gw = Math.max(X(CH_R) - X(SRC_R), ctx.measureText(label).width + 16);
+      ctx.fillStyle = C.gate;
+      ctx.fillRect(X(MID) - gw / 2, 8, gw, 22);
+      ctx.fillStyle = C.bg;
+      ctx.textAlign = "center";
+      ctx.fillText(label, X(MID), 24);
+
+      // energy axis
+      ctx.strokeStyle = C.faint; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(14, bot); ctx.lineTo(14, top); ctx.stroke();
+      ctx.save(); ctx.translate(10, (top + bot) / 2); ctx.rotate(-Math.PI / 2);
+      ctx.fillStyle = C.muted; ctx.font = "500 12px Inter, system-ui, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("electron energy", 0, 0); ctx.restore();
+
+      // band edge
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.beginPath();
+      for (let k = 0; k <= 300; k++) {
+        const f = SRC_L + ((END - SRC_L) * k) / 300;
+        const x = X(f), y = Y(ec(f, b));
+        if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // barrier height
+      if (b > 0.004) {
+        const xa = X(MID) + 26;
+        ctx.strokeStyle = C.gate; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(xa, Y(0)); ctx.lineTo(xa, Y(b)); ctx.stroke();
+        const ym = (Y(0) + Y(b)) / 2 + 4;
+        ctx.fillStyle = C.gate; ctx.textAlign = "left"; ctx.font = "600 14px Inter, system-ui, sans-serif";
+        ctx.fillText("E", xa + 6, ym);
+        ctx.font = "600 10px Inter, system-ui, sans-serif";
+        ctx.fillText("b", xa + 16, ym + 4);
+      }
+
+      // labels
+      ctx.fillStyle = C.muted; ctx.font = "500 13px Inter, system-ui, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("source", X((SRC_L + SRC_R) / 2), Y(0) + 20);
+      ctx.fillText("drain", X((CH_R + END) / 2), Y(-DRAIN) + 20);
+
+      // electrons
+      ctx.fillStyle = C.electron;
+      for (let i = 0; i < N; i++) {
+        ctx.beginPath();
+        ctx.arc(X(px[i]), Y(pe[i]) - 3, 2.6, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
+
+    // --- the I-V plot --------------------------------------------------------------------------
+    const iv = Lab.fitCanvas($("iv"));
+    const LOG_MIN = -16, LOG_MAX = -4;
+    function drawIV(s) {
+      const { ctx, w, h } = iv;
+      const l = 54, r = w - 12, t = 12, b = h - 34;
+      const X = (v) => l + (v / VMAX) * (r - l);
+      const Y = (lg) => t + ((LOG_MAX - lg) / (LOG_MAX - LOG_MIN)) * (b - t);
+      ctx.clearRect(0, 0, w, h);
+      ctx.font = "500 12px Inter, system-ui, sans-serif";
+
+      ctx.strokeStyle = C.faint; ctx.lineWidth = 1; ctx.fillStyle = C.muted;
+      for (let n = LOG_MIN; n <= LOG_MAX; n += 2) {
+        ctx.beginPath(); ctx.moveTo(l, Y(n)); ctx.lineTo(r, Y(n)); ctx.stroke();
+        ctx.textAlign = "right"; ctx.fillText(pow10(n) + " A", l - 6, Y(n) + 4);
+      }
+      ctx.textAlign = "center";
+      for (let v = 0; v <= VMAX + 1e-9; v += 0.2) ctx.fillText(v.toFixed(1), X(v), b + 16);
+      ctx.fillText("gate voltage (V)", (l + r) / 2, b + 30);
+
+      ctx.save();
+      ctx.beginPath(); ctx.rect(l, t, r - l, b - t); ctx.clip();
+      const curve = (T, m, color, width, dash) => {
+        ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash); ctx.beginPath();
+        for (let k = 0; k <= 240; k++) {
+          const v = (VMAX * k) / 240, y = Y(Math.log10(current(v, T, m)));
+          if (k === 0) ctx.moveTo(X(v), y); else ctx.lineTo(X(v), y);
+        }
+        ctx.stroke(); ctx.setLineDash([]);
+      };
+      curve(300, 1, C.muted, 1.5, [6, 5]);
+      curve(s.T, s.m, C.electron, 3, []);
+
+      // the swing, drawn on the curve where it's straight
+      const ss = P.subthresholdSwing(s.T, s.m);
+      const v0 = Math.max(0.02, VT - 3.2 * ss);
+      if (v0 + ss < VT) {
+        const y0 = Y(Math.log10(current(v0, s.T, s.m))), y1 = Y(Math.log10(current(v0 + ss, s.T, s.m)));
+        ctx.strokeStyle = C.gate; ctx.lineWidth = 2; ctx.beginPath();
+        ctx.moveTo(X(v0), y0); ctx.lineTo(X(v0 + ss), y0); ctx.lineTo(X(v0 + ss), y1); ctx.stroke();
+        ctx.fillStyle = C.gate; ctx.textAlign = "center";
+        ctx.fillText((ss * 1e3).toFixed(0) + " mV", (X(v0) + X(v0 + ss)) / 2, y0 + 16);
+        ctx.textAlign = "left"; ctx.fillText("×10", X(v0 + ss) + 5, (y0 + y1) / 2 + 4);
+      }
+
+      const lg = Math.log10(current(s.vg, s.T, s.m));
+      ctx.fillStyle = C.gate; ctx.beginPath(); ctx.arc(X(s.vg), Y(lg), 6, 0, 2 * Math.PI); ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = C.muted; ctx.textAlign = "left";
+      ctx.fillText("- - 300 K, perfect gate", l + 8, t + 14);
+    }
+
+    // --- readouts and controls -----------------------------------------------------------------
+    function readouts(s) {
+      const kT = P.thermalVoltage(s.T), b = barrier(s);
+      $("oVg").textContent = s.vg.toFixed(3) + " V";
+      $("oT").textContent = s.T + " K";
+      $("oM").textContent = s.m.toFixed(2);
+      $("rEb").textContent = (b * 1e3).toFixed(0) + " meV";
+      $("rKt").textContent = (kT * 1e3).toFixed(1) + " meV";
+      $("rFrac").textContent = sci(P.fractionOverBarrier(b, s.T));
+      $("rRate").textContent = (crossings.length / 2).toFixed(1) + " per second";
+      $("rSS").textContent = (P.subthresholdSwing(s.T, s.m) * 1e3).toFixed(1) + " mV/decade";
+      const dec = Math.log10(current(VMAX, s.T, s.m) / current(0, s.T, s.m));
+      $("rDec").textContent = dec.toFixed(1) + " decades";
+    }
+
+    document.querySelectorAll("[data-t]").forEach((btn) =>
+      btn.addEventListener("click", () => { ui.temp.value = btn.dataset.t; })
+    );
+
+    let sweep = null;
+    $("sweep").addEventListener("click", () => { sweep = { t0: performance.now() }; ui.vg.value = 0; });
+
+    let last = performance.now();
+    function frame(now) {
+      // rAF timestamps can trail the clock read at start-up, so never step backwards.
+      const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+      last = now;
+      if (sweep) {
+        const a = (now - sweep.t0) / 6000;
+        ui.vg.value = Math.min(VMAX, a * VMAX);
+        if (a >= 1) sweep = null;
+      }
+      const s = state();
+      step(dt / 2, s); step(dt / 2, s);
+      drawHill(s);
+      drawIV(s);
+      readouts(s);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>

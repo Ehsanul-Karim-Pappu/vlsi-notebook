@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ cdn_url }}/dist/reveal.css">
+    <link rel="stylesheet" href="{{ cdn_url }}/dist/theme/black.css">
+    <style>
+      /* The series' palette: kit/style.py */
+      :root {
+        --bg: #0E1116;
+        --ink: #ECE8E1;
+        --muted: #8A8F98;
+        --gate: #F2B84B;
+      }
+      html, body, .reveal, .reveal-viewport { background: var(--bg); }
+      .reveal .progress { color: var(--gate); height: 4px; }
+      .reveal .controls { color: var(--gate); }
+      .reveal .slide-number {
+        background: transparent;
+        color: var(--muted);
+        font: 500 14px/1 Inter, system-ui, sans-serif;
+      }
+      /* A live lab fills its slide. */
+      .reveal .slides section.lab { width: 100%; height: 100%; padding: 0; top: 0 !important; }
+      .reveal .slides section.lab iframe {
+        position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        {#
+          Like manim-slides' default template, with two changes:
+          1. A slide followed by "vertical" slides opens a reveal.js stack, so it is the top of
+             the stack and → skips the detour below it. (The default starts the stack at the
+             first vertical slide.)
+          2. A marker after every scene, where build.py inserts the live labs.
+        #}
+        {% for presentation_config in presentation_configs -%}
+          {%- set outer_loop = loop %}
+          {%- set ns = namespace(open_stack=false) %}
+          {% for slide_config in presentation_config.slides %}
+            {% if one_file %}
+              {% set file = file_to_data_uri(slide_config.file) %}
+            {% else %}
+              {% set file = assets_dir ~ '/' ~ (prefix(outer_loop.index0) + slide_config.file.name) %}
+            {% endif %}
+            {% if slide_config.direction != "vertical" %}
+              {% if ns.open_stack %}
+        </section>
+                {% set ns.open_stack = false %}
+              {% endif %}
+              {% if loop.nextitem is defined and loop.nextitem.direction == "vertical" %}
+        <section>
+                {% set ns.open_stack = true %}
+              {% endif %}
+            {% endif %}
+        <section
+          data-background-size={{ background_size }}
+          data-background-color="{{ presentation_config.background_color }}"
+          {% if slide_config.type.value == "image" %}
+          data-background-image="{{ file }}"
+          {% else %}
+          data-background-video="{{ file }}"
+          {% if loop.index == 1 and outer_loop.index == 1 %}
+          data-background-video-muted
+          {% endif %}
+          {% if slide_config.loop %}
+          data-background-video-loop
+          {% endif %}
+          {% endif %}
+          {% if slide_config.auto_next %}
+          data-autoslide="{{ get_duration_ms(slide_config.file) }}"
+          {% endif %}
+          >
+          {% if slide_config.notes != "" %}
+          <aside class="notes" data-markdown>{{ slide_config.notes }}</aside>
+          {% endif %}
+        </section>
+          {% endfor %}
+          {% if ns.open_stack %}
+        </section>
+          {% endif %}
+        <!-- after-scene:{{ outer_loop.index0 }} -->
+        {% endfor %}
+      </div>
+    </div>
+
+    <script src="{{ cdn_url }}/dist/reveal.js"></script>
+    <script src="{{ cdn_url }}/dist/plugin/notes.js"></script>
+    {% if has_notes %}
+    <script src="{{ cdn_url }}/dist/plugin/markdown.js"></script>
+    {% endif %}
+    <script>
+      Reveal.initialize({
+        {% if has_notes %}
+        plugins: [ RevealMarkdown, RevealNotes ],
+        {% else %}
+        plugins: [ RevealNotes ],
+        {% endif %}
+        width: {{ width }},
+        height: {{ height }},
+        margin: {{ margin }},
+        minScale: {{ min_scale }},
+        maxScale: {{ max_scale }},
+        controls: {{ controls }},
+        controlsTutorial: {{ controls_tutorial }},
+        controlsLayout: {{ controls_layout }},
+        controlsBackArrows: {{ controls_back_arrows }},
+        progress: {{ progress }},
+        slideNumber: {{ slide_number }},
+        showSlideNumber: {{ show_slide_number }},
+        hash: {{ hash }},
+        respondToHashChanges: {{ respond_to_hash_changes }},
+        history: {{ history }},
+        keyboard: {{ keyboard }},
+        overview: {{ overview }},
+        center: {{ center }},
+        touch: {{ touch }},
+        loop: {{ loop }},
+        navigationMode: {{ navigation_mode }},
+        fragments: {{ fragments }},
+        embedded: {{ embedded }},
+        help: {{ help }},
+        pause: {{ pause }},
+        showNotes: {{ show_notes }},
+        autoPlayMedia: {{ auto_play_media }},
+        preloadIframes: true,
+        autoSlide: {{ auto_slide }},
+        autoSlideStoppable: {{ auto_slide_stoppable }},
+        defaultTiming: {{ default_timing }},
+        mouseWheel: {{ mouse_wheel }},
+        previewLinks: {{ preview_links }},
+        transition: {{ transition }},
+        transitionSpeed: {{ transition_speed }},
+        backgroundTransition: {{ background_transition }},
+        viewDistance: {{ view_distance }},
+        mobileViewDistance: {{ mobile_view_distance }},
+        display: {{ display }},
+        hideInactiveCursor: {{ hide_inactive_cursor }},
+        hideCursorTime: {{ hide_cursor_time }}
+      });
+
+      // SPACE plays or pauses the slide's video (as in manim-slides' own template).
+      Reveal.addKeyBinding({ keyCode: 32, key: "SPACE", description: "Play / pause video" }, () => {
+        const v = Reveal.getCurrentSlide().slideBackgroundContentElement.getElementsByTagName("video");
+        if (v.length > 0) { if (v[0].paused) v[0].play(); else v[0].pause(); } else { Reveal.next(); }
+      });
+      // A clicker's buttons (Page Down / Page Up) follow the main story and skip the ↓ detours.
+      Reveal.addKeyBinding({ keyCode: 34, key: "PAGE DOWN", description: "Next (skips detours)" }, () => Reveal.right());
+      Reveal.addKeyBinding({ keyCode: 33, key: "PAGE UP", description: "Previous" }, () => Reveal.left());
+
+      // A lab keeps the keyboard while you use it; it sends slide changes up to the deck.
+      window.addEventListener("message", (e) => {
+        if (!e.data || e.data.type !== "deck") return;
+        if (e.data.go === "next") Reveal.right();
+        if (e.data.go === "prev") Reveal.left();
+      });
+      // Give a lab the keyboard when its slide opens, and take it back when it closes.
+      Reveal.on("slidechanged", (ev) => {
+        const frame = ev.currentSlide.querySelector("iframe");
+        if (frame) setTimeout(() => frame.contentWindow && frame.contentWindow.focus(), 300);
+        else window.focus();
+      });
+    </script>
+  </body>
+</html>
