@@ -7,15 +7,15 @@ Animated slides built with Manim, with live simulations and the theory behind ev
 
 | # | Lecture | Status |
 |---|---|---|
-| 1 | [The Switch That Wouldn't Turn Off](lectures/01-transistor-evolution/): the transistor from Lilienfeld's 1925 patent to the MOSFET, FinFET, nanosheet, forksheet, CFET and beyond | Chapters 0–5 and Live Lab 1, in English and Bengali |
+| 1 | [The Switch That Wouldn't Turn Off](lectures/01-transistor-evolution/): the transistor from Lilienfeld's 1925 patent to the MOSFET, FinFET, nanosheet, forksheet, CFET and beyond | Chapters 0–5 and Live Lab 1 |
 | 2 | Analog layout | Planned |
 | 3 | Analog building blocks, with simulation | Planned |
 
 Each lecture is an animated, presenter-paced slide deck built with
 [Manim](https://www.manim.community/) and [manim-slides](https://github.com/jeertmans/manim-slides).
 It exports to a browser deck, with a speaker view that shows the script and how long each
-animation has left, and to PowerPoint. Every lecture comes in English and in Bengali (Bengali
-script, with the technical terms in English).
+animation has left, and to PowerPoint. The slides are in English; the speaker notes are in
+English and Bangla (Bangla script, with the technical terms in English).
 
 ## Notes
 
@@ -24,7 +24,7 @@ Study notes live in [notes/](notes/), one folder per topic.
 ## Layout
 
 ```
-kit/          shared by every lecture: style, colours, fonts, animation helpers, the two languages
+kit/          shared by every lecture: style, colours, fonts, animation helpers, speaker notes
 lectures/     one folder per lecture, each with its own plan, data, slides and labs
 notes/        study notes
 ```

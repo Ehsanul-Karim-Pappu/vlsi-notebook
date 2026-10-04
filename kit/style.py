@@ -1,15 +1,12 @@
-"""The look shared by every lecture: colours, fonts, languages and the recurring pieces.
+"""The look shared by every lecture: colours, fonts, speaker notes and the recurring pieces.
 
 Import it before building any mobject (``from kit.style import *``). It registers the bundled
-fonts (Inter, and Noto Sans Bengali for Bengali text) and sets Manim's background, so every
-deck renders the same on any machine.
+Inter fonts and sets Manim's background, so every deck renders the same on any machine.
 
-Every lecture comes in English and Bangla. Write each on-screen string and each speaker note
-as ``tr("English", "Bangla")``; a chapter's ``LANG`` (see ``Chapter``) picks which one renders.
-
-The Bangla is spoken Bangla, as it would be said in the office, in Bangla script, with every
-technical term, name, number and unit kept in English: "gate voltage বাড়াইলে barrier নিচে
-নামে". Chapter labels and titles stay in English in both versions.
+Slides are in English. Speaker notes are in English and Bangla: write each slide's notes as
+``say("English", "Bangla")``, and the speaker view shows both. The Bangla is spoken Bangla, as
+it would be said in the office, in Bangla script, with every technical term, name, number and
+unit kept in English: "gate voltage বাড়াইলে barrier নিচে নামে".
 """
 
 import re
@@ -25,10 +22,13 @@ from manim import (
     UP,
     FadeIn,
     FadeOut,
+    Group,
+    ImageMobject,
     Line,
     MathTex,
     MarkupText,
     RoundedRectangle,
+    SurroundingRectangle,
     Text,
     Triangle,
     VGroup,
@@ -39,32 +39,21 @@ FONTS = Path(__file__).parent / "fonts"
 for _font in sorted(FONTS.glob("*.ttf")):
     manimpango.register_font(str(_font))
 
-# Pango takes a family list: Latin letters come from Inter, Bengali from Noto Sans Bengali.
-BODY = "Inter, Noto Sans Bengali"
-DISPLAY = "Inter Display, Noto Sans Bengali"
-# Manim checks each font name against the installed list and warns when a family list isn't
-# one name. Pango resolves the list fine, and skipping the check speeds up redrawn text.
+BODY = "Inter"
+DISPLAY = "Inter Display"
+# Manim looks every font up in the installed-font list each time it makes text. The fonts are
+# registered above, so skip the lookup: it slows down text that is redrawn every frame.
 Text.set_default(warn_missing_font=False)
 MarkupText.set_default(warn_missing_font=False)
 
-# --- languages -----------------------------------------------------------------------------
-LANG = "en"
+# --- speaker notes -------------------------------------------------------------------------
+# The line between a note's English and its Bangla. The deck's speaker view splits on it.
+BANGLA = "— বাংলা —"
 
 
-def set_lang(lang):
-    """Choose the language every later tr() call returns ("en" or "bn")."""
-    global LANG
-    assert lang in ("en", "bn"), lang
-    LANG = lang
-
-
-def tr(en, bn):
-    """The English or the Bengali string, by the current language."""
-    return bn if LANG == "bn" else en
-
-
-def has_bangla(s):
-    return any("\u0980" <= c <= "\u09ff" for c in s)
+def say(en, bn):
+    """A slide's speaker notes: the English, then the Bangla."""
+    return f"{textwrap.dedent(en).strip()}\n\n{BANGLA}\n\n{textwrap.dedent(bn).strip()}"
 
 
 # --- palette -------------------------------------------------------------------------------
@@ -111,10 +100,7 @@ def _subscripts(s):
 
 
 def text(s, size=32, color=INK, weight="NORMAL", font=BODY, **kw):
-    """Body text. Symbols written like V_DD or k_BT get real subscripts. Bangla has no
-    italic, so slant is dropped for Bangla text."""
-    if has_bangla(s):
-        kw.pop("slant", None)
+    """Body text. Symbols written like V_DD or k_BT get real subscripts."""
     if _SUB.search(s):
         return MarkupText(_subscripts(s), font=font, font_size=size, color=color, weight=weight, **kw)
     return Text(s, font=font, font_size=size, color=color, weight=weight, **kw)
@@ -131,10 +117,7 @@ def display(s, size=72, color=INK, weight="BOLD", **kw):
 
 
 def kicker(s, size=20, color=MUTED, spacing=4000):
-    """Small, letter-spaced capitals for labels such as CHAPTER 5. Bangla has no capitals, and
-    letter spacing would break its joined letters, so Bangla text gets neither."""
-    if has_bangla(s):
-        return text(s, size=size + 2, color=color, weight="MEDIUM")
+    """Small, letter-spaced capitals for labels such as CHAPTER 5."""
     return MarkupText(
         f'<span letter_spacing="{spacing}">{s.upper()}</span>',
         font=BODY,
@@ -181,10 +164,20 @@ def wrap(s, width):
     return "\n".join(textwrap.wrap(s, width))
 
 
+def figure(path, height, credit, max_width=None):
+    """A real photo or document, in a thin frame, with its credit underneath."""
+    img = ImageMobject(str(path)).scale_to_fit_height(height)
+    if max_width and img.width > max_width:
+        img.scale_to_fit_width(max_width)
+    frame = SurroundingRectangle(img, buff=0, stroke_color=FAINT, stroke_width=2)
+    cap = text(credit, size=14, color=MUTED).next_to(img, DOWN, buff=0.12)
+    return Group(img, frame, cap)
+
+
 def layout_note(s, size=24, width=60):
     """A gold-edged aside that ties the physics to layout work ("In your layout: ..."),
     wrapped to WIDTH characters."""
-    label = text(tr("In your layout", "আপনার layout-এ"), size=size - 4, color=GATE, weight="SEMIBOLD")
+    label = text("In your layout", size=size - 4, color=GATE, weight="SEMIBOLD")
     body = text(wrap(s, width), size=size, color=INK)
     words = VGroup(label, body).arrange(DOWN, aligned_edge=LEFT, buff=0.12)
     bar = Line(words.get_corner(UP + LEFT) + LEFT * 0.2, words.get_corner(DOWN + LEFT) + LEFT * 0.2,
@@ -234,23 +227,24 @@ def chapter_card(number, year, title, hook):
 
 # --- chapters ------------------------------------------------------------------------------
 class Chapter:
-    """Mix into a manim-slides Slide (or ThreeDSlide). Sets the language before construct()
-    runs, and gives every chapter the same slide helpers.
-
-        class Ch05Boltzmann(Chapter, Slide): ...
-        class Ch05BoltzmannBN(Ch05Boltzmann): LANG = "bn"
-    """
-
-    LANG = "en"
-
-    def setup(self):
-        set_lang(self.LANG)
-        super().setup()
+    """Mix into a manim-slides Slide (or ThreeDSlide) to give every chapter the same slide
+    helpers: ``class Ch05Boltzmann(Chapter, Slide): ...``"""
 
     def slide(self, notes="", **kw):
-        """Start a slide. manim-slides gives a slide the options passed to the next_slide()
-        call that opens it, so the speaker notes sit above the animations they describe."""
+        """Start a slide, with its notes from say(). manim-slides gives a slide the options
+        passed to the next_slide() call that opens it, so the notes sit above the animations
+        they describe."""
         self.next_slide(notes=notes, **kw)
+
+    def show_figure(self, notes, title, fig, clear=None):
+        """A slide for a real photo or document (see figure()). Returns the title and the
+        figure: the next slide keeps the title and fades the figure out."""
+        self.slide(notes)
+        if clear is not None:
+            self.play(FadeOut(clear))
+        t = heading(title)
+        self.play(FadeIn(t), FadeIn(fig, shift=UP * 0.15))
+        return t, fig
 
     def clear(self, run_time=1.0):
         if self.mobjects:

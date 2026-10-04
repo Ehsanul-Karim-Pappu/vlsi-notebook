@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 LECTURE = Path(__file__).resolve().parents[1]
+IMAGES = LECTURE / "images"
 sys.path[:0] = [str(LECTURE.parents[1]), str(LECTURE)]
 
 import numpy as np  # noqa: E402
@@ -29,7 +30,7 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
 
     # --- card --------------------------------------------------------------------------------
     def card(self):
-        self.slide(tr(
+        self.slide(say(
             """
             Before we get to that 1925 patent, we need to know what it was trying to replace. In
             the 1920s, if you wanted an electrical switch with no moving parts, you had exactly one
@@ -43,12 +44,29 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         ))
         self.card_group = self.open_chapter(
             1, 1925, 1925, "The switch nobody could build",
-            tr("An idea twenty years too early", "সময়ের বিশ বছর আগে আসা একটা idea"),
+            "An idea twenty years too early",
         )
 
     # --- the vacuum tube ---------------------------------------------------------------------
     def tube(self):
-        self.slide(tr(
+        title, pic = self.show_figure(say(
+            """
+            This is what one looked like. These are early triodes from Lee de Forest's collection,
+            photographed for Scientific American in 1920: a hot filament, a grid and a plate,
+            sealed in glass. Radio, long-distance telephone and, soon, the first computers all ran
+            on them.
+            """,
+            """
+            দেখতে এরকম ছিল। এগুলা Lee de Forest-এর collection-এর শুরুর দিকের triode, 1920-এ Scientific
+            American-এর জন্য তোলা ছবি: একটা গরম filament, একটা grid আর একটা plate, কাচের ভিতরে বন্ধ। Radio,
+            long-distance telephone, আর একটু পরে প্রথম computer-গুলা, সব এগুলা দিয়েই চলত।
+            """,
+        ), "Before the transistor: the vacuum tube",
+            figure(IMAGES / "triodes_de_forest.jpg", 5.9,
+                   "Early triodes from Lee de Forest's collection. Scientific American, 1920 (public domain)").move_to(DOWN * 0.4),
+            clear=self.card_group)
+
+        self.slide(say(
             """
             Here's how a tube switches. A filament heats the cathode until electrons boil off it.
             That's thermionic emission, and look at its law: an exponential of a barrier, the
@@ -64,8 +82,7 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
             করলে electron-গুলারে পিছনে ঠেলে দেয়, current বন্ধ হয়ে যায়।
             """,
         ))
-        self.play(FadeOut(self.card_group))
-        title = heading(tr("Before the transistor: the vacuum tube", "Transistor-এর আগের switch: vacuum tube"))
+        self.play(FadeOut(pic))
         cx = -3.4
         glass = RoundedRectangle(width=3.0, height=4.6, corner_radius=1.1, stroke_color=MUTED, stroke_width=3)
         glass.move_to([cx, -0.4, 0])
@@ -75,9 +92,9 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         plate = Rectangle(width=2.0, height=0.22, fill_color=METAL, fill_opacity=1, stroke_width=0).move_to([cx, 1.2, 0])
         pins = VGroup(*[Line([cx + dx, -2.7, 0], [cx + dx, -3.2, 0], stroke_color=MUTED, stroke_width=3) for dx in (-0.6, 0, 0.6)])
         lbl = VGroup(
-            text(tr("plate", "plate"), size=22, color=METAL).next_to(plate, RIGHT, buff=0.5),
-            text(tr("grid (the gate)", "grid (এইটাই gate)"), size=22, color=GATE).next_to(grid, RIGHT, buff=0.4),
-            text(tr("hot cathode", "গরম cathode"), size=22, color=THERMAL).next_to(cathode, RIGHT, buff=0.5),
+            text("plate", size=22, color=METAL).next_to(plate, RIGHT, buff=0.5),
+            text("grid (the gate)", size=22, color=GATE).next_to(grid, RIGHT, buff=0.4),
+            text("hot cathode", size=22, color=THERMAL).next_to(cathode, RIGHT, buff=0.5),
         )
         tube = VGroup(glass, glow, cathode, grid, plate, pins)
 
@@ -100,20 +117,19 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         flow.add_updater(place)
         tick = lambda m, dt: clock.increment_value(dt)  # noqa: E731
         state = text("ON", size=34, color=GOOD, weight="BOLD").move_to([cx, 2.55, 0])
-        grid_v = text(tr("grid 0 V", "grid 0 V"), size=22, color=GATE).next_to(grid, LEFT, buff=0.3)
+        grid_v = text("grid 0 V", size=22, color=GATE).next_to(grid, LEFT, buff=0.3)
 
         law = eq(r"J", r"=", r"A_G\,", r"T^2", r"\,e^{-", r"W", r"/", r"k_BT", r"}", size=54)
         law[3].set_color(THERMAL)
         law[5].set_color(GATE)
         law[7].set_color(THERMAL)
         law.move_to([3.2, 0.9, 0])
-        law_lbl = text(tr("thermionic emission (Richardson)", "thermionic emission (Richardson)"), size=22, color=MUTED).next_to(law, UP, buff=0.3)
-        w_lbl = text(tr("W: the barrier\n(the cathode's work function)", "W: barrier, মানে\ncathode-এর work function"), size=22, color=GATE)
-        kt_lbl = text(tr("k_BT: the thermal energy", "k_BT: thermal energy"), size=22, color=THERMAL)
+        law_lbl = text("thermionic emission (Richardson)", size=22, color=MUTED).next_to(law, UP, buff=0.3)
+        w_lbl = text("W: the barrier\n(the cathode's work function)", size=22, color=GATE)
+        kt_lbl = text("k_BT: the thermal energy", size=22, color=THERMAL)
         keys = VGroup(w_lbl, kt_lbl).arrange(DOWN, aligned_edge=LEFT, buff=0.15).next_to(law, DOWN, buff=0.4).align_to(law, LEFT)
-        remember = text(tr("Remember this shape.", "এই shape-টা মনে রাখেন।"), size=30, color=GATE, weight="SEMIBOLD").next_to(keys, DOWN, buff=0.55)
+        remember = text("Remember this shape.", size=30, color=GATE, weight="SEMIBOLD").next_to(keys, DOWN, buff=0.55)
 
-        self.play(FadeIn(title))
         self.play(Create(glass), FadeIn(pins), run_time=1)
         self.play(FadeIn(cathode), FadeIn(glow), FadeIn(grid), FadeIn(plate), FadeIn(lbl))
         self.add(flow)
@@ -124,7 +140,7 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         self.play(FadeIn(keys))
         self.wait(0.5)
         off = text("OFF", size=34, color=DRAIN, weight="BOLD").move_to(state)
-        grid_neg = text(tr("grid −5 V", "grid −5 V"), size=22, color=GATE).move_to(grid_v)
+        grid_neg = text("grid −5 V", size=22, color=GATE).move_to(grid_v)
         self.play(open_.animate.set_value(0), Transform(state, off), Transform(grid_v, grid_neg), run_time=0.6)
         self.wait(1.5)
         self.play(FadeIn(remember, shift=UP * 0.2))
@@ -134,22 +150,34 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
 
     # --- ENIAC -------------------------------------------------------------------------------
     def eniac(self):
-        self.slide(tr(
+        title, pic = self.show_figure(say(
             """
-            Now build a computer out of them. ENIAC, unveiled in 1946: 17,468 tubes, every one of
-            them a little heater, drawing 150 kilowatts. Tubes burned out, and finding the dead
+            Now build a computer out of them. This is ENIAC, unveiled in 1946, with two of its
+            programmers, Glen Beck and Betty Snyder, at work. Every one of those panels is packed
+            with tubes.
+            """,
+            """
+            এখন এই tube দিয়ে একটা computer বানান। এইটা ENIAC, 1946-এ সবার সামনে আসে; ছবিতে এর দুইজন
+            programmer, Glen Beck আর Betty Snyder, কাজ করতেছেন। যত panel দেখতেছেন, সবগুলা tube দিয়ে ঠাসা।
+            """,
+        ), "ENIAC, 1946: 17,468 tubes, all glowing",
+            figure(IMAGES / "eniac_1946.jpg", 5.9,
+                   "Glen Beck and Betty Snyder program ENIAC, about 1947. U.S. Army photo (public domain)").move_to(DOWN * 0.4),
+            clear=self.tube_parts)
+
+        self.slide(say(
+            """
+            Count them: 17,468 tubes, every one of them a little heater, drawing 150 kilowatts. Tubes burned out, and finding the dead
             one among eighteen thousand took time. Everyone knew what they wanted instead: a switch
             made from a cold, solid piece of material, with no vacuum and no filament.
             """,
             """
-            এখন এই tube দিয়ে একটা computer বানান। ENIAC, 1946-এ সবার সামনে আসে: 17,468টা tube, প্রত্যেকটা
-            একটা ছোট heater, সব মিলায়ে 150 kilowatt টানে। Tube পুড়ে যাইত, আর আঠারো হাজারের মধ্যে নষ্টটা
+            গুনে দেখেন: 17,468টা tube, প্রত্যেকটা একটা ছোট heater, সব মিলায়ে 150 kilowatt টানে। Tube পুড়ে যাইত, আর আঠারো হাজারের মধ্যে নষ্টটা
             খুঁজে বের করতে সময় লাগত। সবাই জানত তারা আসলে কী চায়: ঠান্ডা, solid কোনো material-এর একটা
             switch, যেটায় vacuum নাই, filament নাই।
             """,
         ))
-        self.play(FadeOut(self.tube_parts))
-        title = heading(tr("ENIAC, 1946: 17,468 tubes, all glowing", "ENIAC, 1946: 17,468টা tube, সবগুলা জ্বলতেছে"))
+        self.play(FadeOut(pic))
         cols, rows, s = 50, 35, 0.15
         rng = np.random.default_rng(5)
         dots = VGroup(*[
@@ -157,47 +185,58 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
                 [(c - cols / 2) * s - 2.0, (rows / 2 - r) * s - 0.3, 0])
             for r in range(rows) for c in range(cols)
         ])
-        key = text(tr("each square: 10 tubes", "প্রতি square = 10টা tube"), size=20, color=MUTED).next_to(dots, DOWN, buff=0.2)
+        key = text("each square: 10 tubes", size=20, color=MUTED).next_to(dots, DOWN, buff=0.2)
         stats = VGroup(
             display("17,468", size=64, color=THERMAL),
-            text(tr("vacuum tubes", "vacuum tube"), size=26, color=MUTED),
+            text("vacuum tubes", size=26, color=MUTED),
             display("150 kW", size=64, color=THERMAL),
-            text(tr("of heat, all the time", "শুধু heat, সারাক্ষণ"), size=26, color=MUTED),
+            text("of heat, all the time", size=26, color=MUTED),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.12).move_to([4.4, 0.7, 0])
         stats[2].shift(DOWN * 0.3)
         stats[3].shift(DOWN * 0.3)
-        src = source(tr("ENIAC figures: University of Pennsylvania / U.S. Army, 1946", "ENIAC-এর সংখ্যা: University of Pennsylvania / U.S. Army, 1946"))
-        self.play(FadeIn(title), FadeIn(src))
+        src = source("ENIAC figures: University of Pennsylvania / U.S. Army, 1946")
+        self.play(FadeIn(src))
         self.play(FadeIn(dots, lag_ratio=0.0006), run_time=2.5)
         self.play(FadeIn(key), FadeIn(stats[:2], shift=LEFT * 0.2))
         self.play(FadeIn(stats[2:], shift=LEFT * 0.2))
         dead = [dots[i] for i in rng.choice(len(dots), 9, replace=False)]
         self.play(*[d.animate.set_fill(FAINT, opacity=1) for d in dead], run_time=1.2)
-        want = text(tr("Wanted:\na cold, solid switch", "দরকার:\nঠান্ডা, solid\nএকটা switch"), size=28, color=INK, weight="SEMIBOLD")
+        want = text("Wanted:\na cold, solid switch", size=28, color=INK, weight="SEMIBOLD")
         want.next_to(stats, DOWN, buff=0.5).align_to(stats, LEFT)
         self.play(FadeIn(want, shift=UP * 0.2))
         self.eniac_parts = VGroup(title, dots, key, stats, src, want)
 
     # --- Lilienfeld --------------------------------------------------------------------------
     def lilienfeld(self):
-        self.slide(tr(
+        title, pic = self.show_figure(say(
             """
-            In 1925 a physicist named Julius Edgar Lilienfeld filed a patent for exactly that. Look
-            at the drawing: a thin film of semiconductor, two contacts, and a metal plate on top,
+            In 1925 a physicist named Julius Edgar Lilienfeld filed a patent for exactly that.
+            This is the drawing from his US patent, filed in 1926 and granted in 1930.
+            """,
+            """
+            1925-এ Julius Edgar Lilienfeld নামে একজন physicist ঠিক এই জিনিসের patent file করেন। এইটা তাঁর
+            US patent-এর drawing, file করা 1926-এ, grant হয় 1930-এ।
+            """,
+        ), "1925: Lilienfeld's idea",
+            figure(IMAGES / "lilienfeld_US1745175.png", 5.6,
+                   "J. E. Lilienfeld, US patent 1,745,175, filed 1926, granted 1930 (public domain)").move_to(DOWN * 0.4),
+            clear=self.eniac_parts)
+
+        self.slide(say(
+            """
+            Redrawn, it's simple: a thin film of semiconductor, two contacts, and a metal plate on top,
             separated by an insulator. Put a voltage on the plate and it pulls charge into the film,
             the way one plate of a capacitor pulls charge onto the other. Source, drain, and a gate
             on an insulator. That is the transistor you lay out every day, thirty-five years early.
             """,
             """
-            1925-এ Julius Edgar Lilienfeld নামে একজন physicist ঠিক এই জিনিসের patent file করেন। Drawing-টা
-            দেখেন: semiconductor-এর একটা পাতলা film, দুই পাশে দুইটা contact, আর উপরে insulator দিয়ে আলাদা
+            নতুন করে আঁকলে জিনিসটা সহজ: semiconductor-এর একটা পাতলা film, দুই পাশে দুইটা contact, আর উপরে insulator দিয়ে আলাদা
             করা একটা metal plate। Plate-এ voltage দিলে ওইটা film-এর ভিতরে charge টেনে আনে, ঠিক যেভাবে
             capacitor-এর এক plate আরেক plate-এ charge জমায়। Source, drain, আর insulator-এর উপর একটা gate।
             আপনারা প্রতিদিন যে transistor-এর layout করেন, এইটা সেটাই, পঁয়ত্রিশ বছর আগে।
             """,
         ))
-        self.play(FadeOut(self.eniac_parts))
-        title = heading(tr("1925: Lilienfeld's idea", "1925: Lilienfeld-এর idea"))
+        self.play(FadeOut(pic))
         y0 = 0.6
         glass = Rectangle(width=7.4, height=0.5, fill_color="#26323F", fill_opacity=1, stroke_width=0).move_to([0, y0 - 0.55, 0])
         film = Rectangle(width=6.4, height=0.22, fill_color=SILICON, fill_opacity=0.8, stroke_width=0).move_to([0, y0 - 0.19, 0])
@@ -208,28 +247,26 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         names = VGroup(
             text("source", size=22, color=MUTED).next_to(c_l, UP, buff=0.15),
             text("drain", size=22, color=MUTED).next_to(c_r, UP, buff=0.15),
-            text(tr("gate (metal plate)", "gate (metal plate)"), size=22, color=GATE).next_to(plate, UP, buff=0.15),
-            text(tr("insulator", "insulator"), size=16, color=BG, weight="SEMIBOLD").move_to(ins),
+            text("gate (metal plate)", size=22, color=GATE).next_to(plate, UP, buff=0.15),
+            text("insulator", size=16, color=BG, weight="SEMIBOLD").move_to(ins),
         )
         device = VGroup(glass, film, c_l, c_r, ins, plate)
-        src = source(tr("Lilienfeld: Canadian application 1925; US 1,745,175, filed 1926, granted 1930",
-                        "Lilienfeld: Canadian application 1925; US 1,745,175, filed 1926, granted 1930"))
-        self.play(FadeIn(title), FadeIn(src))
+        src = source("Lilienfeld: Canadian application 1925; US 1,745,175, filed 1926, granted 1930")
+        self.play(FadeIn(src))
         self.play(LaggedStart(*[FadeIn(m, shift=DOWN * 0.15) for m in device], lag_ratio=0.2), FadeIn(names), run_time=2)
 
         plus = VGroup(*[MathTex("+", font_size=30, color=BG).move_to([x, y0 + 0.37, 0]) for x in np.linspace(-1.1, 1.1, 6)])
         induced = VGroup(*[Dot([x, y0 - 0.19, 0], radius=0.05, color=ELECTRON) for x in np.linspace(-1.25, 1.25, 12)])
-        vg = text(tr("+ V on the gate", "gate-এ + V"), size=24, color=GATE).move_to([0, y0 + 1.25, 0])
+        vg = text("+ V on the gate", size=24, color=GATE).move_to([0, y0 + 1.25, 0])
         arrow = Arrow([-2.3, y0 - 0.19, 0], [2.3, y0 - 0.19, 0], buff=0, stroke_color=ELECTRON, stroke_width=5)
-        cur = text(tr("current flows in the film", "film-এর ভিতর দিয়া current চলে"), size=20, color=ELECTRON).next_to(glass, DOWN, buff=0.12)
+        cur = text("current flows in the film", size=20, color=ELECTRON).next_to(glass, DOWN, buff=0.12)
         self.play(FadeIn(vg), FadeIn(plus, lag_ratio=0.1), FadeIn(induced, lag_ratio=0.05), run_time=1.5)
         self.play(GrowArrow(arrow), FadeIn(cur))
-        tie = layout_note(tr("Source, drain, a gate on an insulator: the MOSFET you draw, 35 years early.",
-                             "Source, drain, insulator-এর উপর gate: আপনারা যে MOSFET আঁকেন, 35 বছর আগে।"), size=22)
+        tie = layout_note("Source, drain, a gate on an insulator: the MOSFET you draw, 35 years early.", size=22)
         tie.to_edge(DOWN, buff=0.9)
         self.play(FadeIn(tie, shift=UP * 0.2))
 
-        self.slide(tr(
+        self.slide(say(
             """
             And the numbers say it should have worked. The plate and the film are a capacitor: the
             charge is C times V. With an insulator a tenth of a micron thick and ten volts on the
@@ -251,15 +288,15 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         e2[0].set_color(ELECTRON)
         e3 = eq(r"=", rf"{n_s / 1e12:.1f}\times10^{{12}}\ \text{{cm}}^{{-2}}", size=44)
         e3[1].set_color(ELECTRON)
-        cond = text(tr("t_ox = 100 nm, V_G = 10 V", "t_ox = 100 nm, V_G = 10 V"), size=20, color=MUTED)
+        cond = text("t_ox = 100 nm, V_G = 10 V", size=20, color=MUTED)
         VGroup(e1, e2, e3, cond).arrange(DOWN, buff=0.3).move_to([4.4, -1.55, 0])
         self.play(FadeOut(tie), VGroup(device, names, plus, induced, vg, arrow, cur).animate.shift(LEFT * 2.2 + UP * 0.2))
         self.play(Write(e1))
         self.play(Write(e2))
         self.play(Write(e3), FadeIn(cond))
         verdict = VGroup(
-            text(tr("It should have worked.", "কাজ করার কথা ছিল।"), size=34, weight="SEMIBOLD"),
-            text(tr("It didn't.", "করে নাই।"), size=34, weight="SEMIBOLD", color=DRAIN),
+            text("It should have worked.", size=34, weight="SEMIBOLD"),
+            text("It didn't.", size=34, weight="SEMIBOLD", color=DRAIN),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.15).move_to([-3.2, -2.3, 0])
         self.play(FadeIn(verdict[0]))
         self.wait(0.6)
@@ -268,7 +305,7 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
 
     # --- surface states ----------------------------------------------------------------------
     def surface_states(self):
-        self.slide(tr(
+        self.slide(say(
             """
             At Bell Labs in 1945, William Shockley built devices like Lilienfeld's and worked out how
             big the effect should be. He measured almost nothing. The explanation came from John
@@ -289,7 +326,7 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
             """,
         ))
         self.play(FadeOut(self.lil_parts))
-        title = heading(tr("Why it failed: the surface eats the field", "কেন fail করল: surface-টাই field খেয়ে ফেলে"))
+        title = heading("Why it failed: the surface eats the field")
         x0 = -3.2
         gate = Rectangle(width=5.2, height=0.45, fill_color=GATE, fill_opacity=1, stroke_width=0).move_to([x0, 2.35, 0])
         ins = Rectangle(width=5.2, height=1.1, fill_color=OXIDE_TEXT, fill_opacity=0.25, stroke_width=0).move_to([x0, 1.57, 0])
@@ -299,9 +336,9 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         traps = VGroup(*[Circle(radius=0.09, stroke_color=MUTED, stroke_width=2).move_to([x, surface_y - 0.12, 0]) for x in xs])
         labels = VGroup(
             text("gate", size=22, color=BG, weight="SEMIBOLD").move_to(gate),
-            text(tr("insulator", "insulator"), size=20, color=OXIDE_TEXT).move_to(ins).add_background_rectangle(color=BG, opacity=0.85, buff=0.08),
-            text(tr("surface states\n(broken bonds)", "surface states\n(ভাঙা bond)"), size=20, color=MUTED).next_to(traps, DOWN, buff=0.12).align_to(semi, LEFT).shift(RIGHT * 0.15),
-            text(tr("channel", "channel"), size=20, color=ELECTRON).move_to([x0, -1.25, 0]),
+            text("insulator", size=20, color=OXIDE_TEXT).move_to(ins).add_background_rectangle(color=BG, opacity=0.85, buff=0.08),
+            text("surface states\n(broken bonds)", size=20, color=MUTED).next_to(traps, DOWN, buff=0.12).align_to(semi, LEFT).shift(RIGHT * 0.15),
+            text("channel", size=20, color=ELECTRON).move_to([x0, -1.25, 0]),
         )
         self.play(FadeIn(title))
         self.play(FadeIn(gate), FadeIn(ins), FadeIn(semi), FadeIn(labels[0]), FadeIn(labels[1]))
@@ -321,20 +358,20 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         e1 = eq(r"\frac{\Delta Q_{ch}}{\Delta Q_G}", r"\approx", r"\frac{C_{dep}}{C_{dep}+C_{it}}", size=46)
         e2 = eq(r"C_{it}", r"=", r"q\,D_{it}", size=42)
         e2[0].set_color(MUTED)
-        dit = text(tr("D_it ≈ 10¹³ states per cm² per eV", "D_it ≈ 10¹³ state / cm² / eV"), size=22, color=MUTED)
+        dit = text("D_it ≈ 10¹³ states per cm² per eV", size=22, color=MUTED)
         big = VGroup(
             display(f"≈ {share * 100:.0f}%", size=72, color=ELECTRON),
-            text(tr("of the gate's charge\nreaches the channel", "gate-এর charge-এর এতটুকুই\nchannel-এ পৌঁছায়"), size=24, color=INK),
+            text("of the gate's charge\nreaches the channel", size=24, color=INK),
         ).arrange(DOWN, buff=0.12)
         col = VGroup(e1, e2, dit, big, model_tag()).arrange(DOWN, buff=0.32).move_to([3.6, -0.1, 0])
-        src = source(tr("J. Bardeen, Phys. Rev. 71, 717 (1947)", "J. Bardeen, Phys. Rev. 71, 717 (1947)"))
+        src = source("J. Bardeen, Phys. Rev. 71, 717 (1947)")
         self.play(Write(e1), FadeIn(src))
         self.play(Write(e2), FadeIn(dit))
         self.play(FadeIn(big, shift=UP * 0.2), FadeIn(col[4]))
         self.screen = VGroup(title, gate, ins, semi, traps, labels, lines, fills, free, col, src)
 
         # ↓ where the 2% comes from
-        self.slide(tr(
+        self.slide(say(
             """
             Here's the charge balance. Whatever charge the gate adds has to be matched underneath,
             either by charge stuck in surface states or by charge in the semiconductor. Both respond
@@ -350,11 +387,11 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         self.detour_in(self.screen)
         rows = [
             (eq(r"\Delta Q_G", r"=", r"-(\Delta Q_{it} + \Delta Q_{s})"),
-             tr("Charge balance: the gate's charge is matched underneath.", "Charge balance: gate-এর charge নিচে match হয়।")),
+             "Charge balance: the gate's charge is matched underneath."),
             (eq(r"\Delta Q_{it} = -C_{it}\,\Delta\psi_s", r"\qquad", r"\Delta Q_{s} = -C_{dep}\,\Delta\psi_s"),
-             tr("Both follow the same surface potential ψ_s.", "দুইটাই একই surface potential ψ_s মেনে চলে।")),
+             "Both follow the same surface potential ψ_s."),
             (eq(r"\frac{\Delta Q_{s}}{\Delta Q_G}", r"=", r"-\frac{C_{dep}}{C_{dep}+C_{it}}"),
-             tr("So the semiconductor gets only its share.", "তাই semiconductor পায় শুধু নিজের ভাগটুকু।")),
+             "So the semiconductor gets only its share."),
         ]
         shown = VGroup()
         y = 2.4
@@ -365,7 +402,7 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
             self.play(Write(m), FadeIn(w))
             shown.add(m, w)
 
-        self.slide(tr(
+        self.slide(say(
             """
             Now the numbers. A lightly doped substrate gives a depletion capacitance of about 34
             nanofarads per square centimetre. Ten to the thirteen surface states per square
@@ -392,12 +429,12 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         self.play(Write(nums[1]))
         self.play(Write(nums[2]))
 
-        self.slide(tr("Back to the story.", "আবার গল্পে ফিরি।"), direction="vertical")
+        self.slide(say("Back to the story.", "আবার গল্পে ফিরি।"), direction="vertical")
         self.detour_out(self.screen, shown[4:], nums)
 
     # --- cliffhanger -------------------------------------------------------------------------
     def cliffhanger(self):
-        self.slide(tr(
+        self.slide(say(
             """
             That was the dead end of the 1940s: a perfect idea, defeated by a few atoms' worth of
             broken bonds. So Bardeen and his colleague Walter Brattain stopped trying to beat the
@@ -417,8 +454,8 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         needle = Polygon([3.15, 2.6, 0], [3.25, 2.6, 0], [3.2, -0.68, 0], fill_color=GATE, fill_opacity=1, stroke_width=0)
         needle.shift(UP * 1.6)
         lbl = text("germanium", size=24, color=MUTED).next_to(crystal, DOWN, buff=0.2)
-        a = text(tr("They stopped fighting\nthe surface.", "তাঁরা surface-এর সাথে\nযুদ্ধ বাদ দিলেন।"), size=40, weight="SEMIBOLD")
-        b = text(tr("They started poking it.", "খোঁচানো শুরু করলেন।"), size=40, weight="SEMIBOLD", color=GATE)
+        a = text("They stopped fighting\nthe surface.", size=40, weight="SEMIBOLD")
+        b = text("They started poking it.", size=40, weight="SEMIBOLD", color=GATE)
         VGroup(a, b).arrange(DOWN, aligned_edge=LEFT, buff=0.3).move_to([-2.8, 0.6, 0])
         self.play(FadeIn(a))
         self.play(FadeIn(crystal), FadeIn(lbl))
@@ -426,7 +463,3 @@ class Ch01BeforeTheSwitch(Chapter, Slide):
         spark = Circle(radius=0.12, stroke_color=ELECTRON, stroke_width=4).move_to([3.2, -0.7, 0])
         self.play(GrowFromCenter(spark), run_time=0.3)
         self.play(spark.animate.scale(4).set_stroke(opacity=0), run_time=0.9)
-
-
-class Ch01BeforeTheSwitchBN(Ch01BeforeTheSwitch):
-    LANG = "bn"

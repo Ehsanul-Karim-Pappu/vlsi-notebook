@@ -37,19 +37,5 @@
 
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-  // Language: the deck opens a lab with ?lang=en or ?lang=bn. The page's HTML is English;
-  // translate(bn) swaps in Bengali for every element marked data-i18n="key".
-  const lang = new URLSearchParams(location.search).get("lang") === "bn" ? "bn" : "en";
-  document.documentElement.lang = lang;
-  const t = (en, bn) => (lang === "bn" ? bn : en);
-  function translate(bn) {
-    if (lang !== "bn") return;
-    document.querySelectorAll("[data-i18n]").forEach((el) => {
-      const s = bn[el.dataset.i18n];
-      if (s !== undefined) el.innerHTML = s;
-    });
-    if (bn._title) document.title = bn._title;
-  }
-
-  window.Lab = { fitCanvas, css, inDeck, lang, t, translate };
+  window.Lab = { fitCanvas, css, inDeck };
 })();

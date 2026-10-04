@@ -38,7 +38,7 @@ class Ch05Boltzmann(Chapter, Slide):
 
     # --- chapter card ------------------------------------------------------------------------
     def card(self):
-        self.slide(tr(
+        self.slide(say(
             """
             For forty years, shrinking worked. Every new generation was smaller, faster and
             cheaper. Then, around 2005, something stopped: clock speeds flattened out, and they
@@ -53,12 +53,12 @@ class Ch05Boltzmann(Chapter, Slide):
         ))
         self.card_group = self.open_chapter(
             5, 2005, 1965, "Boltzmann's tyranny",
-            tr("The one law no transistor has broken", "যে law কোনো transistor এখনো ভাঙতে পারে নাই"),
+            "The one law no transistor has broken",
         )
 
     # --- a transistor is a hill --------------------------------------------------------------
     def hill(self):
-        hill_notes = tr(
+        hill_notes = say(
             """
             Remember the hill from the junction transistor? Here it is again, for the MOSFET. The
             height of this line is the energy of an electron at each point along the transistor.
@@ -89,7 +89,7 @@ class Ch05Boltzmann(Chapter, Slide):
         eb = always_redraw(lambda: DoubleArrow([1.55, bar.energy_y(0), 0], [1.55, bar.energy_y(self.b.get_value()), 0],
                                                buff=0, stroke_color=GATE, stroke_width=3, tip_length=0.15))
         eb_lbl = always_redraw(lambda: MathTex("E_b", color=GATE, font_size=36).next_to(eb, RIGHT, buff=0.1))
-        title = heading(tr("A transistor is a hill", "Transistor মানে একটা hill"))
+        title = heading("A transistor is a hill")
         self.play(FadeIn(title))
         self.play(Create(bar.edge), FadeIn(src_lbl), FadeIn(drn_lbl), FadeIn(axis), FadeIn(axis_lbl))
         self.play(FadeIn(gate), FadeIn(gate_lbl), FadeIn(eb), FadeIn(eb_lbl))
@@ -101,7 +101,7 @@ class Ch05Boltzmann(Chapter, Slide):
         self.slide(hill_notes, loop=True)
         self.wait(4)
 
-        self.slide(tr(
+        self.slide(say(
             """
             The gate's job is to set the height of that hill. Raise the gate voltage and the hill
             comes down: more electrons have enough energy to get over, and current flows. Lower
@@ -112,11 +112,11 @@ class Ch05Boltzmann(Chapter, Slide):
             electron-এর পার হওয়ার মতো energy থাকে, current চলে। কমাইলে hill আবার উঠে যায়। পুরা switch-টা এইটাই।
             """,
         ))
-        counter = always_redraw(lambda: text(tr(f"{bar.crossed} electrons over the hill", f"{bar.crossed}টা electron hill পার হইছে"),
+        counter = always_redraw(lambda: text(f"{bar.crossed} electrons over the hill",
                                              size=26, color=ELECTRON).move_to([4.3, 1.9, 0]))
         bar.crossed = 0
-        vg = text(tr("raise the gate voltage", "gate voltage বাড়ান"), size=24, color=GATE).next_to(gate, RIGHT, buff=0.3)
-        self.play(Transform(title, heading(tr("The gate sets the height of the hill", "Gate ঠিক করে hill কত উঁচু"))))
+        vg = text("raise the gate voltage", size=24, color=GATE).next_to(gate, RIGHT, buff=0.3)
+        self.play(Transform(title, heading("The gate sets the height of the hill")))
         self.add(counter)
         self.play(FadeIn(vg), self.b.animate.set_value(0.08), run_time=3)
         self.wait(3)
@@ -126,7 +126,7 @@ class Ch05Boltzmann(Chapter, Slide):
 
     # --- the Boltzmann tail ------------------------------------------------------------------
     def tail(self):
-        self.slide(tr(
+        self.slide(say(
             """
             Here's the question that matters: when the switch is off, how many electrons still
             make it over? Those electrons are leakage, and leakage is wasted power. Thermal energy
@@ -148,13 +148,13 @@ class Ch05Boltzmann(Chapter, Slide):
         bk = ValueTracker(b0)
         dist = Boltzmann(bk, height=5.2, width=3.6).move_to([-3.6, -0.45, 0])
         b_lbl = always_redraw(lambda: MathTex("E_b", color=GATE, font_size=34).next_to(dist.axes.c2p(1.05, bk.get_value()), RIGHT, buff=0.1))
-        title = heading(tr("How many electrons make it over?", "কয়টা electron পার হয়?"))
+        title = heading("How many electrons make it over?")
         e1 = eq(r"n(E)", r"\;\propto\;", r"e^{-E/", r"k_BT", r"}")
         e1[3].set_color(THERMAL)
         e2 = eq(r"\frac{N(E > E_b)}{N}", r"\;=\;", r"e^{-", r"E_b", r"/", r"k_BT", r"}")
         e2[3].set_color(GATE)
         e2[5].set_color(THERMAL)
-        kt = VGroup(eq(r"k_BT", r"= 25.9\ \text{meV}", size=36), text(tr("at 300 K", "300 K-তে"), size=24, color=MUTED)).arrange(RIGHT, buff=0.2)
+        kt = VGroup(eq(r"k_BT", r"= 25.9\ \text{meV}", size=36), text("at 300 K", size=24, color=MUTED)).arrange(RIGHT, buff=0.2)
         kt[0][0].set_color(THERMAL)
         col = VGroup(e1, e2, kt).arrange(DOWN, buff=0.6, aligned_edge=LEFT).move_to([2.6, 0.6, 0])
         self.play(FadeIn(title))
@@ -162,7 +162,7 @@ class Ch05Boltzmann(Chapter, Slide):
         self.play(Create(dist.curve), run_time=1.5)
         self.play(Write(e1))
 
-        self.slide(tr(
+        self.slide(say(
             """
             The electrons that get over the hill are the ones in this tail, above the barrier. The
             fraction is e to the minus barrier height over k-T. So the current is exponential in
@@ -177,7 +177,7 @@ class Ch05Boltzmann(Chapter, Slide):
         self.play(Write(e2))
         self.play(FadeIn(kt))
 
-        self.slide(tr(
+        self.slide(say(
             """
             So how far do we have to lower the barrier to get ten times as many electrons over? Sixty
             milli-electron-volts. Notice what's not in this number. Not the material, not the size
@@ -189,7 +189,7 @@ class Ch05Boltzmann(Chapter, Slide):
             """,
         ))
         ratio = always_redraw(lambda: VGroup(
-            text(tr("electrons over the hill", "hill পার হওয়া electron"), size=24, color=MUTED),
+            text("electrons over the hill", size=24, color=MUTED),
             display(f"×{exp(b0 - bk.get_value()):,.0f}", size=60, color=ELECTRON),
         ).arrange(DOWN, buff=0.1).move_to([-3.2, 3.15, 0]))
         self.play(FadeOut(title), FadeIn(ratio))
@@ -206,7 +206,7 @@ class Ch05Boltzmann(Chapter, Slide):
         self.play(Write(d3))
         self.play(Circumscribe(d3[2], color=GATE))
 
-        self.slide(tr(
+        self.slide(say(
             """
             Another 60: a hundred times. Another: a thousand. It's a ratchet. Every 60 meV is one
             decade of current, wherever you start.
@@ -219,13 +219,13 @@ class Ch05Boltzmann(Chapter, Slide):
         self.play(bk.animate.set_value(b0 - 2 * LN10), run_time=2)
         self.wait(0.5)
         self.play(bk.animate.set_value(b0 - 3 * LN10), run_time=2)
-        rule = text(tr("Every 60 meV: ten times the current.", "প্রতি 60 meV-তে current দশ গুণ।"), size=28, color=GATE, weight="SEMIBOLD")
+        rule = text("Every 60 meV: ten times the current.", size=28, color=GATE, weight="SEMIBOLD")
         rule.move_to([2.6, -3.35, 0])
         self.play(FadeIn(rule, shift=UP * 0.2))
 
     # --- the capacitive divider (with a ↓ derivation) ----------------------------------------
     def divider(self):
-        self.slide(tr(
+        self.slide(say(
             """
             One more piece. The gate doesn't touch the electrons. It pushes on them through the
             oxide, which is a capacitor. And under the channel there's another capacitor, the
@@ -241,7 +241,7 @@ class Ch05Boltzmann(Chapter, Slide):
             """,
         ))
         self.clear()
-        title = heading(tr("But the gate doesn't push the hill directly", "কিন্তু gate hill-রে সরাসরি ঠেলে না"))
+        title = heading("But the gate doesn't push the hill directly")
         x = -3.6
         top = Dot([x, 2.2, 0], color=GATE, radius=0.08)
         vg = MathTex("V_G", color=GATE, font_size=40).next_to(top, LEFT, buff=0.2)
@@ -255,7 +255,7 @@ class Ch05Boltzmann(Chapter, Slide):
         cox = cap(1.2, OXIDE_TEXT, "C_{ox}")
         node = Dot([x, 0.2, 0], color=ELECTRON, radius=0.1)
         node_lbl = VGroup(MathTex(r"\psi_s", color=ELECTRON, font_size=40),
-                          text(tr("channel surface", "channel surface"), size=22, color=ELECTRON)).arrange(DOWN, buff=0.05).next_to(node, LEFT, buff=0.3)
+                          text("channel surface", size=22, color=ELECTRON)).arrange(DOWN, buff=0.05).next_to(node, LEFT, buff=0.3)
         cdep = cap(-0.8, HOLE, "C_{dep}")
         ground = VGroup(Line([x - 0.5, -1.9, 0], [x + 0.5, -1.9, 0]), Line([x - 0.32, -2.05, 0], [x + 0.32, -2.05, 0]),
                         Line([x - 0.14, -2.2, 0], [x + 0.14, -2.2, 0])).set_stroke(MUTED, 4)
@@ -268,7 +268,7 @@ class Ch05Boltzmann(Chapter, Slide):
         e1[2].set_color(GATE)
         e2 = eq(r"m", r"= 1 + \frac{C_{dep}}{C_{ox}}", r"\;\geq 1")
         e2[0].set_color(OXIDE_TEXT)
-        note = text(tr("The gate gets only 1/m of its\nvoltage onto the channel.", "Gate তার voltage-এর মাত্র 1/m\nchannel-এ পৌঁছাইতে পারে।"), size=26, color=MUTED)
+        note = text("The gate gets only 1/m of its\nvoltage onto the channel.", size=26, color=MUTED)
         col = VGroup(e1, e2, note).arrange(DOWN, buff=0.55).move_to([2.4, 0.2, 0])
         hint = text("↓ derivation", size=20, color=MUTED).to_corner(DR, buff=0.35)
         self.play(FadeIn(title))
@@ -281,18 +281,18 @@ class Ch05Boltzmann(Chapter, Slide):
 
         steps = [
             (eq(r"I_D", r"\;\propto\;", r"e^{\,q\psi_s/k_BT}"),
-             tr("Current: the Boltzmann tail, set by the surface potential.", "Current: Boltzmann tail, surface potential দিয়া ঠিক হয়।")),
+             ("Current: the Boltzmann tail, set by the surface potential.", "Current: Boltzmann tail, surface potential দিয়া ঠিক হয়।")),
             (eq(r"\frac{d\psi_s}{dV_G}", r"=", r"\frac{1}{m}"),
-             tr("The divider: the channel follows the gate at 1/m.", "Divider: channel gate-রে 1/m হারে follow করে।")),
+             ("The divider: the channel follows the gate at 1/m.", "Divider: channel gate-রে 1/m হারে follow করে।")),
             (eq(r"\frac{d\,\log_{10} I_D}{dV_G}", r"=", r"\frac{1}{\ln 10}\cdot\frac{q}{k_BT}\cdot\frac{1}{m}"),
-             tr("Chain rule, and change from e to base 10.", "Chain rule, আর e থেকে base 10-এ নেওয়া।")),
+             ("Chain rule, and change from e to base 10.", "Chain rule, আর e থেকে base 10-এ নেওয়া।")),
             (eq(r"SS", r"\equiv", r"\frac{dV_G}{d\,\log_{10} I_D}", r"=", r"m\,\frac{k_BT}{q}\,\ln 10"),
-             tr("Invert it: the gate voltage needed per decade of current.", "উল্টায়ে দেন: current-এর প্রতি decade-এ কত gate voltage লাগে।")),
+             ("Invert it: the gate voltage needed per decade of current.", "উল্টায়ে দেন: current-এর প্রতি decade-এ কত gate voltage লাগে।")),
         ]
         shown = VGroup()
         y = 2.5
-        for i, (m, why) in enumerate(steps):
-            self.slide(tr(f"Derivation, step {i + 1} of 4: ", f"Derivation, step {i + 1} / 4: ") + why, direction="vertical")
+        for i, (m, (why, why_bn)) in enumerate(steps):
+            self.slide(say(f"Derivation, step {i + 1} of 4: {why}", f"Derivation, step {i + 1} / 4: {why_bn}"), direction="vertical")
             if i == 0:
                 self.detour_in(screen)
             why_t = text(why, size=22, color=MUTED)
@@ -302,13 +302,13 @@ class Ch05Boltzmann(Chapter, Slide):
             shown.add(m, why_t)
         self.play(Circumscribe(steps[-1][0][4], color=GATE))
 
-        self.slide(tr("Back to the story.", "আবার গল্পে ফিরি।"), direction="vertical")
+        self.slide(say("Back to the story.", "আবার গল্পে ফিরি।"), direction="vertical")
         self.detour_out(screen, shown)
         self.screen = screen
 
     # --- the subthreshold swing --------------------------------------------------------------
     def swing(self):
-        self.slide(tr(
+        self.slide(say(
             """
             Put the two pieces together, the Boltzmann tail and the divider, and you get the
             subthreshold swing: how much gate voltage it takes to change the current ten times. A
@@ -324,7 +324,7 @@ class Ch05Boltzmann(Chapter, Slide):
             """,
         ))
         self.play(FadeOut(self.screen))
-        title = heading(tr("The subthreshold swing", "Subthreshold swing"))
+        title = heading("The subthreshold swing")
         big = MathTex(r"SS", r"=", r"m", r"\,\frac{k_BT}{q}", r"\,\ln 10", r"\;\geq\;", r"60\ \tfrac{\text{mV}}{\text{decade}}",
                       font_size=84, color=INK)
         big[2].set_color(OXIDE_TEXT)
@@ -332,9 +332,9 @@ class Ch05Boltzmann(Chapter, Slide):
         big[6].set_color(GATE)
         big.move_to(UP * 0.6)
         labels = VGroup(
-            text(tr("how well the gate\ngrips the channel", "gate channel-রে\nকতটা শক্ত করে ধরে"), size=22, color=OXIDE_TEXT).next_to(big[2], DOWN, buff=0.5).shift(LEFT * 0.4),
+            text("how well the gate\ngrips the channel", size=22, color=OXIDE_TEXT).next_to(big[2], DOWN, buff=0.5).shift(LEFT * 0.4),
             text("temperature", size=22, color=THERMAL).next_to(big[3], DOWN, buff=0.35).shift(RIGHT * 0.6),
-            text(tr("at 300 K, with a\nperfect gate (m = 1)", "300 K-তে, perfect\ngate (m = 1) হলে"), size=22, color=GATE).next_to(big[6], DOWN, buff=0.35),
+            text("at 300 K, with a\nperfect gate (m = 1)", size=22, color=GATE).next_to(big[6], DOWN, buff=0.35),
         )
         self.play(FadeIn(title))
         self.play(Write(big[:5]), run_time=2)
@@ -343,7 +343,7 @@ class Ch05Boltzmann(Chapter, Slide):
         box = SurroundingRectangle(big[6], color=GATE, buff=0.15, corner_radius=0.1)
         self.play(Create(box))
 
-        self.slide(tr(
+        self.slide(say(
             """
             The only knob is temperature: cool the chip to liquid nitrogen and the swing drops to 15
             millivolts per decade. And remember the bipolar transistor from chapter two, whose
@@ -356,16 +356,15 @@ class Ch05Boltzmann(Chapter, Slide):
             বাড়ে? এইটা কাকতালীয় না। সেই একই Boltzmann tail।
             """,
         ))
-        cold = VGroup(text(tr("Cool it to 77 K (liquid nitrogen):", "77 K-তে ঠান্ডা করলে (liquid nitrogen):"), size=28, color=MUTED),
+        cold = VGroup(text("Cool it to 77 K (liquid nitrogen):", size=28, color=MUTED),
                       MathTex(r"SS = 15\ \text{mV/decade}", font_size=44, color=ELECTRON)).arrange(RIGHT, buff=0.3).to_edge(DOWN, buff=1.0)
-        bjt = text(tr("The same 60 mV sets a bipolar transistor's current: one Boltzmann tail, two devices.",
-                      "Bipolar transistor-এও সেই একই 60 mV: একটাই Boltzmann tail, দুইটা device।"), size=22, color=MUTED).to_edge(DOWN, buff=0.4)
+        bjt = text("The same 60 mV sets a bipolar transistor's current: one Boltzmann tail, two devices.", size=22, color=MUTED).to_edge(DOWN, buff=0.4)
         self.play(FadeIn(cold, shift=UP * 0.2))
         self.play(FadeIn(bjt))
 
     # --- I-V on a log scale, and Dennard's demand --------------------------------------------
     def iv(self):
-        self.slide(tr(
+        self.slide(say(
             """
             Here's what that means for a real transistor: current against gate voltage, on a log
             scale. Below the threshold voltage, V-T, the curve is a straight line, one decade for
@@ -404,7 +403,7 @@ class Ch05Boltzmann(Chapter, Slide):
         off_lbl = always_redraw(lambda: MathTex(r"I_{off}", color=DRAIN, font_size=34).next_to(off, RIGHT, buff=0.15))
         on = always_redraw(lambda: Dot(axes.c2p(vdd.get_value(), logi(vdd.get_value())), color=GOOD, radius=0.09))
         on_lbl = always_redraw(lambda: MathTex(r"I_{on}", color=GOOD, font_size=34).next_to(on, UP + LEFT, buff=0.08))
-        title = heading(tr("On and off, on a log scale", "On আর off, log scale-এ"))
+        title = heading("On and off, on a log scale")
         self.play(FadeIn(title), Create(axes), FadeIn(x_t), FadeIn(y_t))
         self.play(Create(curve), run_time=2)
         self.play(FadeIn(vt_line), FadeIn(vt_lbl), FadeIn(off), FadeIn(off_lbl), FadeIn(on), FadeIn(on_lbl))
@@ -417,16 +416,16 @@ class Ch05Boltzmann(Chapter, Slide):
         a, b = axes.c2p(0.10, logi(0.10)), axes.c2p(0.24, logi(0.24))
         ang = np.arctan2(b[1] - a[1], b[0] - a[0])
         weak = text("weak inversion", size=20, color=MUTED).rotate(ang).move_to(axes.c2p(0.17, logi(0.17)) + rotate_vector(UP * 0.3, ang))
-        side = VGroup(text(tr("A real transistor\n(m = 1.2):", "একটা আসল transistor\n(m = 1.2):"), size=24, color=MUTED),
+        side = VGroup(text("A real transistor\n(m = 1.2):", size=24, color=MUTED),
                       MathTex(rf"SS = {ss * 1e3:.0f}\ \text{{mV/decade}}", font_size=38, color=GATE)).arrange(DOWN, aligned_edge=LEFT, buff=0.15).move_to([4.75, 1.7, 0])
         self.play(Create(tri), FadeIn(tri_l), FadeIn(side), FadeIn(weak))
         span = always_redraw(lambda: VGroup(
-            text(tr("decades between off and on", "off আর on-এর মাঝে decade"), size=22, color=MUTED),
+            text("decades between off and on", size=22, color=MUTED),
             display(f"{logi(vdd.get_value()) - logi(0):.1f}", size=54, color=INK),
         ).arrange(DOWN, buff=0.08).move_to([4.75, -0.4, 0]))
         self.play(FadeIn(span))
 
-        self.slide(tr(
+        self.slide(say(
             """
             Now do what Dennard scaling asks: shrink the supply voltage along with everything else,
             from 1 volt to 0.7. Look at the on current. It collapses, because we're barely above
@@ -441,11 +440,11 @@ class Ch05Boltzmann(Chapter, Slide):
         vdd_line = always_redraw(lambda: DashedLine(axes.c2p(vdd.get_value(), 0), axes.c2p(vdd.get_value(), 10), stroke_color=GOOD, stroke_width=2))
         vdd_lbl = always_redraw(lambda: MathTex("V_{DD}", color=GOOD, font_size=32).next_to(axes.c2p(vdd.get_value(), 10), UP, buff=0.05))
         self.play(FadeOut(tri), FadeOut(tri_l), FadeOut(weak),
-                  Transform(title, heading(tr("Dennard scaling: shrink the supply voltage too", "Dennard scaling: supply voltage-ও কমান"))),
+                  Transform(title, heading("Dennard scaling: shrink the supply voltage too")),
                   FadeIn(vdd_line), FadeIn(vdd_lbl))
         self.play(vdd.animate.set_value(0.7), run_time=2)
 
-        self.slide(tr(
+        self.slide(say(
             """
             And here's the trap. Each time we lower the threshold by one swing, about 70 millivolts,
             the off current goes up ten times. Lower it by three swings and the switch leaks a
@@ -468,12 +467,11 @@ class Ch05Boltzmann(Chapter, Slide):
         for k in (1, 2, 3):
             self.play(vt.animate.set_value(0.40 - k * ss), run_time=1.6)
             self.wait(0.4)
-        self.play(Transform(title, heading(tr(f"Every {ss * 1e3:.0f} mV off V_T: ten times the leakage",
-                                              f"V_T থেকে প্রতি {ss * 1e3:.0f} mV কমাইলে leakage দশ গুণ"))))
+        self.play(Transform(title, heading(f"Every {ss * 1e3:.0f} mV off V_T: ten times the leakage")))
 
     # --- the power wall ----------------------------------------------------------------------
     def power_wall(self):
-        self.slide(tr(
+        self.slide(say(
             """
             You can see it in the clock speed. For thirty years it rose about a thousandfold. Then
             around 2004 it hit three to four gigahertz and stopped. With the voltage stuck,
@@ -499,27 +497,27 @@ class Ch05Boltzmann(Chapter, Slide):
         axes.y_axis.add_labels({1: text("1 MHz", size=16, color=MUTED), 2: text("10 MHz", size=16, color=MUTED),
                                 3: text("100 MHz", size=16, color=MUTED), 4: text("1 GHz", size=16, color=MUTED),
                                 5: text("10 GHz", size=16, color=MUTED)}, font_size=16)
-        title = heading(tr("Clock speed stopped rising", "Clock speed বাড়া থেমে গেল"))
+        title = heading("Clock speed stopped rising")
         dots = VGroup(*[Dot(axes.c2p(y, log10(f) + 1), color=THERMAL, radius=0.07) for y, f in clocks])
         trail = VMobject(stroke_color=THERMAL, stroke_width=3).set_points_as_corners([d.get_center() for d in dots])
-        cap = text(tr("Intel desktop processors, base clock (approximate)", "Intel desktop processor, base clock (আনুমানিক)"), size=18, color=MUTED).next_to(axes, DOWN, buff=0.35)
+        cap = text("Intel desktop processors, base clock (approximate)", size=18, color=MUTED).next_to(axes, DOWN, buff=0.35)
         self.play(FadeIn(title), Create(axes), FadeIn(cap))
         self.play(LaggedStart(*[FadeIn(d, scale=0.3) for d in dots[:9]], lag_ratio=0.25), Create(trail), run_time=3)
         self.play(LaggedStart(*[FadeIn(d, scale=0.3) for d in dots[9:]], lag_ratio=0.25), run_time=1.5)
         x0, x1 = axes.c2p(2004, 1)[0], axes.c2p(2022, 1)[0]
         y0, y1 = axes.c2p(1970, log10(2500) + 1)[1], axes.c2p(1970, log10(4500) + 1)[1]
         band = Rectangle(width=x1 - x0, height=y1 - y0, fill_color=DRAIN, fill_opacity=0.15, stroke_width=0).move_to([(x0 + x1) / 2, (y0 + y1) / 2, 0])
-        flat = text(tr("~3–4 GHz since 2004", "2004 থেকে ~3–4 GHz"), size=24, color=DRAIN, weight="SEMIBOLD").next_to(band, UP, buff=0.12)
+        flat = text("~3–4 GHz since 2004", size=24, color=DRAIN, weight="SEMIBOLD").next_to(band, UP, buff=0.12)
         self.play(FadeIn(band), FadeIn(flat))
         side = VGroup(
-            text(tr("V_DD stuck near 1 V", "V_DD 1 V-এর কাছে আটকা"), size=22),
-            text(tr("→ power density rises", "→ power density বাড়ে"), size=22),
-            text(tr("→ the clock can't", "→ clock আর বাড়ানো যায় না"), size=22),
-            text(tr("→ multicore instead", "→ বদলে multicore"), size=22),
+            text("V_DD stuck near 1 V", size=22),
+            text("→ power density rises", size=22),
+            text("→ the clock can't", size=22),
+            text("→ multicore instead", size=22),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.15).move_to([5.0, 0.2, 0])
         self.play(LaggedStart(*[FadeIn(s, shift=RIGHT * 0.1) for s in side], lag_ratio=0.3))
 
-        self.slide(tr(
+        self.slide(say(
             """
             Intel saw this coming. In 2001, Pat Gelsinger told the ISSCC conference that if
             processors kept going the way they were, their power density would match a nuclear
@@ -534,23 +532,22 @@ class Ch05Boltzmann(Chapter, Slide):
             """,
         ))
         self.clear()
-        title = heading(tr("Where the heat was heading", "Heat কোন দিকে যাইতেছিল"))
-        rungs = [(tr("hot plate", "hot plate"), "2001"), (tr("nuclear reactor", "nuclear reactor"), "2005"),
-                 (tr("rocket nozzle", "rocket nozzle"), "2010"), (tr("surface of the Sun", "সূর্যের surface"), "2015")]
+        title = heading("Where the heat was heading")
+        rungs = [("hot plate", "2001"), ("nuclear reactor", "2005"),
+                 ("rocket nozzle", "2010"), ("surface of the Sun", "2015")]
         ladder = VGroup()
         for i, (thing, year) in enumerate(rungs):
             bar = Rectangle(width=1.6 + 1.5 * i, height=0.55, fill_color=THERMAL, fill_opacity=0.25 + 0.2 * i, stroke_width=0)
             ladder.add(VGroup(text(year, size=26, color=MUTED), bar, text(thing, size=30, weight="MEDIUM")).arrange(RIGHT, buff=0.35))
         ladder.arrange(UP, aligned_edge=LEFT, buff=0.35).move_to([0, -0.1, 0])
-        quote = text(tr("Pat Gelsinger (Intel), ISSCC 2001 keynote: where power density was heading if scaling went on as it was.",
-                        "Pat Gelsinger (Intel), ISSCC 2001 keynote: scaling এভাবে চললে power density কোথায় যাইত।"), size=18, color=MUTED).to_edge(DOWN, buff=0.35)
+        quote = text("Pat Gelsinger (Intel), ISSCC 2001 keynote: where power density was heading if scaling went on as it was.", size=18, color=MUTED).to_edge(DOWN, buff=0.35)
         self.play(FadeIn(title), FadeIn(quote))
         for row in ladder:
             self.play(FadeIn(row, shift=UP * 0.15), run_time=0.7)
 
     # --- the gate oxide ----------------------------------------------------------------------
     def oxide(self):
-        self.slide(tr(
+        self.slide(say(
             """
             There was a second wall at the same time. To keep its grip on the channel, the gate
             oxide had been thinned to about 1.2 nanometres: about five layers of atoms. At that
@@ -566,7 +563,7 @@ class Ch05Boltzmann(Chapter, Slide):
             """,
         ))
         self.clear()
-        title = heading(tr("Meanwhile, the oxide was five atoms thick", "এদিকে oxide ছিল মাত্র পাঁচ atom পুরু"))
+        title = heading("Meanwhile, the oxide was five atoms thick")
         gate = Rectangle(width=3.7, height=1.2, fill_color=GATE, fill_opacity=1, stroke_width=0).move_to([-3.55, 1.7, 0])
         gate_l = text("gate", size=24, color=BG, weight="SEMIBOLD").move_to(gate)
         atoms = VGroup(*[Circle(radius=0.12, fill_color=OXIDE_TEXT, fill_opacity=0.85, stroke_width=0).move_to(
@@ -588,19 +585,19 @@ class Ch05Boltzmann(Chapter, Slide):
             return 0.45 * np.exp(-(y_top - y_bot) * 2.2) * np.sin(14 * y)
 
         wave = ParametricFunction(lambda y: [wave_x + psi(y), y, 0], t_range=[-1.5, 2.25], stroke_color=ELECTRON, stroke_width=4)
-        wave_l = text(tr("electron wave", "electron wave"), size=22, color=ELECTRON).move_to([-0.6, -1.0, 0])
+        wave_l = text("electron wave", size=22, color=ELECTRON).move_to([-0.6, -1.0, 0])
         self.play(Create(wave), FadeIn(wave_l), run_time=1.5)
         e1 = eq(r"J_G", r"\;\propto\;", r"\exp\!\left(-2\,", r"t_{ox}", r"\,\frac{\sqrt{2m^*\Phi_B}}{\hbar}\right)", size=40)
         e1[0].set_color(DRAIN)
         e1[3].set_color(OXIDE_TEXT)
         per = phys.thickness_per_decade_nm()
-        e2 = text(tr(f"≈ 10× more leakage\nfor every {per:.1f} nm thinner", f"প্রতি {per:.1f} nm পাতলায়\nleakage ≈ 10 গুণ"), size=28, color=DRAIN, weight="SEMIBOLD")
-        e3 = text(tr("with m* ≈ 0.4 m₀ and Φ_B ≈ 3.1 eV (Si/SiO₂)", "m* ≈ 0.4 m₀ আর Φ_B ≈ 3.1 eV (Si/SiO₂) ধরে"), size=20, color=MUTED)
+        e2 = text(f"≈ 10× more leakage\nfor every {per:.1f} nm thinner", size=28, color=DRAIN, weight="SEMIBOLD")
+        e3 = text("with m* ≈ 0.4 m₀ and Φ_B ≈ 3.1 eV (Si/SiO₂)", size=20, color=MUTED)
         col = VGroup(e1, e2, e3, model_tag()).arrange(DOWN, buff=0.35).move_to([3.7, 0.5, 0])
         self.play(Write(e1))
         self.play(FadeIn(e2), FadeIn(e3), FadeIn(col[3]))
 
-        self.slide(tr(
+        self.slide(say(
             """
             The fix was a new material. A capacitor's strength is the permittivity, k, over the
             thickness. Hafnium oxide has a k around 20, five times silicon dioxide's. So about 6
@@ -616,7 +613,7 @@ class Ch05Boltzmann(Chapter, Slide):
             """,
         ))
         self.clear()
-        title = heading(tr("The fix: a thicker insulator that acts thinner", "Fix: পুরু insulator, যে কাজ করে পাতলার মতো"))
+        title = heading("The fix: a thicker insulator that acts thinner")
         t_hk = phys.physical_thickness_nm(1.2, 20)
         u = 0.32  # scene units per nm, the same for both stacks
 
@@ -628,12 +625,12 @@ class Ch05Boltzmann(Chapter, Slide):
 
         sio2 = stack(-4.4, 1.2, OXIDE_TEXT, "SiO₂  1.2 nm")
         hfo2 = stack(-1.4, t_hk, HIGHK, f"HfO₂  {t_hk:.1f} nm")
-        same = text(tr("same grip on the channel", "channel-এর উপর একই grip"), size=22, color=MUTED).next_to(VGroup(sio2, hfo2), DOWN, buff=0.25)
+        same = text("same grip on the channel", size=22, color=MUTED).next_to(VGroup(sio2, hfo2), DOWN, buff=0.25)
         f1 = eq(r"C_{ox}", r"=", r"\frac{\varepsilon_0\,k}{t}", size=46)
         f1[0].set_color(OXIDE_TEXT)
         f2 = eq(r"\text{EOT}", r"=", r"t_{hk}\,\frac{3.9}{k}", size=46)
-        f3 = text(tr(f"k ≈ 20: {t_hk:.1f} nm of HfO₂ acts\nlike 1.2 nm of SiO₂", f"k ≈ 20: {t_hk:.1f} nm HfO₂ কাজ করে\n1.2 nm SiO₂-এর মতো"), size=26)
-        f4 = text(tr("Far less tunnelling.\nIntel 45 nm, 2007.", "Tunnelling অনেক কম।\nIntel 45 nm, 2007।"), size=26, color=GOOD, weight="SEMIBOLD")
+        f3 = text(f"k ≈ 20: {t_hk:.1f} nm of HfO₂ acts\nlike 1.2 nm of SiO₂", size=26)
+        f4 = text("Far less tunnelling.\nIntel 45 nm, 2007.", size=26, color=GOOD, weight="SEMIBOLD")
         VGroup(f1, f2, f3, f4).arrange(DOWN, buff=0.4).move_to([3.6, 0.0, 0])
         self.play(FadeIn(title), FadeIn(sio2))
         self.play(FadeIn(hfo2), FadeIn(same))
@@ -644,7 +641,7 @@ class Ch05Boltzmann(Chapter, Slide):
 
     # --- cliffhanger -------------------------------------------------------------------------
     def cliffhanger(self):
-        self.slide(tr(
+        self.slide(say(
             """
             So that's the state of things in the mid-2000s. We fixed the oxide. We could not fix
             Boltzmann: 60 millivolts per decade is a law of nature for this kind of switch. The only
@@ -660,10 +657,9 @@ class Ch05Boltzmann(Chapter, Slide):
             """,
         ))
         self.clear()
-        a = text(tr("We fixed the oxide.", "Oxide আমরা ঠিক করছি।"), size=46, weight="SEMIBOLD")
-        b = text(tr("We couldn't fix Boltzmann.", "Boltzmann-রে ঠিক করতে পারি নাই।"), size=46, weight="SEMIBOLD", color=GATE)
-        c = text(tr("And the channel got so short that the drain started to fight the gate.",
-                    "আর channel এত ছোট হইলো যে drain gate-এর সাথে লড়াই শুরু করল।"), size=26, color=DRAIN)
+        a = text("We fixed the oxide.", size=46, weight="SEMIBOLD")
+        b = text("We couldn't fix Boltzmann.", size=46, weight="SEMIBOLD", color=GATE)
+        c = text("And the channel got so short that the drain started to fight the gate.", size=26, color=DRAIN)
         VGroup(a, b, c).arrange(DOWN, buff=0.3).to_edge(UP, buff=0.5)
         self.play(FadeIn(a))
         self.play(FadeIn(b))
@@ -676,7 +672,3 @@ class Ch05Boltzmann(Chapter, Slide):
         self.play(FadeIn(c), self.d.animate.set_value(0.38), self.b.animate.set_value(0.15), run_time=3)
         self.wait(1.5)
         bar.stop()
-
-
-class Ch05BoltzmannBN(Ch05Boltzmann):
-    LANG = "bn"

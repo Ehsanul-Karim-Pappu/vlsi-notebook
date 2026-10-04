@@ -10,6 +10,7 @@ from math import log10
 from pathlib import Path
 
 LECTURE = Path(__file__).resolve().parents[1]
+IMAGES = LECTURE / "images"
 sys.path[:0] = [str(LECTURE.parents[1]), str(LECTURE)]
 
 import numpy as np  # noqa: E402
@@ -34,7 +35,7 @@ class Ch02AccidentalTransistor(Chapter, Slide):
 
     # --- card --------------------------------------------------------------------------------
     def card(self):
-        self.slide(tr(
+        self.slide(say(
             """
             Bell Labs, December 1947. Bardeen and Brattain are pressing metal points into a crystal
             of germanium to understand its surface. They are not trying to build an amplifier.
@@ -46,14 +47,30 @@ class Ch02AccidentalTransistor(Chapter, Slide):
         ))
         self.card_group = self.open_chapter(
             2, 1947, 1925, "The accidental transistor",
-            tr("Gold foil, a plastic wedge and a paper clip", "Gold foil, একটা plastic wedge আর একটা paper clip"),
+            "Gold foil, a plastic wedge and a paper clip",
         )
 
     # --- the point-contact transistor --------------------------------------------------------
     def point_contact(self):
-        self.slide(tr(
+        pics = Group(
+            figure(IMAGES / "first_transistor_replica.jpg", 6.0, "A replica. Photo: Mister rf, CC BY-SA 4.0"),
+            figure(IMAGES / "bardeen_brattain_US2524035.png", 5.0, "Bardeen & Brattain, US patent 2,524,035, filed 1948"),
+        ).arrange(RIGHT, buff=0.6, aligned_edge=DOWN).move_to(DOWN * 0.4)
+        title, pics = self.show_figure(say(
             """
-            Here is what they built. A block of germanium. On top, a plastic wedge with gold foil
+            This is a replica of the first transistor. And this is the drawing from Bardeen and
+            Brattain's patent, filed in June 1948: two metal points pressed into a block of
+            germanium, almost touching.
+            """,
+            """
+            এইটা প্রথম transistor-এর একটা replica। আর এইটা Bardeen আর Brattain-এর patent-এর drawing, file
+            করা June 1948-এ: একটা germanium block-এ দুইটা metal point চাপ দিয়া বসানো, প্রায় গায়ে গায়ে।
+            """,
+        ), "16 December 1947: the point-contact transistor", pics, clear=self.card_group)
+
+        self.slide(say(
+            """
+            Here's how it's put together. A block of germanium. On top, a plastic wedge with gold foil
             wrapped around its tip, and the foil slit with a razor, so there are two gold contacts a
             hair's width apart. A spring made from a paper clip presses it down. Put a small signal
             into one contact, and a bigger copy comes out of the other. On the 16th of December 1947
@@ -61,15 +78,14 @@ class Ch02AccidentalTransistor(Chapter, Slide):
             born, out of an experiment on surfaces.
             """,
             """
-            এই হইলো তাঁদের বানানো জিনিস। একটা germanium block। উপরে একটা plastic wedge, তার মাথায় gold
+            জিনিসটা কীভাবে বানানো, দেখেন। একটা germanium block। উপরে একটা plastic wedge, তার মাথায় gold
             foil মোড়ানো, আর razor দিয়ে foil-টা চিরে দেওয়া, যাতে একটা চুলের সমান দূরে দুইটা gold contact
             হয়। Paper clip বাঁকায়ে বানানো একটা spring সেটারে নিচে চেপে রাখে। এক contact-এ ছোট একটা signal
             দিলে, আরেকটা দিয়া তার বড় একটা copy বের হয়। 16 December 1947-এ এইটা amplify করল; 23 তারিখে
             Bell Labs management-রে দেখানো হইল। Transistor-এর জন্ম হইলো, surface নিয়া একটা experiment থেকে।
             """,
         ))
-        self.play(FadeOut(self.card_group))
-        title = heading(tr("16 December 1947: the point-contact transistor", "16 December 1947: point-contact transistor"))
+        self.play(FadeOut(pics))
         cx = -2.6
         block = Rectangle(width=4.6, height=1.5, fill_color=METAL, fill_opacity=0.3, stroke_color=METAL, stroke_width=2).move_to([cx, -1.55, 0])
         base = Rectangle(width=5.0, height=0.22, fill_color=METAL, fill_opacity=1, stroke_width=0).move_to([cx, -2.42, 0])
@@ -80,16 +96,16 @@ class Ch02AccidentalTransistor(Chapter, Slide):
         zig = [[cx, 1.25 + 0.16 * i, 0] if i % 2 == 0 else [cx + (0.32 if i % 4 == 1 else -0.32), 1.25 + 0.16 * i, 0] for i in range(9)]
         spring = VMobject(stroke_color=METAL, stroke_width=4).set_points_as_corners(zig)
         lbl = VGroup(
-            text(tr("germanium", "germanium"), size=22, color=MUTED).move_to(block),
+            text("germanium", size=22, color=MUTED).move_to(block),
             text("base", size=20, color=MUTED).next_to(base, DOWN, buff=0.1),
             text("emitter", size=22, color=GATE).next_to(foil_l, LEFT, buff=0.2).shift(DOWN * 0.4),
             text("collector", size=22, color=GATE).next_to(foil_r, RIGHT, buff=0.2).shift(DOWN * 0.4),
-            text(tr("paper-clip spring", "paper-clip spring"), size=20, color=MUTED).next_to(spring, RIGHT, buff=0.3),
-            text(tr("plastic wedge, gold foil", "plastic wedge, gold foil"), size=20, color=MUTED).next_to(wedge, LEFT, buff=0.25).shift(UP * 0.6),
+            text("paper-clip spring", size=20, color=MUTED).next_to(spring, RIGHT, buff=0.3),
+            text("plastic wedge, gold foil", size=20, color=MUTED).next_to(wedge, LEFT, buff=0.25).shift(UP * 0.6),
         )
-        gap = text(tr("~50 µm apart", "~50 µm দূরে"), size=18, color=GATE).next_to([cx, tip_y, 0], DOWN, buff=0.15)
+        gap = text("~50 µm apart", size=18, color=GATE).next_to([cx, tip_y, 0], DOWN, buff=0.15)
         src = source("J. Bardeen & W. H. Brattain, Phys. Rev. 74, 230 (1948)")
-        self.play(FadeIn(title), FadeIn(src))
+        self.play(FadeIn(src))
         self.play(FadeIn(block), FadeIn(base), FadeIn(lbl[0]), FadeIn(lbl[1]))
         self.play(FadeIn(wedge, shift=DOWN * 0.3), Create(foil_l), Create(foil_r), FadeIn(lbl[2:4]), FadeIn(lbl[5]))
         self.play(Create(spring), FadeIn(lbl[4]), FadeIn(gap))
@@ -100,13 +116,13 @@ class Ch02AccidentalTransistor(Chapter, Slide):
 
         sin_in = wave(1.6, 1.0, 0.12, ELECTRON)
         sin_out = wave(1.6, -0.9, 0.55, GOOD)
-        in_l = text(tr("small signal in", "ছোট signal ঢুকে"), size=22, color=ELECTRON).next_to(sin_in, UP, buff=0.15)
-        out_l = text(tr("bigger copy out", "বড় copy বের হয়"), size=22, color=GOOD).next_to(sin_out, DOWN, buff=0.15)
+        in_l = text("small signal in", size=22, color=ELECTRON).next_to(sin_in, UP, buff=0.15)
+        out_l = text("bigger copy out", size=22, color=GOOD).next_to(sin_out, DOWN, buff=0.15)
         self.play(Create(sin_in), FadeIn(in_l), run_time=1.2)
         self.play(Create(sin_out), FadeIn(out_l), run_time=1.2)
         dates = VGroup(
-            text(tr("16 Dec 1947: it amplifies", "16 Dec 1947: amplify করে"), size=22),
-            text(tr("23 Dec 1947: shown to management", "23 Dec 1947: management-রে দেখানো হয়"), size=22, color=MUTED),
+            text("16 Dec 1947: it amplifies", size=22),
+            text("23 Dec 1947: shown to management", size=22, color=MUTED),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.12)
         dates.move_to([0.9 + dates.width / 2, -2.6, 0])
         self.play(FadeIn(dates, shift=UP * 0.2))
@@ -114,27 +130,40 @@ class Ch02AccidentalTransistor(Chapter, Slide):
 
     # --- the junction transistor -------------------------------------------------------------
     def junction(self):
-        self.slide(tr(
+        pics = Group(
+            figure(IMAGES / "bardeen_shockley_brattain_1948.jpg", 4.8, "Bardeen, Shockley and Brattain, 1948. AT&T photo (public domain)"),
+            figure(IMAGES / "shockley_US2569347.png", 3.2, "W. Shockley, US patent 2,569,347, filed 1948"),
+        ).arrange(RIGHT, buff=0.5).move_to(DOWN * 0.3)
+        title, pics = self.show_figure(say(
             """
-            Shockley was not in the room for that discovery, and it stung. Within weeks he had
-            worked out something better: a transistor made entirely inside the crystal, the junction
-            transistor. A thin layer of p-type material, the base, between two n-type regions, the
+            The famous Bell Labs photo from 1948: John Bardeen, William Shockley at the bench, and
+            Walter Brattain. Shockley was not in the room for the discovery, and it stung. Within
+            weeks he had worked out something better, and filed this patent in June 1948.
+            """,
+            """
+            1948-এর বিখ্যাত Bell Labs ছবি: John Bardeen, bench-এ বসা William Shockley, আর Walter Brattain।
+            ওই discovery-র সময় Shockley room-এ ছিলেন না, আর এইটা তাঁরে খোঁচাইছিল। কয়েক সপ্তাহের মধ্যেই তিনি
+            আরও ভালো একটা জিনিস বের করলেন, আর June 1948-এ এই patent file করলেন।
+            """,
+        ), "1948: Shockley's junction transistor", pics, clear=self.pc_parts)
+
+        self.slide(say(
+            """
+            Here it is: a transistor made entirely inside the crystal, the junction transistor. A
+            thin layer of p-type material, the base, between two n-type regions, the
             emitter and the collector. Now look at its energy picture. A hill between emitter and
             collector, and the base voltage sets its height. Raise V-B-E and the hill comes down;
             electrons pour over. Hold on to this picture. It is exactly the picture of the MOSFET,
             and we'll come back to it.
             """,
             """
-            ওই discovery-র সময় Shockley room-এ ছিলেন না, আর এইটা তাঁরে খোঁচাইছিল। কয়েক সপ্তাহের মধ্যেই
-            তিনি আরও ভালো একটা জিনিস বের করলেন: পুরাটাই crystal-এর ভিতরে বানানো একটা transistor, junction
-            transistor। দুইটা n-type region, মানে emitter আর collector, তাদের মাঝে p-type-এর একটা পাতলা
+            এই যে: পুরাটাই crystal-এর ভিতরে বানানো একটা transistor, junction transistor। দুইটা n-type region, মানে emitter আর collector, তাদের মাঝে p-type-এর একটা পাতলা
             layer, base। এবার এর energy-র ছবিটা দেখেন। Emitter আর collector-এর মাঝে একটা hill, আর base
             voltage ঠিক করে hill-টা কত উঁচু। V-B-E বাড়াইলে hill নিচে নামে, electron হুড়মুড় করে পার হয়। এই
             ছবিটা মনে রাখেন। MOSFET-এর ছবিও হুবহু এইটাই, পরে আবার আসবো।
             """,
         ))
-        self.play(FadeOut(self.pc_parts))
-        title = heading(tr("1948: Shockley's junction transistor", "1948: Shockley-র junction transistor"))
+        self.play(FadeOut(pics))
         e = Rectangle(width=3.0, height=0.8, fill_color=ELECTRON, fill_opacity=0.35, stroke_width=0)
         b = Rectangle(width=0.7, height=0.8, fill_color=HOLE, fill_opacity=0.45, stroke_width=0)
         c = Rectangle(width=3.0, height=0.8, fill_color=ELECTRON, fill_opacity=0.35, stroke_width=0)
@@ -144,7 +173,6 @@ class Ch02AccidentalTransistor(Chapter, Slide):
             text("base (p)", size=18).next_to(b, DOWN, buff=0.1),
             text("collector (n)", size=22).move_to(c),
         )
-        self.play(FadeIn(title))
         self.play(FadeIn(bar), FadeIn(bar_l))
 
         self.vbe = ValueTracker(0.30)
@@ -159,10 +187,10 @@ class Ch02AccidentalTransistor(Chapter, Slide):
         self.play(FadeIn(hill.dots, scale=0.5, lag_ratio=0.004), run_time=1.2)
         hill.start()
         self.wait(1)
-        raise_ = text(tr("raise V_BE: the hill comes down", "V_BE বাড়াইলে hill নিচে নামে"), size=26, color=GATE).move_to([3.6, 0.5, 0])
+        raise_ = text("raise V_BE: the hill comes down", size=26, color=GATE).move_to([3.6, 0.5, 0])
         self.play(FadeIn(raise_), self.vbe.animate.set_value(0.07), run_time=3)
         self.wait(2)
-        same = text(tr("Same picture as the MOSFET.\nKeep it in mind.", "MOSFET-এর ছবিও এইটাই।\nমনে রাখেন।"), size=26, weight="SEMIBOLD").move_to([3.8, -0.9, 0])
+        same = text("Same picture as the MOSFET.\nKeep it in mind.", size=26, weight="SEMIBOLD").move_to([3.8, -0.9, 0])
         self.play(FadeIn(same, shift=UP * 0.2))
         self.wait(1)
         hill.stop()
@@ -170,7 +198,7 @@ class Ch02AccidentalTransistor(Chapter, Slide):
 
     # --- the exponential ---------------------------------------------------------------------
     def exponential(self):
-        self.slide(tr(
+        self.slide(say(
             """
             Because the electrons have to get over that hill, the collector current is exponential
             in the base-emitter voltage. On a log scale it's a straight line. And here is a number
@@ -186,7 +214,7 @@ class Ch02AccidentalTransistor(Chapter, Slide):
             """,
         ))
         self.play(FadeOut(self.jt_parts))
-        title = heading(tr("An exponential switch", "একটা exponential switch"))
+        title = heading("An exponential switch")
         off = 8  # plot log10(I) + 8, so the x axis sits at the bottom
         axes = Axes(
             x_range=[0.5, 0.8, 0.05], y_range=[0, 6, 1], x_length=7.0, y_length=4.6, tips=False,
@@ -215,9 +243,9 @@ class Ch02AccidentalTransistor(Chapter, Slide):
         )
         self.play(Create(tri), FadeIn(tri_l))
         plant = VGroup(
-            text(tr("+60 mV on the base:", "Base-এ +60 mV:"), size=30),
-            text(tr("ten times the current", "current দশ গুণ"), size=30, color=GATE, weight="SEMIBOLD"),
-            text(tr("Why 60? Chapter 5.", "60 কেন? Chapter 5-এ।"), size=24, color=MUTED),
+            text("+60 mV on the base:", size=30),
+            text("ten times the current", size=30, color=GATE, weight="SEMIBOLD"),
+            text("Why 60? Chapter 5.", size=24, color=MUTED),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.12).move_to([4.0, -1.4, 0])
         self.play(FadeIn(beta))
         self.play(FadeIn(plant, shift=UP * 0.2))
@@ -225,7 +253,7 @@ class Ch02AccidentalTransistor(Chapter, Slide):
 
     # --- the bandgap: the BJT you still draw -------------------------------------------------
     def bandgap(self):
-        self.slide(tr(
+        self.slide(say(
             """
             This isn't only history. In a CMOS chip the bipolar transistor survives as a parasitic:
             the vertical PNP you place in a bandgap reference. You've probably drawn this array: one
@@ -243,7 +271,7 @@ class Ch02AccidentalTransistor(Chapter, Slide):
             """,
         ))
         self.play(FadeOut(self.exp_parts))
-        title = heading(tr("You still lay this transistor out", "এই transistor আপনারা এখনো layout করেন"))
+        title = heading("You still lay this transistor out")
         cell = 1.05
         grid = VGroup()
         for r in range(3):
@@ -255,16 +283,15 @@ class Ch02AccidentalTransistor(Chapter, Slide):
                 emitter = Square(cell * 0.38, stroke_width=0, fill_color=GATE if center else ELECTRON, fill_opacity=0.9).move_to(sq)
                 grid.add(VGroup(sq, emitter, text("Q1" if center else "Q2", size=16, color=BG, weight="SEMIBOLD").move_to(emitter)))
         ring = SurroundingRectangle(grid, buff=0.18, color=MUTED, stroke_width=2)
-        ring_l = text(tr("1 : 8 vertical PNP array,\ncommon centroid", "1 : 8 vertical PNP array,\ncommon centroid"), size=20, color=MUTED).next_to(ring, DOWN, buff=0.15)
+        ring_l = text("1 : 8 vertical PNP array,\ncommon centroid", size=20, color=MUTED).next_to(ring, DOWN, buff=0.15)
         dvbe = phys.delta_vbe(8)
         e1 = eq(r"\Delta V_{BE}", r"=", r"\frac{k_BT}{q}", r"\ln 8", size=52)
         e1[0].set_color(GATE)
         e1[2].set_color(THERMAL)
         e2 = eq(rf"= {dvbe * 1e3:.1f}\ \text{{mV at 300 K}}", size=40)
-        e3 = text(tr("∝ T: the PTAT half of a bandgap", "∝ T: bandgap-এর PTAT অংশ"), size=26, color=THERMAL)
+        e3 = text("∝ T: the PTAT half of a bandgap", size=26, color=THERMAL)
         col = VGroup(e1, e2, e3).arrange(DOWN, buff=0.35).move_to([2.6, 1.2, 0])
-        note = layout_note(tr("Common centroid so process gradients hit Q1 and Q2 alike; dummies around the edge.",
-                              "Common centroid, যাতে process gradient Q1 আর Q2-তে একইভাবে লাগে; চারপাশে dummy।"), size=22, width=44)
+        note = layout_note("Common centroid so process gradients hit Q1 and Q2 alike; dummies around the edge.", size=22, width=44)
         note.move_to([2.6, -1.9, 0])
         self.play(FadeIn(title))
         self.play(LaggedStart(*[FadeIn(g, scale=0.8) for g in grid], lag_ratio=0.08), run_time=1.5)
@@ -276,7 +303,7 @@ class Ch02AccidentalTransistor(Chapter, Slide):
 
     # --- the cost ----------------------------------------------------------------------------
     def cost(self):
-        self.slide(tr(
+        self.slide(say(
             """
             But as a building block for logic, the bipolar transistor has a cost. To keep it on you
             must keep pushing current into the base, all the time, so a logic gate built from them
@@ -294,7 +321,7 @@ class Ch02AccidentalTransistor(Chapter, Slide):
             """,
         ))
         self.play(FadeOut(self.bg_parts))
-        title = heading(tr("The catch: a bipolar switch is always eating", "সমস্যা: bipolar switch সারাক্ষণ খাইতেই থাকে"))
+        title = heading("The catch: a bipolar switch is always eating")
         x0, y0 = -3.0, -0.2
         base_bar = Line([x0, y0 - 0.7, 0], [x0, y0 + 0.7, 0], stroke_color=INK, stroke_width=6)
         base_in = Line([x0 - 1.6, y0, 0], [x0, y0, 0], stroke_color=INK, stroke_width=4)
@@ -305,21 +332,17 @@ class Ch02AccidentalTransistor(Chapter, Slide):
         sym = VGroup(base_bar, base_in, col, col_up, emi, emi_dn)
         ib = Arrow([x0 - 1.6, y0 + 0.25, 0], [x0 - 0.3, y0 + 0.25, 0], buff=0, stroke_color=DRAIN, stroke_width=5)
         ib_l = MathTex("I_B", color=DRAIN, font_size=40).next_to(ib, UP, buff=0.1)
-        ib_n = text(tr("must flow all the time\nto stay ON", "ON রাখতে\nসারাক্ষণ চলতে হয়"), size=22, color=DRAIN).next_to(ib_l, UP, buff=0.15)
+        ib_n = text("must flow all the time\nto stay ON", size=22, color=DRAIN).next_to(ib_l, UP, buff=0.15)
         self.play(FadeIn(title))
         self.play(Create(sym), run_time=1.2)
         self.play(GrowArrow(ib), FadeIn(ib_l), FadeIn(ib_n))
         pts = VGroup(
-            text(tr("a logic gate of these\nburns power standing still", "এগুলা দিয়া বানানো logic gate\nদাঁড়ায়ে থেকেও power খায়"), size=26),
-            text(tr("the field effect needs\nalmost no input current…", "field effect-এ input current\nপ্রায় লাগেই না…"), size=26),
-            text(tr("…but surface states\nstill block it", "…কিন্তু surface states এখনো\nসেটা আটকায়ে রাখছে"), size=26, color=MUTED),
+            text("a logic gate of these\nburns power standing still", size=26),
+            text("the field effect needs\nalmost no input current…", size=26),
+            text("…but surface states\nstill block it", size=26, color=MUTED),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).move_to([2.7, 0.5, 0])
         for p in pts:
             self.play(FadeIn(p, shift=RIGHT * 0.15), run_time=0.8)
-        nxt = text(tr("The answer would grow on silicon, by accident.", "Answer জন্মাবে silicon-এর উপর, accident-এ।"), size=32, color=GATE, weight="SEMIBOLD")
+        nxt = text("The answer would grow on silicon, by accident.", size=32, color=GATE, weight="SEMIBOLD")
         nxt.to_edge(DOWN, buff=0.5)
         self.play(FadeIn(nxt, shift=UP * 0.2))
-
-
-class Ch02AccidentalTransistorBN(Ch02AccidentalTransistor):
-    LANG = "bn"

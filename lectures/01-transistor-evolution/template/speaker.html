@@ -44,13 +44,32 @@
     .anim.paused .state { color: var(--drain); }
     .anim.idle .state { color: var(--muted); }
 
+    /* Notes on the left; what's on screen now and what comes next on the right. */
+    .main { display: grid; grid-template-columns: 1fr auto; gap: 14px; min-height: 0; }
+    .previews { display: flex; flex-direction: column; gap: 10px;
+      width: min(34vw, calc((100vh - 400px) * 0.88)); min-width: 220px; }
+    .pv-label { color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; margin-bottom: 4px; }
+    .frame { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 8px;
+      overflow: hidden; border: 1px solid var(--faint); }
+    .frame video, .frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+    .frame .ph { position: absolute; inset: 0; display: none; place-items: center; padding: 10px;
+      text-align: center; color: var(--muted); font-weight: 600; font-size: 15px; background: var(--panel); }
+    .frame .ph.show { display: grid; }
     .notes { background: var(--panel); border-radius: 12px; padding: 16px 20px; overflow: auto;
-      font-size: 24px; line-height: 1.5; }
+      font-size: 23px; line-height: 1.5; }
     .notes p { margin: 0 0 .6em; }
     .notes .empty { color: var(--muted); }
+    .notes .bn { font-family: "Noto Sans Bengali", Inter, sans-serif; }
+    /* The notes language switch: English or Bangla, one at a time. */
+    #lang { display: flex; gap: 2px; padding: 4px; }
+    #lang span { padding: 6px 12px; border-radius: 7px; color: var(--muted); }
+    #lang span.on { background: var(--gate); color: var(--bg); }
+    #lang .bn { font-family: "Noto Sans Bengali", Inter, sans-serif; }
 
     .next { color: var(--muted); font-size: 17px; }
     .next b { color: var(--ink); font-weight: 600; }
+    .next .bn { font-family: "Noto Sans Bengali", Inter, sans-serif; }
     .next .down { color: var(--gate); font-weight: 600; margin-left: 10px; }
 
     .keys { display: flex; gap: 10px; align-items: center; }
@@ -72,6 +91,7 @@
     <div class="clock" id="clock"></div>
     <div class="timer" id="timer" title="Time since you opened this window">00:00</div>
     <button id="reset" title="Restart the timer">Reset</button>
+    <button id="lang" title="Notes in English or Bangla (L)"><span data-lang="en">EN</span><span data-lang="bn" class="bn">বাংলা</span></button>
   </div>
 
   <div class="anim idle" id="anim">
@@ -79,7 +99,15 @@
     <div class="track"><div class="fill" id="fill"></div></div>
   </div>
 
-  <div class="notes" id="notes"><span class="empty">No notes for this slide.</span></div>
+  <div class="main">
+    <div class="notes" id="notes"><span class="empty">No notes for this slide.</span></div>
+    <div class="previews">
+      <div><div class="pv-label">Now</div>
+        <div class="frame"><video id="nowVid" muted playsinline></video><div class="ph" id="nowPh"></div></div></div>
+      <div><div class="pv-label">Next</div>
+        <div class="frame"><img id="nextImg" alt=""><div class="ph" id="nextPh"></div></div></div>
+    </div>
+  </div>
 
   <div class="next" id="next"></div>
 
@@ -89,54 +117,59 @@
     <button id="down">↓ Derivation</button>
     <button id="toggle">Pause / play</button>
     <div class="spacer"></div>
-    <div class="hint">Keys work here too: → ← next / back · ↓ ↑ derivation · Space pause · Page Down / Up for a clicker</div>
+    <div class="hint">Keys work here too: → ← next / back · ↓ ↑ derivation · Space pause · L notes language · Page Down / Up for a clicker</div>
   </div>
 
   <div class="lost" id="lost">The deck window is closed or was reloaded.<br>Go back to the deck and press S to reopen this view.</div>
 
   <script>
   (function () {
-    // Labels in the deck's language (build.py opens this page with ?lang=en or ?lang=bn).
-    const LANG = new URLSearchParams(location.search).get("lang") === "bn" ? "bn" : "en";
-    const T = {
-      en: {
-        title: "Speaker view", waiting: "Waiting for the deck…", noNotes: "No notes for this slide.",
-        deriv: (v, n) => "DERIVATION " + v + " OF " + n, lab: "LIVE LAB", upNext: "Up next:",
-        last: "This is the last slide.", down: "↓ a derivation sits below this slide", downMore: "↓ the next step is below",
-        back: "◀ Back", next: "Next ▶", derivBtn: "↓ Derivation", toggle: "Pause / play", reset: "Reset",
-        hint: "Keys work here too: → ← next / back · ↓ ↑ derivation · Space pause · Page Down / Up for a clicker",
-        lost: "The deck window is closed or was reloaded.<br>Go back to the deck and press S to reopen this view.",
-        sLab: "Live lab: no animation, take your time", sNone: "No animation on this slide",
-        sLoop: "Looping: move on whenever you're ready", sDone: "Done: ready for the next slide",
-        sPaused: "Paused (Space to play)", sPlaying: "Animation playing", sStarting: "Starting…", left: " s left",
-      },
-      bn: {
-        title: "Speaker view", waiting: "Deck connect হওয়ার অপেক্ষায়…", noNotes: "এই slide-এ কোনো notes নাই।",
-        deriv: (v, n) => "DERIVATION " + v + " / " + n, lab: "LIVE LAB", upNext: "এরপর:",
-        last: "এইটাই last slide।", down: "↓ এই slide-এর নিচে একটা derivation আছে", downMore: "↓ পরের step নিচে",
-        back: "◀ Back", next: "Next ▶", derivBtn: "↓ Derivation", toggle: "Pause / play", reset: "Reset",
-        hint: "Keys এখানেও কাজ করে: → ← next / back · ↓ ↑ derivation · Space pause · clicker-এর জন্য Page Down / Up",
-        lost: "Deck-এর window বন্ধ বা reload হয়ে গেছে।<br>Deck-এ ফিরে গিয়ে আবার S চাপেন।",
-        sLab: "Live lab: কোনো animation নাই, সময় নিয়ে দেখান", sNone: "এই slide-এ কোনো animation নাই",
-        sLoop: "Loop চলছে: ready হলে next-এ যান", sDone: "Animation শেষ: এখন next slide-এ যেতে পারেন",
-        sPaused: "Pause করা আছে (চালাতে Space)", sPlaying: "Animation চলছে", sStarting: "শুরু হচ্ছে…", left: " s বাকি",
-      },
-    }[LANG];
-    document.documentElement.lang = LANG;
-    document.title = T.title;
-    for (const [id, key] of [["state", "waiting"], ["prev", "back"], ["go", "next"], ["down", "derivBtn"],
-                             ["toggle", "toggle"], ["reset", "reset"]]) {
-      document.getElementById(id).textContent = T[key];
-    }
-    document.querySelector(".hint").textContent = T.hint;
-    document.getElementById("lost").innerHTML = T.lost;
-    document.getElementById("notes").innerHTML = '<span class="empty">' + T.noNotes + "</span>";
-
     const deck = window.opener;
     const $ = (id) => document.getElementById(id);
     const send = (go) => { if (deck && !deck.closed) deck.postMessage({ type: "deck", go }, "*"); };
-
     if (!deck) $("lost").classList.add("show");
+
+    // Notes come in English and Bangla; the switch (or L) shows one at a time, and is remembered.
+    let mode = "en";
+    try { if (localStorage.getItem("notes-lang") === "bn") mode = "bn"; } catch (e) {}
+    let notes = { en: "", bn: "" };
+
+    const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const paras = (t) => t.split(/\n\s*\n/).map((p) => p.replace(/\s+/g, " ").trim()).filter(Boolean)
+      .map((p) => "<p>" + esc(p) + "</p>").join("");
+    function showNotes() {
+      document.querySelectorAll("#lang span").forEach((el) => el.classList.toggle("on", el.dataset.lang === mode));
+      const t = notes[mode];
+      $("notes").innerHTML = t ? '<div class="' + mode + '" lang="' + mode + '">' + paras(t) + "</div>"
+                               : '<span class="empty">No notes for this slide.</span>';
+      fitNotes();
+    }
+    // Shrink the notes until they fit the box, so a long script never needs scrolling mid-talk.
+    function fitNotes() {
+      const box = $("notes");
+      let size = 23;
+      box.style.fontSize = size + "px";
+      while (box.scrollHeight > box.clientHeight + 2 && size > 15) box.style.fontSize = --size + "px";
+    }
+    window.addEventListener("resize", fitNotes);
+    // "Up next": the start of the next slide's notes, in the language the notes are in.
+    let upNext = null;
+    function showUpNext() {
+      const s = upNext;
+      if (!s) return;
+      const t = s.next && (s.next[mode] || s.next.en);
+      let html = t ? "Up next: <b" + (mode === "bn" ? ' class="bn"' : "") + ">" + esc(t) + "</b>" : s.last ? "This is the last slide." : "";
+      if (s.hasDown) html += '<span class="down">' + (s.vertical ? "↓ the next step is below" : "↓ a derivation sits below this slide") + "</span>";
+      $("next").innerHTML = html;
+    }
+    function toggleLang() {
+      mode = mode === "en" ? "bn" : "en";
+      try { localStorage.setItem("notes-lang", mode); } catch (e) {}
+      showNotes();
+      showUpNext();
+      fitNotes();
+    }
+    showNotes();
 
     window.addEventListener("message", (e) => {
       const s = e.data;
@@ -144,28 +177,63 @@
       $("lost").classList.remove("show");
       if (s.notes !== undefined) {
         $("count").innerHTML = s.index + " <small>/ " + s.total + "</small>";
-        $("where").textContent = s.vertical ? T.deriv(s.v, s.stack) : s.kind === "lab" ? T.lab : "";
-        $("notes").innerHTML = s.notes || '<span class="empty">' + T.noNotes + "</span>";
+        $("where").textContent = s.vertical ? "DERIVATION " + s.v + " OF " + s.stack : s.kind === "lab" ? "LIVE LAB" : "";
+        notes = s.notes;
+        showNotes();
         $("notes").scrollTop = 0;
-        let next = s.next ? T.upNext + " <b>" + s.next + "</b>" : s.last ? T.last : "";
-        if (s.hasDown) next += '<span class="down">' + (s.vertical ? T.downMore : T.down) + "</span>";
-        $("next").innerHTML = next;
+        upNext = s;
+        showUpNext();
         $("down").disabled = !s.hasDown;
+        fitNotes();  // again: the "Up next" line can change the notes box's height
+        showNext(s.upcoming, s.last);
       }
+      if (s.now !== undefined) nowSlide = s.now;
+      mirror(s);
       anim(s);
     });
+
+    // "Now": the current slide's video, muted, kept in step with the deck's.
+    let nowSlide = null;
+    const vid = $("nowVid");
+    function mirror(s) {
+      const want = nowSlide && nowSlide.video;
+      if (!want) {
+        if (vid.getAttribute("src")) { vid.pause(); vid.removeAttribute("src"); vid.load(); }
+        $("nowPh").textContent = nowSlide && nowSlide.lab !== undefined ? (nowSlide.lab || "Live lab") + " (on screen)" : "";
+        $("nowPh").classList.toggle("show", !!nowSlide);
+        return;
+      }
+      $("nowPh").classList.remove("show");
+      if (vid.getAttribute("src") !== want) {
+        vid.poster = nowSlide.thumb;
+        vid.src = want;
+      }
+      vid.loop = !!s.loop;
+      if (!(s.d > 0) || vid.readyState < 1) return;
+      if (Math.abs(vid.currentTime - s.t) > 0.3) vid.currentTime = s.t;
+      if (s.paused || s.ended) { if (!vid.paused) vid.pause(); }
+      else if (vid.paused) vid.play().catch(() => {});
+    }
+    // "Next": the last frame of the slide → goes to, so you can see what it builds to.
+    function showNext(p, last) {
+      const img = $("nextImg"), ph = $("nextPh");
+      if (p && p.thumb) { img.src = p.thumb; img.style.display = ""; ph.classList.remove("show"); return; }
+      img.removeAttribute("src"); img.style.display = "none";
+      ph.textContent = p ? (p.lab || "Live lab") : last ? "End of the deck" : "";
+      ph.classList.add("show");
+    }
 
     function anim(s) {
       const box = $("anim");
       let cls = "idle", state = "", secs = "", pct = 0;
-      const left = s.d > 0 ? (s.d - s.t).toFixed(1) + T.left : "";
-      if (s.kind === "lab") { state = T.sLab; pct = 100; }
-      else if (s.kind !== "video" || !(s.d > 0)) { state = T.sNone; }
-      else if (s.loop) { cls = "loop"; state = T.sLoop; pct = 100 * s.t / s.d; }
-      else if (s.ended || s.t >= s.d - 0.05) { cls = "done"; state = T.sDone; secs = "✓"; pct = 100; }
-      else if (s.paused && s.t < 0.05) { cls = "playing"; state = T.sStarting; secs = left; }
-      else if (s.paused) { cls = "paused"; state = T.sPaused; pct = 100 * s.t / s.d; secs = left; }
-      else { cls = "playing"; state = T.sPlaying; pct = 100 * s.t / s.d; secs = left; }
+      const left = s.d > 0 ? (s.d - s.t).toFixed(1) + " s left" : "";
+      if (s.kind === "lab") { state = "Live lab: no animation, take your time"; pct = 100; }
+      else if (s.kind !== "video" || !(s.d > 0)) { state = "No animation on this slide"; }
+      else if (s.loop) { cls = "loop"; state = "Looping: move on whenever you're ready"; pct = 100 * s.t / s.d; }
+      else if (s.ended || s.t >= s.d - 0.05) { cls = "done"; state = "Done: ready for the next slide"; secs = "✓"; pct = 100; }
+      else if (s.paused && s.t < 0.05) { cls = "playing"; state = "Starting…"; secs = left; }
+      else if (s.paused) { cls = "paused"; state = "Paused (Space to play)"; pct = 100 * s.t / s.d; secs = left; }
+      else { cls = "playing"; state = "Animation playing"; pct = 100 * s.t / s.d; secs = left; }
       box.className = "anim " + cls;
       $("state").textContent = state;
       $("secs").textContent = secs;
@@ -174,6 +242,7 @@
 
     // Keys and buttons drive the deck.
     document.addEventListener("keydown", (e) => {
+      if (e.key === "l" || e.key === "L") { toggleLang(); return; }
       const map = { ArrowRight: "next", PageDown: "next", ArrowLeft: "prev", PageUp: "prev",
                     ArrowDown: "down", ArrowUp: "up", " ": "toggle" };
       if (map[e.key]) { e.preventDefault(); send(map[e.key]); }
@@ -182,6 +251,7 @@
     $("prev").onclick = () => send("prev");
     $("down").onclick = () => send("down");
     $("toggle").onclick = () => send("toggle");
+    $("lang").onclick = toggleLang;
 
     // Timer and clock.
     let t0 = Date.now();

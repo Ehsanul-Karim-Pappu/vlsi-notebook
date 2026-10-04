@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="{{ cdn_url }}/dist/reveal.css">
     <link rel="stylesheet" href="{{ cdn_url }}/dist/theme/black.css">
     <style>
+      @font-face { font-family: Inter; font-weight: 400; src: url("labs/fonts/Inter-Regular.ttf") format("truetype"); }
+      @font-face { font-family: Inter; font-weight: 500; src: url("labs/fonts/Inter-Medium.ttf") format("truetype"); }
       /* The series' palette: kit/style.py */
       :root {
         --bg: #0E1116;
@@ -22,6 +24,11 @@
         color: var(--muted);
         font: 500 14px/1 Inter, system-ui, sans-serif;
       }
+      /* The author's line, small, on every slide. */
+      .credit {
+        position: fixed; left: 16px; bottom: 10px; z-index: 30; pointer-events: none;
+        font: 400 13px/1 Inter, system-ui, sans-serif; color: var(--muted); opacity: .7;
+      }
       /* A live lab fills its slide. */
       .reveal .slides section.lab { width: 100%; height: 100%; padding: 0; top: 0 !important; }
       .reveal .slides section.lab iframe {
@@ -31,6 +38,7 @@
   </head>
 
   <body>
+    <div class="credit">Prepared by __AUTHOR__</div>
     <div class="reveal">
       <div class="slides">
         {#
@@ -78,7 +86,7 @@
           {% endif %}
           >
           {% if slide_config.notes != "" %}
-          <aside class="notes" data-markdown>{{ slide_config.notes }}</aside>
+          <aside class="notes">{{ slide_config.notes }}</aside>
           {% endif %}
         </section>
           {% endfor %}
@@ -91,14 +99,8 @@
     </div>
 
     <script src="{{ cdn_url }}/dist/reveal.js"></script>
-    {% if has_notes %}
-    <script src="{{ cdn_url }}/dist/plugin/markdown.js"></script>
-    {% endif %}
     <script>
       Reveal.initialize({
-        {% if has_notes %}
-        plugins: [ RevealMarkdown ],
-        {% endif %}
         width: {{ width }},
         height: {{ height }},
         margin: {{ margin }},
@@ -142,9 +144,6 @@
         hideCursorTime: {{ hide_cursor_time }}
       });
 
-      // build.py sets the deck's language here ("en" or "bn").
-      const DECK_LANG = "__DECK_LANG__";
-
       function currentVideo() {
         const bg = Reveal.getCurrentSlide().slideBackgroundContentElement;
         return bg ? bg.querySelector("video") : null;
@@ -165,18 +164,30 @@
       let speaker = null;
       let shownKey = null;
       Reveal.addKeyBinding({ keyCode: 83, key: "S", description: "Speaker view" }, () => {
-        speaker = window.open("speaker.html?lang=" + DECK_LANG, "deck-speaker", "width=1100,height=760");
+        speaker = window.open("speaker.html", "deck-speaker", "width=1100,height=760");
         shownKey = null;
       });
 
+      // A slide's notes: English, then a "— বাংলা —" line, then Bangla (see kit.style.say).
       function notesOf(slide) {
         const a = slide && slide.querySelector(":scope > aside.notes");
-        return a ? a.innerHTML.trim() : "";
+        const [en, bn] = (a ? a.textContent : "").split("— বাংলা —");
+        return { en: (en || "").trim(), bn: (bn || "").trim() };
       }
+      // What the speaker view shows for a slide: its video (played in sync for the current
+      // slide), its last frame (build.py writes thumbs/<video>.jpg), or the lab's name.
+      function previewOf(slide) {
+        if (!slide) return null;
+        const v = slide.getAttribute("data-background-video");
+        if (v) return { video: v, thumb: "thumbs/" + v.split("/").pop().replace(/\.mp4$/, ".jpg") };
+        const f = slide.querySelector("iframe");
+        return { lab: f ? f.title : "" };
+      }
+      // The start of a slide's notes, in both languages, for the speaker view's "Up next".
       function teaser(slide) {
-        const a = slide && slide.querySelector(":scope > aside.notes");
-        const s = a ? a.textContent.replace(/\s+/g, " ").trim() : "";
-        return s.length > 140 ? s.slice(0, 140) + "…" : s;
+        const n = notesOf(slide);
+        const cut = (t) => { t = t.replace(/\s+/g, " "); return t.length > 140 ? t.slice(0, 140) + "…" : t; };
+        return { en: cut(n.en), bn: cut(n.bn) };
       }
       function pushState() {
         if (!speaker || speaker.closed) return;
@@ -202,6 +213,9 @@
           msg.hasDown = routes.down;
           msg.last = !routes.right && !routes.down;
           msg.next = routes.right ? teaser(Reveal.getSlide(idx.h + 1, 0)) : "";
+          msg.now = previewOf(slide);
+          // "Next" is what → (and the speaker view's Next button) goes to.
+          msg.upcoming = routes.right ? previewOf(Reveal.getSlide(idx.h + 1, 0)) : null;
         }
         speaker.postMessage(msg, "*");
       }

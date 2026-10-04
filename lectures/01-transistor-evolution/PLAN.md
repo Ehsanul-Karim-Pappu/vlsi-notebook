@@ -6,8 +6,9 @@ forksheet, the CFET and beyond. It's built with **Manim** and **manim-slides**, 
 Veritasium, and heavy on theory: each architecture shows up as the answer to a physics problem
 that we state with its equations.
 
-Status: **Phases 1 and 2 are built**: the style kit, Chapters 0 to 5 and Live Lab 1, in English
-and Bengali, with a speaker view that shows each animation's progress. See `README.md` to build
+Status: **Phases 1 and 2 are built**: the style kit, Chapters 0 to 5 and Live Lab 1, with
+English slides, speaker notes in English and Bangla, and a speaker view that shows each
+animation's progress. See `README.md` to build
 and present it. Next: Phase 3, the architecture arc (Ch 6–10).
 
 The device data in `data/` and the 3D models in `models/` are copied from
@@ -103,10 +104,10 @@ documentary cut. Draft renders use `-ql` (480p15).
   Equations are derived, not just quoted, and each chapter ties its physics to something they
   draw, in an "In your layout" note: W and L, common-centroid pairs, threshold flavours, taps
   and guard rings, λ and DRC rules, weak-inversion biasing.
-- **Languages** (confirmed): two decks, English and Bengali. The Bengali is spoken office
-  Bengali in Bengali script, with technical terms, names, units and numbers left in English.
-  Chapter titles stay in English in both. Slides flow into each other: objects carry over
-  between slides and the notes bridge each change of scene.
+- **Languages** (confirmed): one deck, with the slides in English and the speaker notes in
+  English and Bangla. The Bangla is spoken office Bangla in Bangla script, with technical
+  terms, names, units and numbers left in English. Slides flow into each other: objects carry
+  over between slides and the notes bridge each change of scene.
 - **Length**: about 45 minutes in full, with a marked **25-minute core path** that skips the
   ↓ detours and the optional chapters.
 - **Delivery**: presented live from the speaker notes, on a laptop. There's no recorded
@@ -346,6 +347,8 @@ the slides show matches what the labs compute.
 - **Type**: a clean sans for titles; LaTeX Latin Modern for math.
 - **Chapter cards**: a giant year plus a one-line hook. The timeline marker slides.
 - **No bullet-point slides.** Any text on screen is a label or a single sentence.
+- **The real thing first.** Where the story reaches a real device or document, show it (a photo
+  or the patent drawing, credited on the slide and in `images/CREDITS.md`), then animate it.
 
 ## 7. Repository layout
 
@@ -357,7 +360,7 @@ vlsi-notebook/
   requirements.txt        manim, manim-slides (pinned), shared by every lecture
   kit/                    shared by every lecture
     style.py              palette, fonts, title cards, timeline ribbon, control meter
-    fonts/                Inter and Noto Sans Bengali (SIL OFL), registered at import
+    fonts/                Inter (slides) and Noto Sans Bengali (Bangla notes), SIL OFL
     motifs.py             band diagrams, field lines, the hill and marbles, the grip
     devices3d.py          3D devices built from a lecture's geometry data
   lectures/01-transistor-evolution/
@@ -385,7 +388,7 @@ deck is a build output.
 1. ✅ **Vertical slice**: the style kit + **Ch 0** (cold open) + **Ch 5** (Boltzmann) + **Lab 1**,
    exported as an HTML deck. This is the checkpoint: you judge the look, the tone and the
    depth of the theory before I scale it up.
-2. ✅ **The history arc**: Ch 1–4, with both languages and the speaker view.
+2. ✅ **The history arc**: Ch 1–4, with notes in both languages and the speaker view.
 3. **The architecture arc**: Ch 6–10, with the 3D devices and the process animation from
    `process.json`.
 4. **The frontier**: Ch 11–12 and Labs 2–5.
@@ -417,5 +420,5 @@ deck is a build output.
    speaker notes. The documentary cut comes as a by-product.
 2. **Length**: about 45 min in full, with a 25-min core path. (Not yet confirmed.)
 3. **Audience**: analog layout engineers, junior and senior (confirmed).
-4. **Languages**: English and Bengali decks (confirmed).
+4. **Languages**: English slides; speaker notes in English and Bangla (confirmed).
 5. **Hosting**: a local HTML folder per language, plus PPTX.

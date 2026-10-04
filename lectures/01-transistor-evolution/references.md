@@ -1,7 +1,9 @@
 # Sources
 
 Every date, name and number on the slides, with where it comes from. Results of the lecture's
-own simple models are labelled "model" on screen and computed in `physics.py`.
+own simple models are labelled "model" on screen and computed in `physics.py`. The historical
+photos and patent drawings, with their sources and licences, are listed in
+[images/CREDITS.md](images/CREDITS.md).
 
 ## Chapter 0 · Cold open
 
@@ -33,6 +35,8 @@ own simple models are labelled "model" on screen and computed in `physics.py`.
 |---|---|
 | The point-contact transistor: amplified on 16 December 1947, shown to Bell Labs management on 23 December | Riordan and Hoddeson, *Crystal Fire*, ch. 7; Computer History Museum, "1947: Invention of the point-contact transistor", *The Silicon Engine* |
 | Gold foil on a plastic wedge, a paper-clip spring, contacts about 50 µm apart | The same CHM page; J. Bardeen and W. H. Brattain, "The transistor, a semi-conductor triode", *Phys. Rev.* 74, 230 (1948) |
+| Bardeen and Brattain's patent, filed 17 June 1948 | US patent 2,524,035 |
+| Shockley's patent, filed 26 June 1948 | US patent 2,569,347 |
 | Shockley's junction transistor, conceived in January 1948 | W. Shockley, "The theory of p-n junctions in semiconductors and p-n junction transistors", *Bell Syst. Tech. J.* 28, 435 (1949); US patent 2,569,347 |
 | I_C = I_S exp(qV_BE/k_BT): 10× per about 60 mV | Sze and Ng, ch. 5. Computed in `physics.collector_current` |
 | ΔV_BE = (k_BT/q) ln N = 53.8 mV for a 1 : 8 pair, proportional to T | P. Brokaw, "A simple three-terminal IC bandgap reference", *IEEE J. Solid-State Circuits* SC-9(6), 388 (1974); B. Razavi, *Design of Analog CMOS Integrated Circuits*, 2nd ed. (McGraw-Hill, 2017), ch. 12. Computed in `physics.delta_vbe` |
@@ -47,6 +51,8 @@ own simple models are labelled "model" on screen and computed in `physics.py`.
 | D_it ≈ 10¹³ (bare) and ≈ 10¹⁰ cm⁻² eV⁻¹ (thermal oxide); the share rises from about 2% to 96% | Typical values: Sze and Ng, ch. 4; E. H. Nicollian and J. R. Brews, *MOS Physics and Technology* (Wiley, 1982). Model: `physics.share_reaching_channel` |
 | 1958 Kilby's IC (Texas Instruments); 1959 Hoerni's planar process and Noyce's planar IC | Computer History Museum, *The Silicon Engine*: "1958: All semiconductor 'solid circuit' is demonstrated", "1959: Practical monolithic integrated circuit concept patented"; J. A. Hoerni, US patent 3,025,589; R. N. Noyce, US patent 2,981,877 |
 | Atalla and Kahng's MOSFET, 1959–60 | D. Kahng and M. M. Atalla, "Silicon-silicon dioxide field induced surface devices", IRE-AIEE Solid-State Device Research Conference, Pittsburgh, 1960; CHM, "1960: Metal oxide semiconductor (MOS) transistor demonstrated" |
+| Kahng's patent, filed 31 May 1960: thermally grown oxide of about 1000 Å, p-type regions in n-type silicon | D. Kahng, US patent 3,102,230 (granted 27 August 1963) |
+| Wanlass's CMOS patent, filed 18 June 1963 | F. M. Wanlass, US patent 3,356,858 (granted 5 December 1967) |
 | Band bending, inversion at ψ_s = 2φ_F; V_T = V_FB + 2φ_F + Q_dep/C_ox | Sze and Ng, ch. 4 and 6; Taur and Ning, ch. 2 and 3 |
 | V_T ≈ 0.34 V (N_A = 10¹⁷ cm⁻³, t_ox = 10 nm, V_FB = −0.98 V) | Model: `physics.threshold_voltage` |
 | Square law I_D = ½ µC_ox (W/L)(V_GS − V_T)²; 173 µA for W/L = 10 at 0.5 V overdrive | Razavi, ch. 2. Model: `physics.square_law_current`, with µ = 400 cm²/V·s and a 10 nm oxide |
@@ -62,6 +68,8 @@ own simple models are labelled "model" on screen and computed in `physics.py`.
 | Moore's 1965 line, about 65,000 components by 1975 | G. E. Moore, "Cramming more components onto integrated circuits", *Electronics* 38(8), 19 April 1965. Points read approximately from his figure |
 | Revised to doubling every two years | G. E. Moore, "Progress in digital integrated electronics", IEDM 1975 |
 | Transistor counts: 4004 (2,300), 8086 (29,000), 386 (275,000), Pentium (3.1 M), Pentium 4 (42 M), Core 2 Duo (291 M), Apple M1 (16 B), M3 Max (92 B), NVIDIA B200 (208 B) | Intel, Apple and NVIDIA product announcements. The 1975 line's value for 2024 is `physics.moore_count` |
+| Dennard's one-transistor DRAM cell, patented 1968 | R. H. Dennard, "Field-effect transistor memory", US patent 3,387,286 (4 June 1968) |
+| The 4004's layout, drawn by hand | F. Faggin, "The making of the first microprocessor", *IEEE Solid-State Circuits Magazine* 1(1), 8–21 (2009) |
 | Dennard's scaling table | R. H. Dennard et al., *IEEE J. Solid-State Circuits* SC-9(5), 256 (1974). Factors in `physics.DENNARD` |
 | λ rules | C. Mead and L. Conway, *Introduction to VLSI Systems* (Addison-Wesley, 1980); the widths shown (poly 2λ, diffusion and metal 3λ) are those of the MOSIS scalable CMOS (SCMOS) rules |
 

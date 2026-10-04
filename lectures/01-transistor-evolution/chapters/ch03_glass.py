@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 LECTURE = Path(__file__).resolve().parents[1]
+IMAGES = LECTURE / "images"
 sys.path[:0] = [str(LECTURE.parents[1]), str(LECTURE)]
 
 import numpy as np  # noqa: E402
@@ -34,6 +35,7 @@ class Ch03Glass(Chapter, Slide):
         self.oxide_mask()
         self.passivation()
         self.mosfet()
+        self.kahng_patent()
         self.band_bending()
         self.threshold()
         self.layout_view()
@@ -44,7 +46,7 @@ class Ch03Glass(Chapter, Slide):
 
     # --- card --------------------------------------------------------------------------------
     def card(self):
-        self.slide(tr(
+        self.slide(say(
             """
             So the field effect was stuck behind the surface, and bipolar transistors burned power.
             The way out started as an accident in a furnace.
@@ -56,12 +58,12 @@ class Ch03Glass(Chapter, Slide):
         ))
         self.card_group = self.open_chapter(
             3, 1959, 1947, "The glass that saved electronics",
-            tr("A furnace accident, and a switch Bell Labs set aside", "Furnace-এ একটা accident, আর Bell Labs-এর সরায়ে রাখা একটা switch"),
+            "A furnace accident, and a switch Bell Labs set aside",
         )
 
     # --- oxide masking -----------------------------------------------------------------------
     def oxide_mask(self):
-        self.slide(tr(
+        self.slide(say(
             """
             In the mid-1950s at Bell Labs, Carl Frosch and Lincoln Derick were diffusing dopants into
             silicon in a hot furnace when steam got in by accident. The wafers came out coated in a
@@ -78,22 +80,22 @@ class Ch03Glass(Chapter, Slide):
             """,
         ))
         self.play(FadeOut(self.card_group))
-        title = heading(tr("Mid-1950s: silicon grows its own glass", "1950-এর দশকের মাঝামাঝি: silicon নিজেই কাচ জন্মায়"))
+        title = heading("Mid-1950s: silicon grows its own glass")
         si = box(9.0, 2.2, 0, -1.6, SUBSTRATE)
         si_l = text("silicon", size=24, color=MUTED).move_to([3.6, -2.3, 0])
         ox_h = ValueTracker(0.02)
         left = always_redraw(lambda: box(3.7, ox_h.get_value(), -2.65, -0.5 + ox_h.get_value() / 2, OXIDE_TEXT, 0.9))
         right = always_redraw(lambda: box(3.7, ox_h.get_value(), 2.65, -0.5 + ox_h.get_value() / 2, OXIDE_TEXT, 0.9))
-        ox_l = text(tr("SiO₂, grown in steam", "SiO₂, steam-এ জন্মানো"), size=22, color=OXIDE_TEXT).move_to([-2.95, 0.25, 0])
+        ox_l = text("SiO₂, grown in steam", size=22, color=OXIDE_TEXT).move_to([-2.95, 0.25, 0])
         self.play(FadeIn(title), FadeIn(si), FadeIn(si_l))
         self.add(left, right)
         self.play(ox_h.animate.set_value(0.42), FadeIn(ox_l), run_time=2)
-        win = text(tr("a window", "একটা window"), size=22, color=GATE).move_to([0, 0.25, 0])
+        win = text("a window", size=22, color=GATE).move_to([0, 0.25, 0])
         self.play(FadeIn(win))
         rng = np.random.default_rng(9)
         xs = rng.uniform(-4.2, 4.2, 30)
         drops = VGroup(*[Arrow([x, 2.6, 0], [x, 1.9, 0], buff=0, stroke_color=ELECTRON, stroke_width=3, max_tip_length_to_length_ratio=0.3) for x in xs])
-        dop = text(tr("dopants", "dopant"), size=22, color=ELECTRON).move_to([-4.6, 2.6, 0])
+        dop = text("dopants", size=22, color=ELECTRON).move_to([-4.6, 2.6, 0])
         self.play(FadeIn(drops), FadeIn(dop))
         anims = []
         for a, x in zip(drops, xs):
@@ -103,33 +105,34 @@ class Ch03Glass(Chapter, Slide):
                 anims.append(a.animate.shift(DOWN * 1.3).set_opacity(0.15))
         doped = box(1.7, 0.7, 0, -0.85, ELECTRON, 0.55)
         self.play(*anims, FadeIn(doped), run_time=1.6)
-        dl = text(tr("doped only under the window", "শুধু window-এর নিচে doped"), size=22, color=ELECTRON).next_to(doped, DOWN, buff=0.15)
+        dl = text("doped only under the window", size=22, color=ELECTRON).next_to(doped, DOWN, buff=0.15)
         self.play(FadeIn(dl))
-        note = layout_note(tr("Every layer you draw becomes a mask like this: open where you drew, blocked elsewhere.",
-                              "আপনার আঁকা প্রত্যেকটা layer এরকম একটা mask হয়: যেখানে আঁকছেন সেখানে খোলা, বাকি সব বন্ধ।"), size=22, width=90)
+        note = layout_note("Every layer you draw becomes a mask like this: open where you drew, blocked elsewhere.", size=22, width=90)
         note.to_edge(DOWN, buff=0.25)
         self.play(FadeOut(si_l), FadeIn(note, shift=UP * 0.2))
         self.parts = VGroup(title, si, left, right, ox_l, win, drops, dop, doped, dl, note)
 
     # --- passivation -------------------------------------------------------------------------
     def passivation(self):
-        self.slide(tr(
+        self.slide(say(
             """
             Then Mohamed Atalla at Bell Labs found something even more important. A carefully grown
             oxide doesn't just protect the silicon: it ties up those broken bonds at the surface.
             The density of surface states drops about a thousand times. Put that into Bardeen's
             equation from chapter one: instead of two percent of the gate's charge reaching the
-            channel, now about ninety-six percent does. The field effect finally works.
+            channel, now about ninety-six percent does. The field effect finally works. That's
+            Atalla on the right, in 1963.
             """,
             """
             এরপর Bell Labs-এর Mohamed Atalla আরও important একটা জিনিস পাইলেন। যত্ন করে জন্মানো oxide শুধু
             silicon-রে protect করে না: surface-এর ওই ভাঙা bond-গুলারেও বাঁধে ফেলে। Surface states-এর density প্রায়
             হাজার গুণ কমে যায়। Chapter one-এর Bardeen-এর equation-এ এইটা বসান: gate-এর charge-এর দুই
-            percent-এর বদলে এখন প্রায় ছিয়ানব্বই percent channel-এ পৌঁছায়। Field effect অবশেষে কাজ করে।
+            percent-এর বদলে এখন প্রায় ছিয়ানব্বই percent channel-এ পৌঁছায়। Field effect অবশেষে কাজ করে। ডানের
+            ছবিতে Atalla, 1963-এ।
             """,
         ))
         self.play(FadeOut(self.parts))
-        title = heading(tr("Atalla: the glass also heals the surface", "Atalla: এই কাচ surface-টাও সারায়ে তোলে"))
+        title = heading("Atalla: the glass also heals the surface")
         x0 = -3.2
         gate = box(5.2, 0.45, x0, 2.35, GATE)
         ox = box(5.2, 1.1, x0, 1.57, OXIDE_TEXT, 0.3)
@@ -143,24 +146,25 @@ class Ch03Glass(Chapter, Slide):
         after = phys.share_reaching_channel(1e10)
         e1 = eq(r"\frac{C_{dep}}{C_{dep}+C_{it}}", r"\approx", rf"{before * 100:.0f}\%", size=50)
         e1[2].set_color(DRAIN)
-        d1 = text(tr("D_it ≈ 10¹³ (bare surface)", "D_it ≈ 10¹³ (খালি surface)"), size=24, color=MUTED)
+        d1 = text("D_it ≈ 10¹³ (bare surface)", size=24, color=MUTED)
         col = VGroup(e1, d1).arrange(DOWN, buff=0.3).move_to([3.4, 0.6, 0])
         self.play(Write(e1), FadeIn(d1))
-        heal = text(tr("thermal oxide: D_it ≈ 10¹⁰", "thermal oxide: D_it ≈ 10¹⁰"), size=24, color=GOOD).move_to(d1)
+        heal = text("thermal oxide: D_it ≈ 10¹⁰", size=24, color=GOOD).move_to(d1)
         e2 = eq(r"\frac{C_{dep}}{C_{dep}+C_{it}}", r"\approx", rf"{after * 100:.0f}\%", size=50).move_to(e1)
         e2[2].set_color(GOOD)
         deep = VGroup(*[Arrow([x, 2.1, 0], [x, -1.0, 0], buff=0, stroke_color=GATE, stroke_width=3, max_tip_length_to_length_ratio=0.03) for x in xs])
         chan = box(5.0, 0.12, x0, -1.05, ELECTRON)
-        chan_l = text(tr("a channel, at last", "অবশেষে একটা channel"), size=22, color=ELECTRON).next_to(chan, DOWN, buff=0.15)
+        chan_l = text("a channel, at last", size=22, color=ELECTRON).next_to(chan, DOWN, buff=0.15)
         self.play(FadeOut(traps, lag_ratio=0.05), Transform(lines, deep), Transform(d1, heal), Transform(e1, e2), run_time=2)
         self.play(FadeIn(chan), FadeIn(chan_l))
         src = source("M. M. Atalla, E. Tannenbaum & E. J. Scheibner, Bell Syst. Tech. J. 38, 749 (1959)")
-        self.play(FadeIn(src))
-        self.parts = VGroup(title, gate, ox, semi, lines, col, chan, chan_l, src)
+        portrait = figure(IMAGES / "atalla_1963.jpg", 2.3, "M. M. Atalla, 1963 (public domain)").move_to([5.4, -1.95, 0])
+        self.play(FadeIn(src), FadeIn(portrait, shift=UP * 0.15))
+        self.parts = Group(title, gate, ox, semi, lines, col, chan, chan_l, src, portrait)
 
     # --- the MOSFET and the planar process ---------------------------------------------------
     def mosfet(self):
-        self.slide(tr(
+        self.slide(say(
             """
             With the surface tamed, everything arrives at once. Jack Kilby builds the first
             integrated circuit at Texas Instruments in 1958. In 1959 Jean Hoerni at Fairchild
@@ -178,7 +182,7 @@ class Ch03Glass(Chapter, Slide):
             """,
         ))
         self.play(FadeOut(self.parts))
-        title = heading(tr("1959: the MOSFET, at last", "1959: অবশেষে MOSFET"))
+        title = heading("1959: the MOSFET, at last")
         sub = box(8.0, 2.0, 0, -1.2, PSUB)
         s = box(1.6, 0.6, -2.3, -0.5, ELECTRON, 0.6)
         d = box(1.6, 0.6, 2.3, -0.5, ELECTRON, 0.6)
@@ -188,7 +192,7 @@ class Ch03Glass(Chapter, Slide):
         cd = box(0.9, 0.7, 2.3, 0.15, METAL)
         lbl = VGroup(
             text("metal (Al) gate", size=22, color=METAL).next_to(g, UP, buff=0.2),
-            text(tr("↑ thin oxide", "↑ পাতলা oxide"), size=18, color=OXIDE_TEXT).move_to([0, -0.48, 0]),
+            text("↑ thin oxide", size=18, color=OXIDE_TEXT).move_to([0, -0.48, 0]),
             text("n⁺ source", size=22).next_to(s, DOWN, buff=0.15),
             text("n⁺ drain", size=22).next_to(d, DOWN, buff=0.15),
             text("p-type silicon", size=22, color=MUTED).move_to([0, -1.8, 0]),
@@ -197,10 +201,10 @@ class Ch03Glass(Chapter, Slide):
         self.play(FadeIn(title))
         self.play(LaggedStart(*[FadeIn(m, shift=DOWN * 0.1) for m in (sub, s, d, ox, g, cs, cd)], lag_ratio=0.15), FadeIn(lbl), run_time=2)
         events = [
-            ("1958", tr("Kilby: first IC (TI)", "Kilby: প্রথম IC (TI)")),
-            ("1959", tr("Hoerni: planar process", "Hoerni: planar process")),
-            ("1959", tr("Noyce: planar IC", "Noyce: planar IC")),
-            ("1959–60", tr("Atalla & Kahng: MOSFET", "Atalla & Kahng: MOSFET")),
+            ("1958", "Kilby: first IC (TI)"),
+            ("1959", "Hoerni: planar process"),
+            ("1959", "Noyce: planar IC"),
+            ("1959–60", "Atalla & Kahng: MOSFET"),
         ]
         strip = VGroup()
         for i, (yr, what) in enumerate(events):
@@ -212,8 +216,29 @@ class Ch03Glass(Chapter, Slide):
         self.parts = VGroup(title, strip)
 
     # --- how a gate makes a channel ----------------------------------------------------------
+    def kahng_patent(self):
+        title, pic = self.show_figure(say(
+            """
+            Here it is as Dawon Kahng drew it in his patent, filed in May 1960. A silicon wafer, a
+            thermally grown oxide, a metal electrode on top, and two p-type regions diffused on
+            either side: a p-channel transistor, on n-type silicon. The patent gives the oxide as
+            about a thousand angstroms, a hundred nanometres: the same thickness we gave
+            Lilienfeld's insulator in chapter one.
+            """,
+            """
+            এই যে, Dawon Kahng-এর patent-এ যেভাবে আঁকা, file করা May 1960-এ। একটা silicon wafer, তার উপর
+            thermally grown oxide, তার উপর metal electrode, আর দুই পাশে diffuse করা দুইটা p-type region: n-type
+            silicon-এর উপর একটা p-channel transistor। Patent-এ oxide প্রায় এক হাজার angstrom, মানে একশ
+            nanometre: chapter one-এ Lilienfeld-এর insulator-এর জন্য আমরা ঠিক এই thickness-ই ধরছিলাম।
+            """,
+        ), "The MOSFET, as Kahng drew it",
+            figure(IMAGES / "kahng_US3102230_fig1a.png", 5.6,
+                   "D. Kahng, US patent 3,102,230, filed 1960 (public domain)").move_to(DOWN * 0.4),
+            clear=VGroup(self.parts, self.mos))
+        self.parts = Group(title, pic)
+
     def band_bending(self):
-        self.slide(tr(
+        self.slide(say(
             """
             So how does a gate make a channel? Here is the gate, the oxide, and p-type silicon, with
             the silicon's energy bands drawn to the right: the conduction band, the intrinsic level,
@@ -234,8 +259,8 @@ class Ch03Glass(Chapter, Slide):
             layer-টাই channel।
             """,
         ))
-        self.play(FadeOut(self.parts), FadeOut(self.mos))
-        title = heading(tr("How a gate makes a channel", "Gate কীভাবে channel বানায়"))
+        self.play(FadeOut(self.parts))
+        title = heading("How a gate makes a channel")
         s = 2.4  # screen units per eV
         phi_f = phys.fermi_potential(N_A)
         x_s, x_end = -3.4, 1.8
@@ -249,7 +274,7 @@ class Ch03Glass(Chapter, Slide):
         ox = box(0.8, 4.2, -4.4, 0.1, OXIDE_TEXT, 0.35)
         gate_l = text("gate", size=22, color=BG, weight="SEMIBOLD").rotate(PI / 2).move_to(gate)
         ox_l = text("oxide", size=18, color=OXIDE_TEXT).rotate(PI / 2).move_to(ox)
-        si_l = text(tr("p-type silicon →", "p-type silicon →"), size=20, color=MUTED).move_to([1.0, -3.15, 0])
+        si_l = text("p-type silicon →", size=20, color=MUTED).move_to([1.0, -3.15, 0])
 
         def bend(x):
             w = w_max * np.sqrt(max(psi.get_value(), 1e-6) / (2 * phi_f))
@@ -304,22 +329,22 @@ class Ch03Glass(Chapter, Slide):
             MathTex(r"\text{V}", font_size=36),
         ).arrange(RIGHT, buff=0.12).move_to([4.9, 2.4, 0]))
         phase = VGroup(
-            text(tr("flat bands", "band সমান"), size=26, color=MUTED),
+            text("flat bands", size=26, color=MUTED),
         ).move_to([4.9, 1.7, 0])
 
         self.play(FadeIn(title), FadeIn(gate), FadeIn(ox), FadeIn(gate_l), FadeIn(ox_l), FadeIn(si_l))
         self.play(Create(ec), Create(ei), Create(ev), Create(ef), FadeIn(names), run_time=1.5)
         self.add(holes, elec, ion)
         self.play(FadeIn(holes), FadeIn(readout), FadeIn(phase))
-        dep = text(tr("depletion:\nholes pushed away", "depletion:\nhole সরে গেছে"), size=26, color=HOLE).move_to(phase)
+        dep = text("depletion:\nholes pushed away", size=26, color=HOLE).move_to(phase)
         self.play(psi.animate.set_value(phi_f), Transform(phase, dep), run_time=3)
-        inv = text(tr("inversion:\na layer of electrons", "inversion:\nelectron-এর একটা layer"), size=26, color=ELECTRON).move_to(phase)
+        inv = text("inversion:\na layer of electrons", size=26, color=ELECTRON).move_to(phase)
         self.play(psi.animate.set_value(2 * phi_f), Transform(phase, inv), run_time=3)
         f1 = eq(r"\phi_F", r"=", r"\frac{k_BT}{q}", r"\ln\frac{N_A}{n_i}", size=40)
         f1[2].set_color(THERMAL)
         f2 = eq(r"\text{threshold:}\ ", r"\psi_s = 2\phi_F", size=40)
         cols = VGroup(f1, f2).arrange(DOWN, buff=0.3).move_to([4.9, -0.3, 0])
-        f3 = text(tr(f"N_A = 10¹⁷: 2φ_F = {2 * phi_f:.2f} V", f"N_A = 10¹⁷: 2φ_F = {2 * phi_f:.2f} V"), size=22, color=MUTED).next_to(cols, DOWN, buff=0.25)
+        f3 = text(f"N_A = 10¹⁷: 2φ_F = {2 * phi_f:.2f} V", size=22, color=MUTED).next_to(cols, DOWN, buff=0.25)
         self.play(Write(f1))
         self.play(Write(f2), FadeIn(f3))
         holes.clear_updaters()
@@ -327,7 +352,7 @@ class Ch03Glass(Chapter, Slide):
 
     # --- the threshold voltage ---------------------------------------------------------------
     def threshold(self):
-        self.slide(tr(
+        self.slide(say(
             """
             The threshold voltage is just the gate voltage that gets you there, and every term has a
             job. V-F-B lines the bands up flat: it comes from the difference in work functions and
@@ -347,23 +372,21 @@ class Ch03Glass(Chapter, Slide):
             """,
         ))
         self.play(FadeOut(self.parts))
-        title = heading(tr("The threshold voltage, term by term", "Threshold voltage, প্রতিটা term ধরে"))
+        title = heading("The threshold voltage, term by term")
         big = eq(r"V_T", r"=", r"V_{FB}", r"+", r"2\phi_F", r"+", r"\frac{\sqrt{2q\,\varepsilon_{Si}N_A\,(2\phi_F)}}{C_{ox}}", size=64)
         big[2].set_color(MUTED)
         big[4].set_color(GATE)
         big[6].set_color(HOLE)
         big.move_to(UP * 1.0)
         labels = VGroup(
-            text(tr("make the bands flat", "band সমান করা"), size=22, color=MUTED).next_to(big[2], DOWN, buff=0.45),
-            text(tr("bend them to inversion", "বাঁকায়ে inversion"), size=22, color=GATE).next_to(big[4], DOWN, buff=1.05),
-            text(tr("hold the depletion charge,\nthrough the oxide", "depletion charge ধরে রাখা,\noxide দিয়া"), size=22, color=HOLE).next_to(big[6], DOWN, buff=0.35),
+            text("make the bands flat", size=22, color=MUTED).next_to(big[2], DOWN, buff=0.45),
+            text("bend them to inversion", size=22, color=GATE).next_to(big[4], DOWN, buff=1.05),
+            text("hold the depletion charge,\nthrough the oxide", size=22, color=HOLE).next_to(big[6], DOWN, buff=0.35),
         )
         vt = phys.threshold_voltage(N_A, T_OX, V_FB)
-        ex = text(tr(f"N_A = 10¹⁷ cm⁻³, t_ox = 10 nm, V_FB = {V_FB} V:  V_T ≈ {vt:.2f} V",
-                     f"N_A = 10¹⁷ cm⁻³, t_ox = 10 nm, V_FB = {V_FB} V:  V_T ≈ {vt:.2f} V"), size=26)
+        ex = text(f"N_A = 10¹⁷ cm⁻³, t_ox = 10 nm, V_FB = {V_FB} V:  V_T ≈ {vt:.2f} V", size=26)
         ex_row = VGroup(ex, model_tag()).arrange(RIGHT, buff=0.3).move_to([0, -1.55, 0])
-        note = layout_note(tr("LVT / SVT / HVT in your PDK: the same device, different doping and gate work function.",
-                              "আপনার PDK-এর LVT / SVT / HVT: একই device, আলাদা doping আর gate work function।"), size=22, width=90)
+        note = layout_note("LVT / SVT / HVT in your PDK: the same device, different doping and gate work function.", size=22, width=90)
         note.to_edge(DOWN, buff=0.35)
         self.play(FadeIn(title))
         self.play(Write(big[:2]))
@@ -375,7 +398,7 @@ class Ch03Glass(Chapter, Slide):
 
     # --- the layout view: W and L ------------------------------------------------------------
     def layout_view(self):
-        self.slide(tr(
+        self.slide(say(
             """
             Now the current. Look at a transistor the way you see it in layout: diffusion, with the
             poly gate crossing it. L is the distance across the gate, source to drain. W is the
@@ -392,7 +415,7 @@ class Ch03Glass(Chapter, Slide):
             """,
         ))
         self.play(FadeOut(self.parts))
-        title = heading(tr("The W and L you draw", "আপনার আঁকা W আর L"))
+        title = heading("The W and L you draw")
         od = box(4.6, 2.4, -3.2, -0.2, SILICON, 0.45)
         poly = box(0.7, 3.6, -3.2, -0.2, GATE, 0.95)
         cts = VGroup(*[box(0.32, 0.32, -3.2 + dx, y, METAL) for dx in (-1.5, 1.5) for y in (-0.9, -0.2, 0.5)])
@@ -412,13 +435,12 @@ class Ch03Glass(Chapter, Slide):
         sq = eq(r"I_D", r"=", r"\tfrac{1}{2}\,", r"\mu C_{ox}", r"\,\frac{W}{L}", r"\,(V_{GS}-V_T)^2", size=54)
         sq[4].set_color(GATE)
         sq.move_to([3.6, 1.2, 0])
-        sat = text(tr("saturation (the square law)", "saturation (square law)"), size=22, color=MUTED).next_to(sq, UP, buff=0.25)
+        sat = text("saturation (the square law)", size=22, color=MUTED).next_to(sq, UP, buff=0.25)
         k = 400 * phys.oxide_capacitance_cm2(T_OX)
         i_ex = phys.square_law_current(0.84, 1.0, 0.34, k, 10)
-        ex = text(tr(f"W/L = 10, overdrive 0.5 V:  I_D ≈ {i_ex * 1e6:.0f} µA", f"W/L = 10, overdrive 0.5 V:  I_D ≈ {i_ex * 1e6:.0f} µA"), size=22)
+        ex = text(f"W/L = 10, overdrive 0.5 V:  I_D ≈ {i_ex * 1e6:.0f} µA", size=22)
         ex_row = VGroup(ex, model_tag()).arrange(RIGHT, buff=0.3).next_to(sq, DOWN, buff=0.45)
-        note = layout_note(tr("The ratio you draw sets the current: matched devices copy W, L, fingers and orientation.",
-                              "আপনার আঁকা ratio-ই current ঠিক করে: matched device-এ W, L, finger, orientation copy হয়।"), size=22, width=44)
+        note = layout_note("The ratio you draw sets the current: matched devices copy W, L, fingers and orientation.", size=22, width=44)
         note.move_to([3.4, -2.0, 0])
         self.play(FadeIn(sat), Write(sq))
         self.play(Indicate(sq[4], color=GATE), Indicate(VGroup(l_lbl, w_lbl), color=GATE))
@@ -428,7 +450,7 @@ class Ch03Glass(Chapter, Slide):
 
     # --- pinch-off and the output curves (with a ↓ derivation) -------------------------------
     def pinch_off(self):
-        self.slide(tr(
+        self.slide(say(
             """
             Here's the channel from the side. Raise the drain voltage and the channel gets thinner
             at the drain end, because the gate has less voltage over the channel there. When V-D-S
@@ -444,7 +466,7 @@ class Ch03Glass(Chapter, Slide):
             """,
         ))
         self.play(FadeOut(self.parts))
-        title = heading(tr("Pinch-off: why the current saturates", "Pinch-off: current কেন saturate করে"))
+        title = heading("Pinch-off: why the current saturates")
         vov = 0.5
         vds = ValueTracker(0.0)
         x0, x1, y0 = -6.0, -1.2, 0.2
@@ -471,7 +493,7 @@ class Ch03Glass(Chapter, Slide):
         labels = VGroup(
             text("source", size=20, color=MUTED).next_to(src, DOWN, buff=0.2),
             text("drain", size=20, color=MUTED).next_to(drn, DOWN, buff=0.2),
-            text(tr("channel", "channel"), size=20, color=ELECTRON).move_to([(x0 + x1) / 2, y0 - 0.35, 0]),
+            text("channel", size=20, color=ELECTRON).move_to([(x0 + x1) / 2, y0 - 0.35, 0]),
         )
         axes = Axes(x_range=[0, 1.2, 0.2], y_range=[0, 1.1, 0.25], x_length=5.2, y_length=3.6, tips=False,
                     axis_config={"stroke_color": MUTED, "stroke_width": 2, "include_ticks": False}).move_to([3.4, -0.2, 0])
@@ -491,27 +513,27 @@ class Ch03Glass(Chapter, Slide):
         self.add(chan)
         self.play(Create(axes), FadeIn(xl), FadeIn(yl), Create(fam), FadeIn(dot))
         self.play(vds.animate.set_value(vov), run_time=3)
-        po = text(tr("pinched off at the drain", "drain-এর কাছে pinch off"), size=22, color=GATE).move_to([x1 - 1.0, y0 + 1.55, 0])
+        po = text("pinched off at the drain", size=22, color=GATE).move_to([x1 - 1.0, y0 + 1.55, 0])
         self.play(FadeIn(sat_line), FadeIn(sat_l), FadeIn(po))
         self.play(vds.animate.set_value(1.1), run_time=2)
         lin = eq(r"I_D = \mu C_{ox}\frac{W}{L}\Big[(V_{GS}-V_T)V_{DS} - \tfrac{1}{2}V_{DS}^2\Big]", size=34)
-        lin_l = text(tr("linear region", "linear region"), size=20, color=MUTED)
+        lin_l = text("linear region", size=20, color=MUTED)
         VGroup(lin_l, lin).arrange(DOWN, buff=0.1).to_edge(DOWN, buff=0.4)
-        hint = text(tr("↓ derivation", "↓ derivation"), size=20, color=MUTED).to_corner(DR, buff=0.35)
+        hint = text("↓ derivation", size=20, color=MUTED).to_corner(DR, buff=0.35)
         self.play(FadeIn(lin_l), Write(lin), FadeIn(hint))
         screen = VGroup(title, body, src, drn, ox, gate, labels, chan, axes, xl, yl, fam, dot, sat_line, sat_l, po, lin_l, lin, hint)
 
         steps = [
-            (eq(r"Q_i(y) = -C_{ox}\big(V_{GS}-V_T-V(y)\big)"), tr("Charge in the channel at a point y along it.", "Channel-এর y জায়গায় charge।")),
-            (eq(r"I_D = -W\,\mu\,Q_i(y)\,\frac{dV}{dy}"), tr("Current = charge × velocity, and velocity = μ × field.", "Current = charge × velocity, আর velocity = μ × field।")),
-            (eq(r"\int_0^L I_D\,dy = W\mu C_{ox}\int_0^{V_{DS}}\big(V_{GS}-V_T-V\big)\,dV"), tr("I_D is the same everywhere: integrate source to drain.", "I_D সব জায়গায় সমান: source থেকে drain integrate করেন।")),
+            (eq(r"Q_i(y) = -C_{ox}\big(V_{GS}-V_T-V(y)\big)"), ("Charge in the channel at a point y along it.", "Channel-এর y জায়গায় charge।")),
+            (eq(r"I_D = -W\,\mu\,Q_i(y)\,\frac{dV}{dy}"), ("Current = charge × velocity, and velocity = μ × field.", "Current = charge × velocity, আর velocity = μ × field।")),
+            (eq(r"\int_0^L I_D\,dy = W\mu C_{ox}\int_0^{V_{DS}}\big(V_{GS}-V_T-V\big)\,dV"), ("I_D is the same everywhere: integrate source to drain.", "I_D সব জায়গায় সমান: source থেকে drain integrate করেন।")),
             (eq(r"I_D = \mu C_{ox}\frac{W}{L}\Big[(V_{GS}-V_T)V_{DS}-\tfrac{1}{2}V_{DS}^2\Big]\ \xrightarrow{V_{DS}=V_{GS}-V_T}\ \tfrac{1}{2}\mu C_{ox}\frac{W}{L}(V_{GS}-V_T)^2", size=34),
-             tr("At pinch-off the bracket peaks: that's the square law.", "Pinch-off-এ bracket-টা maximum: এইটাই square law।")),
+             ("At pinch-off the bracket peaks: that's the square law.", "Pinch-off-এ bracket-টা maximum: এইটাই square law।")),
         ]
         shown = VGroup()
         y = 2.5
-        for i, (m, why) in enumerate(steps):
-            self.slide(tr(f"Derivation, step {i + 1} of 4: ", f"Derivation, step {i + 1} / 4: ") + why, direction="vertical")
+        for i, (m, (why, why_bn)) in enumerate(steps):
+            self.slide(say(f"Derivation, step {i + 1} of 4: {why}", f"Derivation, step {i + 1} / 4: {why_bn}"), direction="vertical")
             if i == 0:
                 self.detour_in(screen)
             w = text(why, size=22, color=MUTED)
@@ -519,31 +541,43 @@ class Ch03Glass(Chapter, Slide):
             y -= 1.5
             self.play(Write(m), FadeIn(w))
             shown.add(m, w)
-        self.slide(tr("Back to the story.", "আবার গল্পে ফিরি।"), direction="vertical")
+        self.slide(say("Back to the story.", "আবার গল্পে ফিরি।"), direction="vertical")
         self.detour_out(screen, shown)
         self.parts = screen
 
     # --- CMOS --------------------------------------------------------------------------------
     def cmos(self):
-        self.slide(tr(
+        title, pic = self.show_figure(say(
             """
-            In 1963 Frank Wanlass and C. T. Sah at Fairchild put an n-channel and a p-channel
-            MOSFET together, in series between the supply and ground, with their gates tied. Input
-            low: the p-device is on and the n-device is off, so the output is high. Input high: the
-            reverse. In either steady state one of them is off, so no current flows from supply to
-            ground. Power is only spent while switching: alpha C V squared f. They called the paper
-            nanowatt logic.
+            In June 1963 Frank Wanlass, at Fairchild, filed this patent. Figure 5: an n-channel and
+            a p-channel transistor in series between the supplies, their gates tied together. Under
+            it, the input and the output: when one goes up, the other comes down.
             """,
             """
-            1963-এ Fairchild-এ Frank Wanlass আর C. T. Sah একটা n-channel আর একটা p-channel MOSFET একসাথে
-            বসাইলেন, supply আর ground-এর মাঝে series-এ, gate দুইটা জোড়া। Input low হলে p-device on, n-device
+            June 1963-এ Fairchild-এর Frank Wanlass এই patent file করেন। Figure 5: supply-গুলার মাঝে series-এ
+            একটা n-channel আর একটা p-channel transistor, gate দুইটা একসাথে জোড়া। নিচে input আর output: একটা
+            উঠলে আরেকটা নামে।
+            """,
+        ), "1963: CMOS, a switch that sips power",
+            figure(IMAGES / "wanlass_US3356858_fig5.png", 5.9,
+                   "F. M. Wanlass, US patent 3,356,858, filed 1963 (public domain)").move_to(DOWN * 0.4),
+            clear=self.parts)
+
+        self.slide(say(
+            """
+            Here's how it switches. Input low: the p-device is on and the n-device is off, so the output is high. Input high: the
+            reverse. In either steady state one of them is off, so no current flows from supply to
+            ground. Power is only spent while switching: alpha C V squared f. Wanlass and C. T. Sah called
+            their 1963 paper nanowatt logic.
+            """,
+            """
+            এইটা কীভাবে switch করে দেখেন। Input low হলে p-device on, n-device
             off, তাই output high। Input high হলে উল্টা। যেকোনো steady state-এ একটা না একটা off থাকে, তাই supply
-            থেকে ground-এ কোনো current যায় না। Power খরচ হয় শুধু switch করার সময়: alpha C V square f। তাঁদের
-            paper-এর নামই ছিল nanowatt logic।
+            থেকে ground-এ কোনো current যায় না। Power খরচ হয় শুধু switch করার সময়: alpha C V square f। Wanlass আর C. T. Sah-এর
+            1963-এর paper-এর নামই ছিল nanowatt logic।
             """,
         ))
-        self.play(FadeOut(self.parts))
-        title = heading(tr("1963: CMOS, a switch that sips power", "1963: CMOS, এমন switch যে খুব কম power খায়"))
+        self.play(FadeOut(pic))
         x = -3.6
         vdd = Line([x - 1.4, 2.4, 0], [x + 1.4, 2.4, 0], stroke_color=INK, stroke_width=4)
         gnd = Line([x - 1.4, -2.6, 0], [x + 1.4, -2.6, 0], stroke_color=INK, stroke_width=4)
@@ -567,14 +601,13 @@ class Ch03Glass(Chapter, Slide):
         ).set_stroke(INK, 3)
         in_l = MathTex(r"V_{in}", font_size=34, color=GATE).next_to([x - 2.1, -0.1, 0], LEFT, buff=0.1)
         out_l = MathTex(r"V_{out}", font_size=34).next_to([x + 1.4, -0.1, 0], RIGHT, buff=0.1)
-        self.play(FadeIn(title))
         self.play(Create(vdd), Create(gnd), FadeIn(vdd_l), FadeIn(gnd_l), FadeIn(p), FadeIn(n), Create(wires), FadeIn(in_l), FadeIn(out_l), run_time=1.5)
         path_hi = VGroup(Line([x, 2.4, 0], [x, 0.5, 0]), Line([x, 0.5, 0], [x, -0.1, 0]), Line([x, -0.1, 0], [x + 1.4, -0.1, 0])).set_stroke(GOOD, 7)
         path_lo = VGroup(Line([x, -2.6, 0], [x, -0.1, 0]), Line([x, -0.1, 0], [x + 1.4, -0.1, 0])).set_stroke(GOOD, 7)
-        st = VGroup(text(tr("in 0 → out 1", "in 0 → out 1"), size=26, color=GOOD)).move_to([x, -3.3, 0])
+        st = VGroup(text("in 0 → out 1", size=26, color=GOOD)).move_to([x, -3.3, 0])
         self.play(Create(path_hi), FadeIn(st), p[0].animate.set_stroke(GOOD), run_time=1)
         self.wait(0.8)
-        st2 = text(tr("in 1 → out 0", "in 1 → out 0"), size=26, color=GOOD).move_to(st)
+        st2 = text("in 1 → out 0", size=26, color=GOOD).move_to(st)
         self.play(FadeOut(path_hi), Create(path_lo), Transform(st, st2), p[0].animate.set_stroke(INK), n[0].animate.set_stroke(GOOD), run_time=1)
         self.wait(0.8)
 
@@ -584,12 +617,12 @@ class Ch03Glass(Chapter, Slide):
         cur = axes.plot(lambda v: 0.9 * np.exp(-((v - 0.5) / 0.07) ** 2), x_range=[0, 1], color=THERMAL, stroke_width=3)
         ax_l = VGroup(MathTex(r"V_{in}", font_size=28, color=MUTED).next_to(axes.x_axis, DOWN, buff=0.15),
                       MathTex(r"V_{out}", font_size=28, color=GATE).next_to(axes.y_axis, UP, buff=0.1))
-        cur_l = text(tr("current: only while switching", "current: শুধু switch করার সময়"), size=20, color=THERMAL).next_to(axes, DOWN, buff=0.55)
+        cur_l = text("current: only while switching", size=20, color=THERMAL).next_to(axes, DOWN, buff=0.55)
         self.play(Create(axes), FadeIn(ax_l), Create(vtc))
         self.play(Create(cur), FadeIn(cur_l))
         pw = eq(r"P", r"=", r"\alpha\,C\,", r"V_{DD}^2", r"\,f", size=54).move_to([4.9, 0.9, 0])
         pw[3].set_color(THERMAL)
-        pw_l = text(tr("power only when switching", "power খরচ শুধু switching-এ"), size=22, color=MUTED).next_to(pw, DOWN, buff=0.25)
+        pw_l = text("power only when switching", size=22, color=MUTED).next_to(pw, DOWN, buff=0.25)
         src = source("F. Wanlass & C. T. Sah, “Nanowatt logic…”, ISSCC 1963")
         self.play(Write(pw), FadeIn(pw_l), FadeIn(src))
         self.inv = VGroup(vdd, gnd, vdd_l, gnd_l, p, n, wires, in_l, out_l, path_lo, st)
@@ -597,7 +630,7 @@ class Ch03Glass(Chapter, Slide):
 
     # --- latch-up ----------------------------------------------------------------------------
     def latchup(self):
-        self.slide(tr(
+        self.slide(say(
             """
             But CMOS has a price, and you pay it in layout. Build the inverter in silicon: the
             nMOS sits in the p-substrate, the pMOS in an n-well. Look at the layers from the pMOS
@@ -620,7 +653,7 @@ class Ch03Glass(Chapter, Slide):
         ))
         self.inv_copy = self.inv.copy()
         self.play(FadeOut(self.parts), FadeOut(self.inv))
-        title = heading(tr("The price of CMOS: latch-up", "CMOS-এর দাম: latch-up"))
+        title = heading("The price of CMOS: latch-up")
         y_top = 0.6
         sub = box(11.0, 3.2, 0.4, y_top - 1.6, PSUB)
         well = box(4.8, 1.9, 3.1, y_top - 0.95, NWELL, 0.95)
@@ -638,8 +671,8 @@ class Ch03Glass(Chapter, Slide):
         tags = VGroup(
             text("p-substrate", size=20, color=MUTED).move_to([-2.0, y_top - 2.7, 0]),
             text("n-well", size=20, color=INK).move_to([3.1, y_top - 1.6, 0]),
-            text(tr("substrate tap → 0", "substrate tap → 0"), size=16, color=MUTED).next_to(p_tap, UP, buff=0.75),
-            text(tr("well tap → V_DD", "well tap → V_DD"), size=16, color=MUTED).next_to(n_tap, UP, buff=0.75),
+            text("substrate tap → 0", size=16, color=MUTED).next_to(p_tap, UP, buff=0.75),
+            text("well tap → V_DD", size=16, color=MUTED).next_to(n_tap, UP, buff=0.75),
             text("nMOS", size=20, color=ELECTRON).next_to(g1, UP, buff=0.45),
             text("pMOS", size=20, color=HOLE).next_to(g2, UP, buff=0.45),
         )
@@ -650,7 +683,7 @@ class Ch03Glass(Chapter, Slide):
         npn = Arrow([1.0, y_top - 1.2, 0], [-2.6, y_top - 0.5, 0], buff=0, stroke_color=DRAIN, stroke_width=5)
         pnp_l = text("PNP", size=20, color=DRAIN, weight="SEMIBOLD").next_to(pnp, RIGHT, buff=0.1)
         npn_l = text("NPN", size=20, color=DRAIN, weight="SEMIBOLD").next_to(npn, DOWN, buff=0.1)
-        loop = text(tr("a parasitic thyristor: p-n-p-n", "একটা parasitic thyristor: p-n-p-n"), size=24, color=DRAIN).to_edge(DOWN, buff=1.05)
+        loop = text("a parasitic thyristor: p-n-p-n", size=24, color=DRAIN).to_edge(DOWN, buff=1.05)
         self.play(GrowArrow(pnp), GrowArrow(npn), FadeIn(pnp_l), FadeIn(npn_l), FadeIn(loop))
         surge = VGroup(*[Dot(radius=0.07, color=DRAIN) for _ in range(10)])
         path = VMobject().set_points_smoothly([[3.7, y_top - 0.5, 0], [3.7, y_top - 2.1, 0], [1.0, y_top - 2.3, 0],
@@ -665,12 +698,12 @@ class Ch03Glass(Chapter, Slide):
         cond = eq(r"\beta_{npn}\,\beta_{pnp} > 1", r"\ \Rightarrow\ ", r"\text{latch}", size=38)
         cond[0].set_color(DRAIN)
         cond.to_corner(UR, buff=0.4).shift(DOWN * 0.7 + LEFT * 0.3)
-        short = text(tr("V_DD shorted to ground", "V_DD ground-এর সাথে short"), size=26, color=DRAIN, weight="SEMIBOLD").next_to(cond, DOWN, buff=0.2).align_to(cond, RIGHT)
+        short = text("V_DD shorted to ground", size=26, color=DRAIN, weight="SEMIBOLD").next_to(cond, DOWN, buff=0.2).align_to(cond, RIGHT)
         self.add(surge)
         self.play(clock.animate.set_value(2), FadeIn(cond), FadeIn(short), run_time=4, rate_func=linear)
         surge.clear_updaters()
 
-        self.slide(tr(
+        self.slide(say(
             """
             The fix is resistance, or rather the lack of it. The loop only latches if enough current
             flows through the well and substrate to turn the parasitic transistors on. Put taps
@@ -687,17 +720,16 @@ class Ch03Glass(Chapter, Slide):
         ))
         ring_n = SurroundingRectangle(VGroup(n_src, n_drn, g1), color=HOLE, buff=0.35, stroke_width=6)
         ring_p = SurroundingRectangle(VGroup(p_src, p_drn, g2), color=ELECTRON, buff=0.35, stroke_width=6)
-        rings_l = text(tr("guard rings + close taps", "guard ring + কাছের tap"), size=24, color=GOOD, weight="SEMIBOLD").next_to(cond, DOWN, buff=0.2).align_to(cond, RIGHT)
+        rings_l = text("guard rings + close taps", size=24, color=GOOD, weight="SEMIBOLD").next_to(cond, DOWN, buff=0.2).align_to(cond, RIGHT)
         self.play(FadeOut(surge), Create(ring_n), Create(ring_p), pnp.animate.set_opacity(0.25), npn.animate.set_opacity(0.25), Transform(short, rings_l))
-        note = layout_note(tr("Taps close to the devices and guard rings keep the well and substrate resistance low: no latch.",
-                              "Device-এর কাছে tap আর guard ring well আর substrate-এর resistance কম রাখে: latch হয় না।"), size=22, width=52)
+        note = layout_note("Taps close to the devices and guard rings keep the well and substrate resistance low: no latch.", size=22, width=52)
         note.to_edge(DOWN, buff=0.3)
         self.play(FadeOut(loop), FadeIn(note, shift=UP * 0.2))
         self.parts = VGroup(title, sub, well, n_src, n_drn, p_tap, p_src, p_drn, n_tap, g1, g2, tags, pnp, npn, pnp_l, npn_l, cond, short, ring_n, ring_p, note)
 
     # --- cliffhanger -------------------------------------------------------------------------
     def cliffhanger(self):
-        self.slide(tr(
+        self.slide(say(
             """
             So by the mid-1960s we have it: a switch that barely leaks, burns power only when it
             switches, and is made by drawing shapes on masks. Now ask the obvious question. What
@@ -711,12 +743,8 @@ class Ch03Glass(Chapter, Slide):
         ))
         inv = self.inv_copy.move_to(ORIGIN + UP * 0.4)
         self.play(FadeOut(self.parts), FadeIn(inv))
-        q = text(tr("What happens if you draw everything smaller?", "সবকিছু আরও ছোট করে আঁকলে কী হয়?"), size=40, weight="SEMIBOLD", color=GATE)
+        q = text("What happens if you draw everything smaller?", size=40, weight="SEMIBOLD", color=GATE)
         q.to_edge(DOWN, buff=0.6)
         self.play(FadeIn(q))
         for _ in range(3):
             self.play(inv.animate.scale(0.6), run_time=0.8)
-
-
-class Ch03GlassBN(Ch03Glass):
-    LANG = "bn"
