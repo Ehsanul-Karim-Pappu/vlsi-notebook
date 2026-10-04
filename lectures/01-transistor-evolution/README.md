@@ -72,20 +72,28 @@ screen recording of yourself working it at `narration/en/<lab name>.mp4`, with i
 replaces the screenshot.
 
 **A synthetic English voice-over.** `voiceover.py` makes the core movie's narration with ElevenLabs
-text-to-speech, from the script in `narration/en-core/manifest.csv` (written to be spoken: "k T",
-"four-oh-oh-four", the labs described as their screenshots). Run it on your own machine; it needs
-only Python 3, and the API key stays there:
+text-to-speech, from the script in `narration/en-core/manifest.csv`. The script is written to be
+spoken ("k T", "four-oh-oh-four", the labs described as their screenshots), with a few of ElevenLabs'
+audio tags to direct the delivery: `[curious]`, `[dry amusement]`, `[short pause]`. Eleven v4, the
+default, follows them; for a model that can't, they're taken out before sending, and the subtitles
+never show them. Run it on your own machine; it needs only Python 3, and the API key stays there:
 
 ```bash
 export ELEVENLABS_API_KEY=...            # or leave it unset and type it when asked
+python voiceover.py cost                 # what each model costs for the script, on your plan; spends nothing
 python voiceover.py voices               # the voices you can use, and your credits
-python voiceover.py sample <voice_id>    # one sample, about 100 credits; listen, try another
-python voiceover.py make <voice_id>      # all 74 files, about 8,300 credits; asks first
+python voiceover.py sample <voice_id>    # one line, a few hundred characters; listen, try another
+python voiceover.py make <voice_id>      # all 74 files; says the cost and asks first
 ```
 
-It writes `narration/en-core/*.mp3`, picks up where it stopped if interrupted, and never respends
-on a file that's already there. Commit that folder, then `python build.py -q p --core --movie` cuts
-the narrated movie, with every recording at the same loudness and subtitles of what was said.
+`sample` takes `--segment <name>` for another line, `--stability` (lower is more expressive, higher
+more even) and `--model`; `make` takes the same. If the script costs more than your credits,
+`make --partial` makes what they cover, in order, and the same command finishes after they refill.
+It writes `narration/en-core/*.mp3` and `voice.json` (the voice and settings, so a later run can't
+mix in another voice), picks up where it stopped if interrupted, and never respends on a file
+that's already there: delete one to remake it. Commit that folder, then
+`python build.py -q p --core --movie` cuts the narrated movie, with every recording at the same
+loudness and subtitles of what was said.
 
 | Key | Does |
 |---|---|

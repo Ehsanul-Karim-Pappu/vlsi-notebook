@@ -294,6 +294,38 @@ class DeckFiles(unittest.TestCase):
         words += sum(len(en.split()) for en, bn in core.LABS.values())
         self.assertTrue(2500 <= words <= 3400, f"core script: {words} words")
 
+    def test_voice_over_script(self):
+        """The voice-over has one line per slide of the core movie, in the movie's order; its audio
+        tags are well formed; and the subtitles and voiceover.py take them out the same way."""
+        import csv
+        import re
+
+        import core
+        import voiceover
+
+        sys.path.insert(0, str(LECTURE.parents[1]))
+        from build import SEQUENCE, untagged
+
+        order = []
+        for step in SEQUENCE:
+            if step[0] == "scene":
+                order += [f"{step[2]}-{row[0]:02d}" for row in core.CORE[step[2]]]
+            else:
+                order.append(Path(step[1]).stem)
+        with open(LECTURE / "narration" / "en-core" / "manifest.csv", newline="", encoding="utf-8") as f:
+            table = list(csv.DictReader(f))
+        self.assertEqual([Path(r["file"]).stem for r in table], order)
+        for r in table:
+            text = r["text"]
+            with self.subTest(file=r["file"]):
+                self.assertRegex(text, r"^[^\[\]]*(\[[^\[\]]{1,30}\][^\[\]]*)*$")
+                self.assertEqual(untagged(text), voiceover.untagged(text))
+                self.assertNotIn("[", untagged(text))
+                self.assertEqual(untagged(text), " ".join(untagged(text).split()))
+                self.assertLess(len(text), 5000)  # the shortest per-request limit, Eleven v3's
+                self.assertNotIn("[", voiceover.spoken(text, "eleven_flash_v2_5"))
+                self.assertEqual(voiceover.spoken(text, "eleven_v4").count("["), text.count("["))
+
 
 if __name__ == "__main__":
     unittest.main()

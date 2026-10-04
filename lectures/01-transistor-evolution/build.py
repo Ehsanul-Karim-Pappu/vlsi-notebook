@@ -361,6 +361,11 @@ def probe_seconds(path):
     return float(out.strip())
 
 
+def untagged(text):
+    """A narration line without its audio tags ([curious], [short pause]), as the subtitles show it."""
+    return re.sub(r"\s+([,.;:?!])", r"\1", " ".join(re.sub(r"\[[^\]]*\]", " ", text).split()))
+
+
 def recording(folder, stem):
     for ext in (".wav", ".m4a", ".mp3", ".flac", ".ogg"):
         if (folder / (stem + ext)).exists():
@@ -404,13 +409,14 @@ def movie(core=False, lang="en"):
         for name, title, notes in labs_after.get(n, []):
             items.append((Path(name).stem, "lab", LAB_SHOTS / (Path(name).stem + ".jpg"), notes, False))
 
-    # If the recordings come with a manifest (file,seconds,text), the subtitles follow what was said.
-    spoken = {}
+    # If the recordings come with a manifest (file,seconds,text), the subtitles follow what was said,
+    # without the audio tags that directed it.
+    said = {}
     if (rec / "manifest.csv").exists():
         import csv
 
         with open(rec / "manifest.csv", newline="", encoding="utf-8") as f:
-            spoken = {Path(row["file"]).stem: row["text"] for row in csv.DictReader(f) if row.get("text")}
+            said = {Path(row["file"]).stem: untagged(row["text"]) for row in csv.DictReader(f) if row.get("text")}
     script = [f"# Narration script: {TITLE}{' (core)' if core else ''}, {lang}", "",
               f"Record each block into {rec.relative_to(HERE)}/<file>.wav (or .m4a, .mp3), then run build.py --movie again.", ""]
     srt, t, segments = [], 0.0, []
@@ -418,7 +424,7 @@ def movie(core=False, lang="en"):
     for k, (stem, kind, src, (en, bn), loop) in enumerate(items):
         text = en if lang == "en" else bn
         script += [f"## {stem}", "", text, ""]
-        text = spoken.get(stem, text)
+        text = said.get(stem, text)
         screen = rec / (stem + ".mp4") if kind == "lab" else None
         audio = recording(rec, stem)
         clip = probe_seconds(src) if kind == "video" else 0.0
