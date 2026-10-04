@@ -6,16 +6,21 @@ bipolar transistor and the MOSFET, to the FinFET, the nanosheet, the forksheet, 
 what comes after. Each architecture shows up as the answer to a physics problem, with its
 equations.
 
-**Status: chapters 0 to 5 and Live Lab 1 are built**: the cold open,
+**Status: chapters 0 to 10 and Live Lab 1 are built**: the cold open,
 the vacuum tube and Lilienfeld (1), the bipolar transistor (2), the oxide, the MOSFET and CMOS
-(3), Moore and Dennard (4) and Boltzmann's tyranny (5). The rest follows the storyboard in
+(3), Moore and Dennard (4), Boltzmann's tyranny (5), short channels and the natural length λ
+(6), the FinFET (7), nanosheets and how they're made (8), the forksheet (9) and the CFET with
+backside power (10). Chapters 11 and 12 and the other labs follow the storyboard in
 [PLAN.md](PLAN.md).
 
 It's pitched at analog layout engineers: each chapter ties its physics to something they draw
 (W and L, common-centroid pairs, taps and guard rings, threshold flavours, λ and DRC rules). The
 slides are in English; the speaker notes are in English and Bangla. Real photos and patent
 drawings appear where the story reaches them: de Forest's triodes, ENIAC, Lilienfeld's patent, the
-first transistor, Kahng's MOSFET, Wanlass's CMOS, the hand-drawn 4004 layout.
+first transistor, Kahng's MOSFET, Wanlass's CMOS, the hand-drawn 4004 layout, the Berkeley FinFET
+patent, and forksheet and CFET patents. The FinFET, nanosheet, forksheet and CFET are FET Lab's
+3D models, built up layer by layer and cut open; their layouts are drawn from above, the way a
+layout tool shows them.
 
 ## Build the deck
 
@@ -73,6 +78,7 @@ while it has focus; click the background, or use the clicker, to move on.
 ```
 build.py               renders the chapters and assembles the deck
 physics.py             every equation the lecture shows, as functions
+devicedata.py          loads FET Lab's device models from data/ for the chapters
 chapters/              one Manim scene per chapter
 labs/                  the live labs (plain HTML and JavaScript); lab-physics.js is the JS port of physics.py
 template/deck.html     the reveal.js page the deck is built into

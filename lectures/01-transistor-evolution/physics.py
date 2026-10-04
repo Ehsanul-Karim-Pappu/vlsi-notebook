@@ -7,7 +7,7 @@ numbers the equations give.
 Units are SI unless a name says otherwise (_eV, _nm, _mV).
 """
 
-from math import exp, log, log1p, sqrt
+from math import exp, log, log1p, sinh, sqrt
 
 K_B = 1.380649e-23  # J/K
 Q = 1.602176634e-19  # C
@@ -196,3 +196,72 @@ DENNARD = [
 def dennard_factor(power, kappa):
     """kappa ** power: how a quantity in DENNARD changes when everything scales by kappa."""
     return kappa**power
+
+
+# --- Chapter 6: losing grip (the quasi-2D model) ---------------------------------------------
+# The channel's potential along x (source at 0, drain at L) under a gate that holds it at
+# phi_gs far from the ends: d2phi/dx2 - (phi - phi_gs)/lambda^2 = 0, with phi = V_bi at the
+# source and V_bi + V_DS at the drain (K. K. Young, IEEE TED 36, 399 (1989); R.-H. Yan,
+# A. Ourmazd and K. F. Lee, IEEE TED 39, 1704 (1992)).
+def natural_length_nm(t_si_nm, t_ox_nm, n_gates=1, eps_si=EPS_SI, eps_ox=EPS_SIO2):
+    """lambda = sqrt(eps_si t_si t_ox / (N eps_ox)): how far the drain's field reaches into the
+    channel. N counts the gates around it: 1 planar, 2 double gate, 3 tri-gate, 4 all around."""
+    return sqrt(eps_si * t_si_nm * t_ox_nm / (n_gates * eps_ox))
+
+
+def channel_potential(x, length, lam, v_bi=1.0, v_ds=0.05, phi_gs=0.4):
+    """phi(x) in volts, x and length in the same units as lam."""
+    s = sinh(length / lam)
+    return (phi_gs + (v_bi - phi_gs) * sinh((length - x) / lam) / s
+            + (v_bi + v_ds - phi_gs) * sinh(x / lam) / s)
+
+
+def barrier_height(length, lam, v_bi=1.0, v_ds=0.05, phi_gs=0.4, n=2001):
+    """The electron's barrier from the source, V_bi - min(phi), in eV. Long channel: V_bi - phi_gs."""
+    lo = min(channel_potential(length * i / (n - 1), length, lam, v_bi, v_ds, phi_gs) for i in range(n))
+    return v_bi - lo
+
+
+def dibl_mV_per_V(length, lam, v_lo=0.05, v_hi=0.75, **kw):
+    """Drain-induced barrier lowering: how much the barrier drops per volt on the drain."""
+    return 1000 * (barrier_height(length, lam, v_ds=v_lo, **kw) - barrier_height(length, lam, v_ds=v_hi, **kw)) / (v_hi - v_lo)
+
+
+def short_channel_swing(length, lam, T=300.0):
+    """SS ~ (60 mV/dec at 300 K) / (1 - 2 exp(-L/(2 lambda))), in V/decade (K. Suzuki et al.,
+    IEEE TED 40, 2326 (1993)). A model: it fails as L approaches lambda."""
+    return subthreshold_swing(T) / (1 - 2 * exp(-length / (2 * lam)))
+
+
+# --- Chapters 7-10: width, cells, wires ------------------------------------------------------
+def weff_fin_nm(n_fin, h_fin_nm, w_fin_nm):
+    """A FinFET's effective width: each fin conducts on both sidewalls and the top."""
+    return n_fin * (2 * h_fin_nm + w_fin_nm)
+
+
+def weff_sheets_nm(n_sheets, w_sh_nm, t_sh_nm):
+    """A nanosheet's effective width: each sheet conducts all the way round."""
+    return n_sheets * 2 * (w_sh_nm + t_sh_nm)
+
+
+def roughness_mobility_ratio(t_nm, t_ref_nm):
+    """Below about 5 nm, thickness fluctuations make mobility fall roughly as t^6 (K. Uchida et
+    al., IEDM 2002). Illustrative: the ratio of mobilities at two thicknesses."""
+    return (t_nm / t_ref_nm) ** 6
+
+
+def cell_height_nm(tracks, m2_pitch_nm):
+    """A standard cell's height: its number of routing tracks times the metal pitch."""
+    return tracks * m2_pitch_nm
+
+
+def wire_resistance_ohm(length_nm, width_nm, thickness_nm, rho_ohm_m=2.0e-8):
+    """R = rho L / (w t). The default rho is a thin-wire copper value, not the bulk 1.7e-8."""
+    return rho_ohm_m * length_nm * 1e-9 / (width_nm * 1e-9 * thickness_nm * 1e-9)
+
+
+def self_gain_from_dibl(dibl_mV_per_V):
+    """An analog transistor's intrinsic gain g_m r_o when DIBL is all that sets its output
+    resistance: the drain moves the current like eta = DIBL (V/V) times the gate, so
+    g_ds = eta g_m and g_m r_o = 1/eta. A model: channel-length modulation lowers it further."""
+    return 1000.0 / dibl_mV_per_V

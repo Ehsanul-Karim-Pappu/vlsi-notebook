@@ -89,7 +89,7 @@ config.background_color = BG
 
 
 # --- text ----------------------------------------------------------------------------------
-_SUB = re.compile(r"([A-Za-zφψβμΦΨΔ])_([A-Za-z0-9]+)")
+_SUB = re.compile(r"([A-Za-zφψβμεληρστΦΨΔ])_([A-Za-z0-9]+)")
 
 
 def _subscripts(s):

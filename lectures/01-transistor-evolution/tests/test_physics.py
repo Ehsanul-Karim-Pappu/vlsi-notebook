@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 import unittest
-from math import log10
+from math import exp, log10
 from pathlib import Path
 
 LECTURE = Path(__file__).resolve().parents[1]
@@ -107,6 +107,44 @@ class HistoryChapters(unittest.TestCase):
 
 
 @unittest.skipUnless(shutil.which("node"), "node is not installed")
+class ArchitectureChapters(unittest.TestCase):
+    def test_natural_length_shrinks_as_the_gate_wraps(self):
+        planar = p.natural_length_nm(15, 1, 1)
+        fin = p.natural_length_nm(6, 1, 3)
+        gaa = p.natural_length_nm(5, 1, 4)
+        self.assertAlmostEqual(planar, 6.71, places=2)
+        self.assertAlmostEqual(fin, 2.45, places=2)
+        self.assertAlmostEqual(gaa, 1.94, places=2)
+
+    def test_long_channel_barrier_is_set_by_the_gate(self):
+        self.assertAlmostEqual(p.barrier_height(30, 1), 0.6, places=4)
+        self.assertLess(p.dibl_mV_per_V(30, 1), 0.1)
+
+    def test_dibl_grows_as_the_channel_shortens(self):
+        d10, d6, d3 = (p.dibl_mV_per_V(k, 1) for k in (10, 6, 3))
+        self.assertLess(d10, d6)
+        self.assertLess(d6, d3)
+        self.assertTrue(20 < d6 < 60, d6)
+
+    def test_short_channel_swing(self):
+        self.assertAlmostEqual(p.short_channel_swing(100, 1) * 1e3, 59.5, places=1)
+        self.assertAlmostEqual(p.short_channel_swing(6, 1) / p.subthreshold_swing(), 1 / (1 - 2 * exp(-3)), places=6)
+
+    def test_effective_widths(self):
+        self.assertEqual(p.weff_fin_nm(2, 45, 6), 192)
+        self.assertEqual(p.weff_sheets_nm(3, 30, 5), 210)
+
+    def test_cells_and_wires(self):
+        self.assertEqual(p.cell_height_nm(6, 24), 144)
+        self.assertAlmostEqual(p.wire_resistance_ohm(1000, 20, 40), 25.0)
+        self.assertAlmostEqual(p.roughness_mobility_ratio(4, 5), 0.262, places=3)
+
+    def test_self_gain_from_dibl(self):
+        self.assertAlmostEqual(p.self_gain_from_dibl(100), 10.0)
+        short, long_ = (p.self_gain_from_dibl(p.dibl_mV_per_V(k, 1)) for k in (3, 10))
+        self.assertTrue(5 < short < 8 and long_ > 100, (short, long_))
+
+
 class LabPortAgrees(unittest.TestCase):
     def js(self, expr):
         script = (

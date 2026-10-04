@@ -6,7 +6,7 @@ Code shared by every lecture, so the decks look and behave alike.
 |---|---|
 | `style.py` | The palette (each colour means one thing in every lecture: electrons cyan, the gate gold, the drain red, heat orange), the fonts, text helpers, chapter cards, the timeline ribbon, and the `Chapter` mixin |
 | `motifs.py` | Reusable pictures: device cross-sections (planar to CFET), the energy barrier with thermal electrons, the Boltzmann distribution |
-| `devices3d.py` | 3D devices from box geometry in nanometres (FET Lab's format), whole or cut away |
+| `devices3d.py` | Devices from box geometry in nanometres (FET Lab's format): in 3D, whole or cut open along any axis (`build_device(..., clip=...)`), and from above, as a layout tool draws them (`plan_view`) |
 | `fonts/` | Inter (for the slides) and Noto Sans Bengali (for the Bangla speaker notes), both under the SIL Open Font License (`OFL.txt`, `OFL-NotoSansBengali.txt`); nothing needs installing |
 
 A chapter imports these with `from kit.style import *`, after putting the repository root on

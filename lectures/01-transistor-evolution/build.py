@@ -57,6 +57,11 @@ SEQUENCE = [
             "chapter-টা এক screen-এ।",
         ),
     ),
+    ("scene", "chapters/ch06_losing_grip.py", "Ch06LosingGrip"),
+    ("scene", "chapters/ch07_finfet.py", "Ch07FinFET"),
+    ("scene", "chapters/ch08_nanosheet.py", "Ch08Nanosheet"),
+    ("scene", "chapters/ch09_forksheet.py", "Ch09Forksheet"),
+    ("scene", "chapters/ch10_cfet.py", "Ch10CFET"),
 ]
 
 # Manim settings per quality. Use long options: manim-slides reads the "h" in "-qh" as its own

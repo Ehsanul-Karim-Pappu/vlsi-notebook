@@ -6,10 +6,10 @@ forksheet, the CFET and beyond. It's built with **Manim** and **manim-slides**, 
 Veritasium, and heavy on theory: each architecture shows up as the answer to a physics problem
 that we state with its equations.
 
-Status: **Phases 1 and 2 are built**: the style kit, Chapters 0 to 5 and Live Lab 1, with
+Status: **Phases 1 to 3 are built**: the style kit, Chapters 0 to 10 and Live Lab 1, with
 English slides, speaker notes in English and Bangla, and a speaker view that shows each
-animation's progress. See `README.md` to build
-and present it. Next: Phase 3, the architecture arc (Ch 6–10).
+animation's progress. See `README.md` to build and present it. Next: Chapters 11 and 12, and
+Live Labs 2 to 5.
 
 The device data in `data/` and the 3D models in `models/` are copied from
 [FET Lab](https://github.com/Ehsanul-Karim-Pappu/fet-lab), so the deck's devices match that
@@ -362,11 +362,12 @@ vlsi-notebook/
     style.py              palette, fonts, title cards, timeline ribbon, control meter
     fonts/                Inter (slides) and Noto Sans Bengali (Bangla notes), SIL OFL
     motifs.py             band diagrams, field lines, the hill and marbles, the grip
-    devices3d.py          3D devices built from a lecture's geometry data
+    devices3d.py          devices from a lecture's geometry data: 3D, cut open, and from above
   lectures/01-transistor-evolution/
     PLAN.md               this file
     README.md             build and present instructions
     physics.py            every equation in this lecture, as functions (unit-tested)
+    devicedata.py         loads FET Lab's device models from data/
     data/                 device geometry, process steps and references, from FET Lab
     models/               FET Lab's 3D models (.glb) for the 3D slides and Lab 5
     chapters/             ch00_cold_open.py … ch12_outro.py, one Slide class per chapter
@@ -389,8 +390,8 @@ deck is a build output.
    exported as an HTML deck. This is the checkpoint: you judge the look, the tone and the
    depth of the theory before I scale it up.
 2. ✅ **The history arc**: Ch 1–4, with notes in both languages and the speaker view.
-3. **The architecture arc**: Ch 6–10, with the 3D devices and the process animation from
-   `process.json`.
+3. ✅ **The architecture arc**: Ch 6–10, with the 3D devices, the layouts from above and the
+   nanosheet process animation.
 4. **The frontier**: Ch 11–12 and Labs 2–5.
 5. **Polish**: transitions, pacing, a speaker-notes script for every slide, an accuracy audit,
    final 1080p renders, HTML + PPTX + the documentary cut, and the README.

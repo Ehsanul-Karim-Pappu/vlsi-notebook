@@ -1,6 +1,6 @@
 # Image credits
 
-The historical photos and documents shown in lecture 1. Each slide also carries a short credit
+The photos and patent drawings shown in lecture 1. Each slide also carries a short credit
 under the image.
 
 Patent drawings come from the USPTO's full-text copies; US patent documents are free to
@@ -22,3 +22,6 @@ shared under the same licence as the original.
 | `wanlass_US3356858_fig5.png` | F. M. Wanlass, US patent 3,356,858, "Low stand-by power complementary field effect circuitry", Figs. 5, 5A and 5B | [USPTO](https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/3356858) | F. M. Wanlass | US patent document |
 | `dennard.jpg` | Robert H. Dennard | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Robert_Dennard.jpg) | Fred Holland | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) (resized) |
 | `intel4004_layout_1971.jpg` | A layout drawing of the Intel 4004, 1971 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Chip_layout_from_the_development_phase_of_the_Intel_4004_from_1971,_the_first_microprocessor_of_the_world_(cropped_and_edited_image).jpg) | Photo: Flickr user stiefkind | [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `hu_finfet_US6413802_fig1.png` | C. Hu, T.-J. King, J. Bokor et al. (University of California), US patent 6,413,802, "FinFET transistor structures having a double gate channel extending vertically from a substrate and methods of manufacture", Fig. 1 | [USPTO](https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/6413802) | C. Hu et al. | US patent document |
+| `forksheet_US11862700_fig12.png` | TSMC, US patent 11,862,700, "Semiconductor device structure including forksheet transistors and methods of forming the same", Fig. 12 (turned upright) | [USPTO](https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11862700) | Taiwan Semiconductor Manufacturing Company | US patent document |
+| `cfet_US11869812_fig17.png` | IBM, US patent 11,869,812, "Stacked complementary field effect transistors", Fig. 17 | [USPTO](https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/11869812) | International Business Machines | US patent document |

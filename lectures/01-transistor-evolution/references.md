@@ -90,3 +90,71 @@ photos and patent drawings, with their sources and licences, are listed in
 | Direct tunnelling ~10× per 0.2 nm; Φ_B ≈ 3.1 eV, m* ≈ 0.4 m₀ | Model: WKB in `physics.tunnel_transmission`, with textbook Si/SiO₂ values (Taur and Ning, ch. 2) |
 | HfO₂ k ≈ 20; EOT = t (3.9/k) | G. D. Wilk, R. M. Wallace and J. M. Anthony, "High-κ gate dielectrics: current status and materials properties considerations", *J. Appl. Phys.* 89, 5243 (2001) |
 | High-k + metal gate at Intel 45 nm, 2007 | K. Mistry et al., "A 45nm logic technology with high-k+metal gate transistors, strained silicon, 9 Cu interconnect layers…", IEDM 2007 |
+
+## Chapter 6 · Losing grip
+
+| Claim | Source |
+|---|---|
+| The quasi-2D (Gauss's-law) channel model, d²φ/dx² − (φ − φ_gs)/λ² = 0, and its sinh solution | K. K. Young, "Short-channel effect in fully depleted SOI MOSFETs", *IEEE Trans. Electron Devices* 36(2), 399 (1989); R.-H. Yan, A. Ourmazd and K. F. Lee, "Scaling the Si MOSFET: from bulk to SOI to bulk", *IEEE Trans. Electron Devices* 39(7), 1704 (1992). Computed in `physics.channel_potential` |
+| λ = √(ε_Si t_Si t_ox / (N ε_ox)), N the equivalent number of gates (1 planar, 2 double gate, about 3 tri-gate, 4 all around) | J.-P. Colinge, "Multiple-gate SOI MOSFETs", *Solid-State Electronics* 48(6), 897 (2004). Computed in `physics.natural_length_nm` |
+| Barrier heights, threshold roll-off and DIBL against L/λ (e.g. 157 mV/V at 3λ, 39 at 6λ, 5 at 10λ); leakage ratios at 60 mV per decade | Model: `physics.barrier_height` and `physics.dibl_mV_per_V`, with V_bi = 1 V and a 0.6 eV long-channel barrier |
+| SS ≈ 60 mV/dec / (1 − 2e^(−L/2λ)) | K. Suzuki et al., "Scaling theory for double-gate SOI MOSFETs", *IEEE Trans. Electron Devices* 40(12), 2326 (1993). Computed in `physics.short_channel_swing` |
+| Keep L ≳ 6λ (sources quote 5 to 10) | Rule of thumb; see Yan et al. (1992) and Colinge (2004) |
+| g_ds = η g_m, so g_m r_o = 1/η when DIBL alone sets the output conductance | Model: `physics.self_gain_from_dibl`. Background: Y. Tsividis and C. McAndrew, *Operation and Modeling of the MOS Transistor*, 3rd ed. (Oxford, 2011), ch. 6 |
+| λ = 6.7, 3.9, 2.4 and 1.9 nm for N = 1 to 4 (15, 10, 6 and 5 nm channels; 1 nm oxide) | Model: `physics.natural_length_nm` |
+
+## Chapter 7 · FinFET
+
+| Claim | Source |
+|---|---|
+| DELTA, a vertical thin-silicon transistor gated from both sides (Hitachi, 1989) | D. Hisamoto, T. Kaga, Y. Kawamoto and E. Takeda, "A fully depleted lean-channel transistor (DELTA): a novel vertical ultra thin SOI MOSFET", IEDM 1989 |
+| The Berkeley FinFET, 1998–99, under DARPA funding | D. Hisamoto et al., "A folded-channel MOSFET for deep-sub-tenth micron era", IEDM 1998; X. Huang et al., "Sub 50-nm FinFET: PMOS", IEDM 1999 |
+| The FinFET patent, filed 23 October 2000 (Fig. 1 shown) | C. Hu, T.-J. King, V. Subramanian, L. Chang, X. Huang, Y.-K. Choi, J. Kedzierski, N. Lindert, J. Bokor and W.-C. Lee (University of California), US patent 6,413,802 B1, granted 2 July 2002 |
+| Intel's 22 nm tri-gate transistors: announced May 2011, in products in 2012 | Intel press announcement, 4 May 2011; C. Auth et al., "A 22nm high performance and low-power CMOS technology featuring fully-depleted tri-gate transistors…", VLSI 2012 |
+| The FinFET model: 6 nm fins, 45 nm tall, 27 nm pitch, 18 nm gate | FET Lab's FinFET (`data/devices.json`, key `fin`), after TSMC US 9,812,358 B1 |
+| W_eff = N_fin (2H_fin + W_fin) = 192 nm for two fins | Model: `physics.weff_fin_nm` |
+| "3 nm" node: 48 nm contacted gate pitch, 24 nm tightest metal pitch | IEEE IRDS 2021, More Moore (G48M24). TSMC N3: 45 nm gate pitch, 23 nm metal pitch (IEDM 2022) |
+| Mobility falls about as t⁶ below ~5 nm (thickness fluctuation scattering) | K. Uchida et al., "Experimental study on carrier transport mechanism in ultrathin-body SOI n- and p-MOSFETs with SOI thickness less than 5 nm", IEDM 2002. Illustrative ratio in `physics.roughness_mobility_ratio` |
+| The FinFET inverter layout | FET Lab's schematic layout model (`show_fin`) |
+
+## Chapter 8 · Nanosheets
+
+| Claim | Source |
+|---|---|
+| Stacked nanosheets (IBM, GlobalFoundries, Samsung), 2017 | N. Loubet et al., "Stacked nanosheet gate-all-around transistor to enable scaling beyond FinFET", VLSI 2017 |
+| Samsung's 3 nm GAA production began 30 June 2022 | Samsung Electronics, "Samsung begins chip production using 3nm process technology with GAA architecture", 30 June 2022 |
+| TSMC N2 in volume production in the fourth quarter of 2025 | TSMC announcement (reported December 2025) |
+| Intel 18A: RibbonFET and PowerVia, 2025 | Intel |
+| The nanosheet model: three sheets, 5 nm thick, 30 nm wide | FET Lab's nanosheet nFET (`data/geometry.json`), after IBM US 2023/0420457 A1 |
+| W_eff = N_sh · 2(W_sh + T_sh) = 210 nm | Model: `physics.weff_sheets_nm` |
+| The process: Si/SiGe stack, dummy gate, recess, SiGe indent, inner spacers, epitaxy, dummy-gate removal, SiGe release, high-k and metal gate | FET Lab's nanosheet process (`data/process.json`), after IBM US 2023/0420457 A1; N. Loubet et al., "A novel dry selective etch of SiGe for the enablement of high performance logic stacked gate-all-around nanosheet devices", IEDM 2019 |
+| Cell height = tracks × metal pitch (6 × 24 nm = 144 nm) | imec, "A view on the logic technology roadmap". Computed in `physics.cell_height_nm` |
+| The n-to-p space in the nanosheet inverter layout (46 nm) | FET Lab's schematic layout model (`show_ns`) |
+
+## Chapter 9 · Forksheet
+
+| Claim | Source |
+|---|---|
+| imec's forksheet, proposed in 2017 | P. Weckx et al., "Stacked nanosheet fork architecture for SRAM design and device co-optimization toward 3nm", IEDM 2017 |
+| Forksheets with dual work-function metal gates at 17 nm n-to-p space; short-channel control on par with nanosheets down to 22 nm gates | H. Mertens et al., "Forksheet FETs for advanced CMOS scaling: forksheet-nanosheet co-integration and dual work function metal gates at 17nm N-P space", VLSI 2021 |
+| The outer-wall forksheet at the A10 node (projection) | imec, "Outer wall forksheet to bridge nanosheet and CFET device architectures in the logic technology roadmap" |
+| A foundry forksheet patent (Fig. 12 shown) | TSMC, US patent 11,862,700 B2, granted 2 January 2024 |
+| The forksheet model: 5 nm sheets, 8 nm SiN wall | FET Lab's forksheet pair (`fs`), after imec EP 3 989 273 A1 |
+| λ = 2.2 nm with three faces (N = 3) against 1.9 nm with four | Model: `physics.natural_length_nm` |
+| Cell height 136 → 106 nm, rail to rail | FET Lab's schematic layout models (`show_ns`, `show_fs`); `devicedata.rail_span_nm` |
+
+## Chapter 10 · CFET
+
+| Claim | Source |
+|---|---|
+| imec's CFET proposal, 2018 | J. Ryckaert et al., "The Complementary FET (CFET) for CMOS scaling beyond N3", VLSI 2018 |
+| IEDM 2023: Intel a stacked CMOS inverter at 60 nm gate pitch; TSMC CFETs at 48 nm gate pitch; Samsung also. IEDM 2024: TSMC a working CFET inverter at 48 nm | IEEE Spectrum, "Intel, Samsung, and TSMC demo 3D-stacked transistors", December 2023; Intel IEDM 2023 paper 29.2; TSMC IEDM 2023 and 2024 |
+| Monolithic CFET at imec's A7 node (projection) | imec, "Performance boosters to scale monolithic CFET across multiple logic technology nodes" |
+| Monolithic against sequential integration; the temperature limit after layer transfer | imec, "Imec puts complementary FET (CFET) on the logic technology roadmap" |
+| A CFET patent (Fig. 17 shown) | IBM, US patent 11,869,812 B2, granted 9 January 2024 |
+| The CFET model: 5 nm sheets, a 12 nm gap between the tiers, one common gate | FET Lab's monolithic CFET (`cfet_mono`), after IBM US 11,869,812 B2; sequential: `cfet_seq`, after TSMC US 2024/0413156 A1 |
+| Inverter cell heights 156, 136, 106 and 74 nm, rail to rail | FET Lab's schematic layout models (`show_fin`, `show_ns`, `show_fs`, `show_cfet`). Not foundry cells |
+| R = ρL/(wt): 25 Ω per µm for a 20 × 40 nm rail (ρ = 2 × 10⁻⁸ Ω m) | Model: `physics.wire_resistance_ohm`; illustrative dimensions |
+| PowerVia: >30% less platform voltage droop, 6% frequency benefit, >90% cell utilization (test chip) | Intel, VLSI Symposium 2023 (June 2023) |
+| ΔT = P R_th; the upper tier is further from the heat path | Qualitative |
+| 5 nm of silicon is about 37 atomic layers | Si (100) layer spacing a/4 = 0.136 nm |
