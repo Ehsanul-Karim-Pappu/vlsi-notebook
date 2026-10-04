@@ -6,8 +6,9 @@ forksheet, the CFET and beyond. It's built with **Manim** and **manim-slides**, 
 Veritasium, and heavy on theory: each architecture shows up as the answer to a physics problem
 that we state with its equations.
 
-Status: **Phase 1 (the first sample) is built**: the style kit, Chapter 0 (cold open), Chapter
-5 (Boltzmann's tyranny) and Live Lab 1. See `README.md` to build and present it.
+Status: **Phases 1 and 2 are built**: the style kit, Chapters 0 to 5 and Live Lab 1, in English
+and Bengali, with a speaker view that shows each animation's progress. See `README.md` to build
+and present it. Next: Phase 3, the architecture arc (Ch 6–10).
 
 The device data in `data/` and the 3D models in `models/` are copied from
 [FET Lab](https://github.com/Ehsanul-Karim-Pappu/fet-lab), so the deck's devices match that
@@ -98,11 +99,19 @@ documentary cut. Draft renders use `-ql` (480p15).
 
 **Defaults I picked** (change any of them):
 
-- **Audience**: EE undergraduates and graduate students, or engineers who have seen a MOSFET
-  once. Equations are derived, not just quoted.
+- **Audience** (confirmed): junior and senior engineers in an analog layout department.
+  Equations are derived, not just quoted, and each chapter ties its physics to something they
+  draw, in an "In your layout" note: W and L, common-centroid pairs, threshold flavours, taps
+  and guard rings, λ and DRC rules, weak-inversion biasing.
+- **Languages** (confirmed): two decks, English and Bengali. The Bengali is spoken office
+  Bengali in Bengali script, with technical terms, names, units and numbers left in English.
+  Chapter titles stay in English in both. Slides flow into each other: objects carry over
+  between slides and the notes bridge each change of scene.
 - **Length**: about 45 minutes in full, with a marked **25-minute core path** that skips the
   ↓ detours and the optional chapters.
-- **Delivery**: presented live from the speaker notes. There's no recorded voice-over.
+- **Delivery**: presented live from the speaker notes, on a laptop. There's no recorded
+  voice-over. The speaker view (S) has an animation bar so the presenter knows when a slide's
+  animation has finished.
 
 ## 4. Chapter storyboard
 
@@ -138,6 +147,8 @@ The ↓ marks the deep-dive derivations.
 - **↓ Detour**: the surface-state band diagram and Fermi-level pinning.
 - **Cliffhanger**: "So Bardeen and Brattain stopped trying to beat the surface, and started
   poking it."
+- **Layout tie-in**: Lilienfeld's drawing already has the source, drain and gate-on-insulator
+  you draw today.
 
 ### Ch 2 · The accidental transistor (1947–1951, ≈3 min)
 
@@ -153,6 +164,8 @@ The ↓ marks the deep-dive derivations.
 - **Problem**: the BJT works, but it always draws base current (static power), and the
   surface still ruins everything that touches it.
 - **Cliffhanger**: "The solution would come from rust. Well, glass."
+- **Layout tie-in** (built): the bipolar transistor is still on their chips: a 1 : 8 vertical
+  PNP array in common centroid for a bandgap, with $\Delta V_{BE} = (k_BT/q)\ln 8 = 53.8$ mV.
 
 ### Ch 3 · The glass that saved electronics: oxide, planar, MOSFET, CMOS (1955–1963, ≈4.5 min)
 
@@ -170,6 +183,9 @@ The ↓ marks the deep-dive derivations.
   inverter in which only one transistor conducts at a time, and its transfer curve drawn live.
 - **↓ Detour**: deriving the square law from the gradual channel approximation.
 - **Cliffhanger**: "Now we had a switch that sips power. What happens if you shrink it?"
+- **Layout tie-ins** (built): every drawn layer is a mask like Frosch and Derick's oxide
+  window; LVT/SVT/HVT are the V_T equation's terms; W and L on the top view set the current;
+  latch-up as a p-n-p-n with β_npn·β_pnp > 1, and the taps and guard rings that stop it.
 
 ### Ch 4 · The free lunch: Moore and Dennard (1965–2003, ≈3.5 min)
 
@@ -184,6 +200,8 @@ The ↓ marks the deep-dive derivations.
   thermometer stays flat. A log-scale transistor-count plot sweeps from 1971 to today.
 - **Cliffhanger**: "There was one line in Dennard's table that couldn't keep shrinking forever:
   the voltage."
+- **Layout tie-in** (built): Mead and Conway's λ rules shrank with Dennard; when scaling stopped
+  being uniform, the rules stopped being multiples of λ and grew into today's DRC decks.
 
 ### Ch 5 · Boltzmann's tyranny and the power wall (2003–2007, ≈5 min) — *the theory heart*
 
@@ -203,6 +221,8 @@ The ↓ marks the deep-dive derivations.
   many hop over. Then the clock-frequency plateau (~2005) and Gelsinger's 2001 ISSCC "hot
   plate → nuclear reactor → rocket nozzle → Sun's surface" power-density chart.
 - **Live Lab 1** follows this chapter.
+- **Analog tie-in** (built): the straight line below V_T is weak inversion, where analog
+  designers bias for the most g_m per unit current.
 - **↓ Detour**: deriving SS from the capacitor divider ($C_{ox}$ in series with $C_{dep}$).
 - **Cliffhanger**: "We'd hit the thermodynamic floor. Then the transistor got short enough
   that the drain started to fight the gate."
@@ -337,7 +357,7 @@ vlsi-notebook/
   requirements.txt        manim, manim-slides (pinned), shared by every lecture
   kit/                    shared by every lecture
     style.py              palette, fonts, title cards, timeline ribbon, control meter
-    fonts/                Inter (SIL OFL), registered at import
+    fonts/                Inter and Noto Sans Bengali (SIL OFL), registered at import
     motifs.py             band diagrams, field lines, the hill and marbles, the grip
     devices3d.py          3D devices built from a lecture's geometry data
   lectures/01-transistor-evolution/
@@ -349,6 +369,7 @@ vlsi-notebook/
     chapters/             ch00_cold_open.py … ch12_outro.py, one Slide class per chapter
     labs/                 lab1_boltzmann.html … lab5_models.html (+ shared lab.css, lab.js, lab-physics.js)
     template/deck.html    reveal.js template that adds the labs and the 3D viewer
+    template/speaker.html the speaker view: notes, timer, and each animation's progress
     references.md         a source for every date and number (reuses data/references.json R-ids)
     build.py              render (draft/final) → manim-slides convert → html/pptx/mp4
     tests/test_physics.py
@@ -361,10 +382,10 @@ deck is a build output.
 
 ## 8. Build phases (each ends with something you can click through)
 
-1. **Vertical slice**: the style kit + **Ch 0** (cold open) + **Ch 5** (Boltzmann) + **Lab 1**,
+1. ✅ **Vertical slice**: the style kit + **Ch 0** (cold open) + **Ch 5** (Boltzmann) + **Lab 1**,
    exported as an HTML deck. This is the checkpoint: you judge the look, the tone and the
    depth of the theory before I scale it up.
-2. **The history arc**: Ch 1–4.
+2. ✅ **The history arc**: Ch 1–4, with both languages and the speaker view.
 3. **The architecture arc**: Ch 6–10, with the 3D devices and the process animation from
    `process.json`.
 4. **The frontier**: Ch 11–12 and Labs 2–5.
@@ -390,12 +411,11 @@ deck is a build output.
 | Simplified physics reads as exact | "model" labels; limits stated in the ↓ detours |
 | 2025–26 industry claims go stale | Re-checked against sources at the final build |
 
-## 11. Things I'd like you to confirm (I'll go with the defaults if you don't say otherwise)
+## 11. Decisions
 
-1. **Live talk or narrated video?** Default: a live, clicker-paced deck with a script in the
+1. **Live talk**: a live, clicker-paced deck presented from a laptop, with a script in the
    speaker notes. The documentary cut comes as a by-product.
-2. **Length**: about 45 min in full, with a 25-min core path. Is that right for your slot?
-3. **Audience**: EE students and engineers. Should I go gentler (general public) or deeper
-   (device physicists)?
-4. **Hosting**: a local HTML folder + PPTX. Do you also want it published (GitHub Pages, next
-   to the FET Lab web app)?
+2. **Length**: about 45 min in full, with a 25-min core path. (Not yet confirmed.)
+3. **Audience**: analog layout engineers, junior and senior (confirmed).
+4. **Languages**: English and Bengali decks (confirmed).
+5. **Hosting**: a local HTML folder per language, plus PPTX.

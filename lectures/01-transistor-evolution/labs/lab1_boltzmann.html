@@ -4,65 +4,73 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Boltzmann's Fence</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="lab.css">
 </head>
 <body>
   <header>
-    <div class="kicker">Live lab 1</div>
-    <h1>Boltzmann's fence</h1>
-    <p>Drag the gate voltage and watch electrons get over the hill. Then change the temperature and the gate's grip, and see what happens to the 60 mV.</p>
+    <div class="kicker" data-i18n="kicker">Live lab 1</div>
+    <h1 data-i18n="title">Boltzmann's fence</h1>
+    <p data-i18n="intro">Drag the gate voltage and watch electrons get over the hill. Then change the temperature and the gate's grip, and see what happens to the 60 mV.</p>
   </header>
 
   <main class="grid">
     <section class="panel">
-      <h2>The hill: electron energy from source to drain</h2>
+      <h2 data-i18n="hill">The hill: electron energy from source to drain</h2>
       <canvas id="hill" aria-label="Energy barrier with thermal electrons"></canvas>
       <div class="readouts">
-        <div>Barrier <b id="rEb"></b></div>
-        <div>Thermal energy k<sub>B</sub>T <b id="rKt"></b></div>
-        <div>Share over the hill <b id="rFrac"></b></div>
-        <div>Crossing now <b id="rRate"></b></div>
+        <div><span data-i18n="barrier">Barrier</span> <b id="rEb"></b></div>
+        <div><span data-i18n="kt">Thermal energy k<sub>B</sub>T</span> <b id="rKt"></b></div>
+        <div><span data-i18n="share">Share over the hill</span> <b id="rFrac"></b></div>
+        <div><span data-i18n="crossing">Crossing now</span> <b id="rRate"></b></div>
       </div>
     </section>
     <section class="panel">
-      <h2>Drain current against gate voltage (log scale)</h2>
+      <h2 data-i18n="iv">Drain current against gate voltage (log scale)</h2>
       <canvas id="iv" aria-label="Drain current against gate voltage"></canvas>
       <div class="readouts">
-        <div class="big">Subthreshold swing <b id="rSS"></b></div>
-        <div class="big">Off to on <b id="rDec"></b></div>
+        <div class="big"><span data-i18n="ss">Subthreshold swing</span> <b id="rSS"></b></div>
+        <div class="big"><span data-i18n="offon">Off to on</span> <b id="rDec"></b></div>
       </div>
     </section>
   </main>
 
   <footer class="controls">
     <label class="control">
-      <div class="row"><span>Gate voltage V<sub>G</sub></span><output id="oVg"></output></div>
+      <div class="row"><span data-i18n="vg">Gate voltage V<sub>G</sub></span><output id="oVg"></output></div>
       <input id="vg" type="range" min="0" max="0.8" step="0.005" value="0.2">
     </label>
     <div class="control">
-      <div class="row"><span>Temperature</span><output id="oT"></output></div>
+      <div class="row"><span data-i18n="temp">Temperature</span><output id="oT"></output></div>
       <input id="temp" type="range" min="50" max="400" step="1" value="300" aria-label="Temperature">
       <div class="presets">
-        <button class="ghost" data-t="77">77 K liquid N₂</button>
-        <button class="ghost" data-t="300">300 K room</button>
-        <button class="ghost" data-t="400">400 K hot chip</button>
+        <button class="ghost" data-t="77" data-i18n="t77">77 K liquid N₂</button>
+        <button class="ghost" data-t="300" data-i18n="t300">300 K room</button>
+        <button class="ghost" data-t="400" data-i18n="t400">400 K hot chip</button>
       </div>
     </div>
     <div class="control">
-      <div class="row"><span>Gate grip, m = 1 + C<sub>dep</sub>/C<sub>ox</sub></span><output id="oM"></output></div>
+      <div class="row"><span data-i18n="grip">Gate grip, m = 1 + C<sub>dep</sub>/C<sub>ox</sub></span><output id="oM"></output></div>
       <input id="m" type="range" min="1" max="2" step="0.01" value="1" aria-label="Body factor m">
-      <div class="hint">1 is a perfect gate. Planar transistors sat around 1.2–1.5.</div>
+      <div class="hint" data-i18n="gripHint">1 is a perfect gate. Planar transistors sat around 1.2–1.5.</div>
     </div>
-    <button id="sweep">Sweep the gate</button>
+    <button id="sweep" data-i18n="sweep">Sweep the gate</button>
   </footer>
 
   <script src="lab-physics.js"></script>
   <script src="lab.js"></script>
   <script>
   (function () {
+    Lab.translate({
+      intro: "Gate voltage বাড়াইলে দেখবেন electron-গুলা hill পার হচ্ছে। তারপর temperature আর gate-এর grip বদলায়ে দেখেন 60 mV-এর কী হয়।",
+      hill: "Hill: source থেকে drain পর্যন্ত electron-এর energy",
+      share: "Hill পার হওয়ার ভাগ",
+      crossing: "এখন পার হচ্ছে",
+      iv: "Drain current vs gate voltage (log scale)",
+      offon: "Off থেকে on",
+      gripHint: "m = 1 মানে perfect gate। Planar transistor-এ এইটা ছিল 1.2–1.5-এর মতো।",
+      sweep: "Gate sweep করেন",
+    });
+    const t = Lab.t;
     const P = window.LabPhysics;
     const C = {
       bg: Lab.css("--bg"), ink: Lab.css("--ink"), muted: Lab.css("--muted"), faint: Lab.css("--faint"),
@@ -147,8 +155,8 @@
       ctx.clearRect(0, 0, w, h);
 
       // gate electrode over the channel
-      ctx.font = "600 13px Inter, system-ui, sans-serif";
-      const label = "gate  " + s.vg.toFixed(2) + " V";
+      ctx.font = "600 13px Inter, 'Noto Sans Bengali', system-ui, sans-serif";
+      const label = t("gate", "gate") + "  " + s.vg.toFixed(2) + " V";
       const gw = Math.max(X(CH_R) - X(SRC_R), ctx.measureText(label).width + 16);
       ctx.fillStyle = C.gate;
       ctx.fillRect(X(MID) - gw / 2, 8, gw, 22);
@@ -160,8 +168,8 @@
       ctx.strokeStyle = C.faint; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(14, bot); ctx.lineTo(14, top); ctx.stroke();
       ctx.save(); ctx.translate(10, (top + bot) / 2); ctx.rotate(-Math.PI / 2);
-      ctx.fillStyle = C.muted; ctx.font = "500 12px Inter, system-ui, sans-serif"; ctx.textAlign = "center";
-      ctx.fillText("electron energy", 0, 0); ctx.restore();
+      ctx.fillStyle = C.muted; ctx.font = "500 12px Inter, 'Noto Sans Bengali', system-ui, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(t("electron energy", "electron energy"), 0, 0); ctx.restore();
 
       // band edge
       ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.beginPath();
@@ -185,7 +193,7 @@
       }
 
       // labels
-      ctx.fillStyle = C.muted; ctx.font = "500 13px Inter, system-ui, sans-serif"; ctx.textAlign = "center";
+      ctx.fillStyle = C.muted; ctx.font = "500 13px Inter, 'Noto Sans Bengali', system-ui, sans-serif"; ctx.textAlign = "center";
       ctx.fillText("source", X((SRC_L + SRC_R) / 2), Y(0) + 20);
       ctx.fillText("drain", X((CH_R + END) / 2), Y(-DRAIN) + 20);
 
@@ -203,11 +211,11 @@
     const LOG_MIN = -16, LOG_MAX = -4;
     function drawIV(s) {
       const { ctx, w, h } = iv;
-      const l = 54, r = w - 12, t = 12, b = h - 34;
+      const l = 54, r = w - 12, top = 12, b = h - 34;
       const X = (v) => l + (v / VMAX) * (r - l);
-      const Y = (lg) => t + ((LOG_MAX - lg) / (LOG_MAX - LOG_MIN)) * (b - t);
+      const Y = (lg) => top + ((LOG_MAX - lg) / (LOG_MAX - LOG_MIN)) * (b - top);
       ctx.clearRect(0, 0, w, h);
-      ctx.font = "500 12px Inter, system-ui, sans-serif";
+      ctx.font = "500 12px Inter, 'Noto Sans Bengali', system-ui, sans-serif";
 
       ctx.strokeStyle = C.faint; ctx.lineWidth = 1; ctx.fillStyle = C.muted;
       for (let n = LOG_MIN; n <= LOG_MAX; n += 2) {
@@ -216,10 +224,10 @@
       }
       ctx.textAlign = "center";
       for (let v = 0; v <= VMAX + 1e-9; v += 0.2) ctx.fillText(v.toFixed(1), X(v), b + 16);
-      ctx.fillText("gate voltage (V)", (l + r) / 2, b + 30);
+      ctx.fillText(t("gate voltage (V)", "gate voltage (V)"), (l + r) / 2, b + 30);
 
       ctx.save();
-      ctx.beginPath(); ctx.rect(l, t, r - l, b - t); ctx.clip();
+      ctx.beginPath(); ctx.rect(l, top, r - l, b - top); ctx.clip();
       const curve = (T, m, color, width, dash) => {
         ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash); ctx.beginPath();
         for (let k = 0; k <= 240; k++) {
@@ -248,7 +256,7 @@
       ctx.restore();
 
       ctx.fillStyle = C.muted; ctx.textAlign = "left";
-      ctx.fillText("- - 300 K, perfect gate", l + 8, t + 14);
+      ctx.fillText(t("- - 300 K, perfect gate", "- - 300 K, perfect gate"), l + 8, top + 14);
     }
 
     // --- readouts and controls -----------------------------------------------------------------
@@ -260,10 +268,10 @@
       $("rEb").textContent = (b * 1e3).toFixed(0) + " meV";
       $("rKt").textContent = (kT * 1e3).toFixed(1) + " meV";
       $("rFrac").textContent = sci(P.fractionOverBarrier(b, s.T));
-      $("rRate").textContent = (crossings.length / 2).toFixed(1) + " per second";
+      $("rRate").textContent = (crossings.length / 2).toFixed(1) + t(" per second", " / second");
       $("rSS").textContent = (P.subthresholdSwing(s.T, s.m) * 1e3).toFixed(1) + " mV/decade";
       const dec = Math.log10(current(VMAX, s.T, s.m) / current(0, s.T, s.m));
-      $("rDec").textContent = dec.toFixed(1) + " decades";
+      $("rDec").textContent = dec.toFixed(1) + t(" decades", " decades");
     }
 
     document.querySelectorAll("[data-t]").forEach((btn) =>

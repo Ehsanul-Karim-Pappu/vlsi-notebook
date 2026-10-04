@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Speaker view</title>
+  <style>
+    @font-face { font-family: Inter; font-weight: 400; src: url("labs/fonts/Inter-Regular.ttf") format("truetype"); }
+    @font-face { font-family: Inter; font-weight: 500; src: url("labs/fonts/Inter-Medium.ttf") format("truetype"); }
+    @font-face { font-family: Inter; font-weight: 600 700; src: url("labs/fonts/Inter-SemiBold.ttf") format("truetype"); }
+    @font-face { font-family: "Noto Sans Bengali"; font-weight: 400; src: url("labs/fonts/NotoSansBengali-Regular.ttf") format("truetype"); }
+    @font-face { font-family: "Noto Sans Bengali"; font-weight: 500; src: url("labs/fonts/NotoSansBengali-Medium.ttf") format("truetype"); }
+    @font-face { font-family: "Noto Sans Bengali"; font-weight: 600 700; src: url("labs/fonts/NotoSansBengali-SemiBold.ttf") format("truetype"); }
+    :root {
+      --bg: #0E1116; --panel: #171B22; --ink: #ECE8E1; --muted: #8A8F98; --faint: #3A3F47;
+      --gate: #F2B84B; --good: #7BD389; --electron: #4FC7D8; --drain: #E8553E;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+      font: 400 16px/1.45 Inter, "Noto Sans Bengali", system-ui, -apple-system, "Segoe UI", sans-serif; }
+    body { display: grid; grid-template-rows: auto auto 1fr auto auto; gap: 14px; padding: 18px 22px; }
+
+    .top { display: flex; align-items: baseline; gap: 18px; }
+    .count { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .count small { color: var(--muted); font-size: 18px; font-weight: 500; }
+    .where { color: var(--gate); font-weight: 600; font-size: 15px; letter-spacing: .04em; }
+    .spacer { flex: 1; }
+    .clock { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 18px; }
+    .timer { font-variant-numeric: tabular-nums; font-size: 30px; font-weight: 700; }
+
+    /* The animation bar: fills while the slide's animation plays; green when it's done. */
+    .anim { background: var(--panel); border-radius: 12px; padding: 12px 16px 14px; }
+    .anim .row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .anim .state { font-size: 20px; font-weight: 600; }
+    .anim .secs { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--muted); }
+    .track { height: 22px; border-radius: 11px; background: var(--faint); overflow: hidden; }
+    .fill { height: 100%; width: 0; background: var(--gate); border-radius: 11px; }
+    .anim.playing .state { color: var(--gate); }
+    .anim.done .state, .anim.done .secs { color: var(--good); }
+    .anim.done .fill { background: var(--good); }
+    .anim.loop .state { color: var(--electron); }
+    .anim.loop .fill { background: var(--electron); }
+    .anim.paused .state { color: var(--drain); }
+    .anim.idle .state { color: var(--muted); }
+
+    .notes { background: var(--panel); border-radius: 12px; padding: 16px 20px; overflow: auto;
+      font-size: 24px; line-height: 1.5; }
+    .notes p { margin: 0 0 .6em; }
+    .notes .empty { color: var(--muted); }
+
+    .next { color: var(--muted); font-size: 17px; }
+    .next b { color: var(--ink); font-weight: 600; }
+    .next .down { color: var(--gate); font-weight: 600; margin-left: 10px; }
+
+    .keys { display: flex; gap: 10px; align-items: center; }
+    .keys button { white-space: nowrap; }
+    button { font: inherit; font-weight: 600; font-size: 16px; color: var(--ink); background: var(--panel);
+      border: 1px solid var(--faint); border-radius: 10px; padding: 10px 18px; cursor: pointer; }
+    button.go { background: var(--gate); color: var(--bg); border-color: var(--gate); padding: 10px 34px; }
+    .hint { color: var(--muted); font-size: 13px; }
+    .lost { position: fixed; inset: 0; display: none; place-items: center; background: rgba(14,17,22,.92);
+      font-size: 22px; text-align: center; padding: 40px; }
+    .lost.show { display: grid; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="count" id="count">– <small>/ –</small></div>
+    <div class="where" id="where"></div>
+    <div class="spacer"></div>
+    <div class="clock" id="clock"></div>
+    <div class="timer" id="timer" title="Time since you opened this window">00:00</div>
+    <button id="reset" title="Restart the timer">Reset</button>
+  </div>
+
+  <div class="anim idle" id="anim">
+    <div class="row"><div class="state" id="state">Waiting for the deck…</div><div class="secs" id="secs"></div></div>
+    <div class="track"><div class="fill" id="fill"></div></div>
+  </div>
+
+  <div class="notes" id="notes"><span class="empty">No notes for this slide.</span></div>
+
+  <div class="next" id="next"></div>
+
+  <div class="keys">
+    <button id="prev">◀ Back</button>
+    <button id="go" class="go">Next ▶</button>
+    <button id="down">↓ Derivation</button>
+    <button id="toggle">Pause / play</button>
+    <div class="spacer"></div>
+    <div class="hint">Keys work here too: → ← next / back · ↓ ↑ derivation · Space pause · Page Down / Up for a clicker</div>
+  </div>
+
+  <div class="lost" id="lost">The deck window is closed or was reloaded.<br>Go back to the deck and press S to reopen this view.</div>
+
+  <script>
+  (function () {
+    // Labels in the deck's language (build.py opens this page with ?lang=en or ?lang=bn).
+    const LANG = new URLSearchParams(location.search).get("lang") === "bn" ? "bn" : "en";
+    const T = {
+      en: {
+        title: "Speaker view", waiting: "Waiting for the deck…", noNotes: "No notes for this slide.",
+        deriv: (v, n) => "DERIVATION " + v + " OF " + n, lab: "LIVE LAB", upNext: "Up next:",
+        last: "This is the last slide.", down: "↓ a derivation sits below this slide", downMore: "↓ the next step is below",
+        back: "◀ Back", next: "Next ▶", derivBtn: "↓ Derivation", toggle: "Pause / play", reset: "Reset",
+        hint: "Keys work here too: → ← next / back · ↓ ↑ derivation · Space pause · Page Down / Up for a clicker",
+        lost: "The deck window is closed or was reloaded.<br>Go back to the deck and press S to reopen this view.",
+        sLab: "Live lab: no animation, take your time", sNone: "No animation on this slide",
+        sLoop: "Looping: move on whenever you're ready", sDone: "Done: ready for the next slide",
+        sPaused: "Paused (Space to play)", sPlaying: "Animation playing", sStarting: "Starting…", left: " s left",
+      },
+      bn: {
+        title: "Speaker view", waiting: "Deck connect হওয়ার অপেক্ষায়…", noNotes: "এই slide-এ কোনো notes নাই।",
+        deriv: (v, n) => "DERIVATION " + v + " / " + n, lab: "LIVE LAB", upNext: "এরপর:",
+        last: "এইটাই last slide।", down: "↓ এই slide-এর নিচে একটা derivation আছে", downMore: "↓ পরের step নিচে",
+        back: "◀ Back", next: "Next ▶", derivBtn: "↓ Derivation", toggle: "Pause / play", reset: "Reset",
+        hint: "Keys এখানেও কাজ করে: → ← next / back · ↓ ↑ derivation · Space pause · clicker-এর জন্য Page Down / Up",
+        lost: "Deck-এর window বন্ধ বা reload হয়ে গেছে।<br>Deck-এ ফিরে গিয়ে আবার S চাপেন।",
+        sLab: "Live lab: কোনো animation নাই, সময় নিয়ে দেখান", sNone: "এই slide-এ কোনো animation নাই",
+        sLoop: "Loop চলছে: ready হলে next-এ যান", sDone: "Animation শেষ: এখন next slide-এ যেতে পারেন",
+        sPaused: "Pause করা আছে (চালাতে Space)", sPlaying: "Animation চলছে", sStarting: "শুরু হচ্ছে…", left: " s বাকি",
+      },
+    }[LANG];
+    document.documentElement.lang = LANG;
+    document.title = T.title;
+    for (const [id, key] of [["state", "waiting"], ["prev", "back"], ["go", "next"], ["down", "derivBtn"],
+                             ["toggle", "toggle"], ["reset", "reset"]]) {
+      document.getElementById(id).textContent = T[key];
+    }
+    document.querySelector(".hint").textContent = T.hint;
+    document.getElementById("lost").innerHTML = T.lost;
+    document.getElementById("notes").innerHTML = '<span class="empty">' + T.noNotes + "</span>";
+
+    const deck = window.opener;
+    const $ = (id) => document.getElementById(id);
+    const send = (go) => { if (deck && !deck.closed) deck.postMessage({ type: "deck", go }, "*"); };
+
+    if (!deck) $("lost").classList.add("show");
+
+    window.addEventListener("message", (e) => {
+      const s = e.data;
+      if (!s || s.type !== "deck-state") return;
+      $("lost").classList.remove("show");
+      if (s.notes !== undefined) {
+        $("count").innerHTML = s.index + " <small>/ " + s.total + "</small>";
+        $("where").textContent = s.vertical ? T.deriv(s.v, s.stack) : s.kind === "lab" ? T.lab : "";
+        $("notes").innerHTML = s.notes || '<span class="empty">' + T.noNotes + "</span>";
+        $("notes").scrollTop = 0;
+        let next = s.next ? T.upNext + " <b>" + s.next + "</b>" : s.last ? T.last : "";
+        if (s.hasDown) next += '<span class="down">' + (s.vertical ? T.downMore : T.down) + "</span>";
+        $("next").innerHTML = next;
+        $("down").disabled = !s.hasDown;
+      }
+      anim(s);
+    });
+
+    function anim(s) {
+      const box = $("anim");
+      let cls = "idle", state = "", secs = "", pct = 0;
+      const left = s.d > 0 ? (s.d - s.t).toFixed(1) + T.left : "";
+      if (s.kind === "lab") { state = T.sLab; pct = 100; }
+      else if (s.kind !== "video" || !(s.d > 0)) { state = T.sNone; }
+      else if (s.loop) { cls = "loop"; state = T.sLoop; pct = 100 * s.t / s.d; }
+      else if (s.ended || s.t >= s.d - 0.05) { cls = "done"; state = T.sDone; secs = "✓"; pct = 100; }
+      else if (s.paused && s.t < 0.05) { cls = "playing"; state = T.sStarting; secs = left; }
+      else if (s.paused) { cls = "paused"; state = T.sPaused; pct = 100 * s.t / s.d; secs = left; }
+      else { cls = "playing"; state = T.sPlaying; pct = 100 * s.t / s.d; secs = left; }
+      box.className = "anim " + cls;
+      $("state").textContent = state;
+      $("secs").textContent = secs;
+      $("fill").style.width = Math.max(0, Math.min(100, pct)) + "%";
+    }
+
+    // Keys and buttons drive the deck.
+    document.addEventListener("keydown", (e) => {
+      const map = { ArrowRight: "next", PageDown: "next", ArrowLeft: "prev", PageUp: "prev",
+                    ArrowDown: "down", ArrowUp: "up", " ": "toggle" };
+      if (map[e.key]) { e.preventDefault(); send(map[e.key]); }
+    });
+    $("go").onclick = () => send("next");
+    $("prev").onclick = () => send("prev");
+    $("down").onclick = () => send("down");
+    $("toggle").onclick = () => send("toggle");
+
+    // Timer and clock.
+    let t0 = Date.now();
+    $("reset").onclick = () => { t0 = Date.now(); };
+    setInterval(() => {
+      const s = Math.floor((Date.now() - t0) / 1000);
+      $("timer").textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+      $("clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      if (deck && deck.closed) $("lost").classList.add("show");
+    }, 250);
+
+    send("hello");
+  })();
+  </script>
+</body>
+</html>

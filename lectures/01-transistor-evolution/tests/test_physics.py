@@ -60,6 +60,52 @@ class TextbookValues(unittest.TestCase):
         self.assertAlmostEqual(p.physical_thickness_nm(1.2, 20), 6.15, delta=0.01)
 
 
+class HistoryChapters(unittest.TestCase):
+    def test_thermionic_emission_is_boltzmann_in_the_work_function(self):
+        j1 = p.thermionic_current_density(2000, 4.5)
+        j2 = p.thermionic_current_density(2000, 4.5 - p.thermal_voltage(2000) * p.LN10)
+        self.assertAlmostEqual(j2 / j1, 10.0, places=6)
+
+    def test_lilienfeld_gate_induces_about_2e12_per_cm2(self):
+        self.assertAlmostEqual(p.induced_sheet_density_cm2(10, 100) / 1e12, 2.16, delta=0.02)
+
+    def test_surface_states_swallow_the_field(self):
+        self.assertAlmostEqual(p.share_reaching_channel(1e13), 0.021, delta=0.002)
+        self.assertGreater(p.share_reaching_channel(1e10), 0.95)
+
+    def test_bjt_rises_tenfold_per_60_mV(self):
+        r = p.collector_current(0.6 + p.subthreshold_swing(300)) / p.collector_current(0.6)
+        self.assertAlmostEqual(r, 10.0, places=6)
+
+    def test_bandgap_delta_vbe_for_one_to_eight(self):
+        self.assertAlmostEqual(p.delta_vbe(8) * 1e3, 53.8, delta=0.1)
+
+    def test_threshold_voltage_example(self):
+        self.assertAlmostEqual(p.fermi_potential(1e17), 0.417, delta=0.002)
+        self.assertAlmostEqual(p.oxide_capacitance_cm2(10) * 1e7, 3.45, delta=0.01)
+        self.assertAlmostEqual(p.threshold_voltage(1e17, 10, -0.98), 0.34, delta=0.01)
+
+    def test_square_law(self):
+        k = 400 * p.oxide_capacitance_cm2(10)  # mu = 400 cm^2/Vs
+        self.assertAlmostEqual(p.square_law_current(0.84, 1.0, 0.34, k, 10) * 1e6, 172, delta=1)
+        self.assertEqual(p.square_law_current(0.2, 1.0, 0.34, k, 10), 0.0)
+        # continuous at the edge of saturation
+        lin = p.square_law_current(0.84, 0.4999999, 0.34, k, 10)
+        sat = p.square_law_current(0.84, 0.5, 0.34, k, 10)
+        self.assertAlmostEqual(lin, sat, places=9)
+
+    def test_moore_line_reaches_the_biggest_chips(self):
+        self.assertAlmostEqual(p.moore_count(2024) / 2.08e11, 1.05, delta=0.05)
+
+    def test_dennard_keeps_power_density_constant(self):
+        k = 1.4
+        f = {name: p.dennard_factor(pw, k) for name, pw in p.DENNARD}
+        density = f["power per circuit VI"] * f["circuits per area"]
+        self.assertAlmostEqual(density, 1.0)
+        self.assertAlmostEqual(f["power density"], 1.0)
+        self.assertAlmostEqual(p.dynamic_power(1, 1 / k, 1 / k, k) * k * k, p.dynamic_power(1, 1, 1, 1))
+
+
 @unittest.skipUnless(shutil.which("node"), "node is not installed")
 class LabPortAgrees(unittest.TestCase):
     def js(self, expr):

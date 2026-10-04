@@ -1,10 +1,8 @@
 """Chapter 0 · Cold open: the most-made thing in history.
 
-A counter to 13 sextillion, a dive from a phone into a single transistor, the transistor in 3D,
-the hook, and the five shapes this lecture moves through.
-
-Each slide starts with ``self.slide(notes)``: manim-slides gives a slide the options passed to
-the ``next_slide`` call that opens it.
+A counter to 13 sextillion, a dive from a phone into a single transistor (the layout view, with
+the W and L you draw), the transistor in 3D and cut open, the hook, and the five shapes this
+lecture moves through.
 """
 
 import json
@@ -39,14 +37,7 @@ def big_count(e):
     return f"{round(n / 10 ** (k - 2)) * 10 ** (k - 2):,}"
 
 
-class Ch00ColdOpen(ThreeDSlide):
-    def slide(self, notes="", **kw):
-        self.next_slide(notes=notes, **kw)
-
-    def clear(self, run_time=1.0):
-        if self.mobjects:
-            self.play(*[FadeOut(m) for m in self.mobjects], run_time=run_time)
-
+class Ch00ColdOpen(Chapter, ThreeDSlide):
     def construct(self):
         self.counter()
         self.dive_in()
@@ -57,20 +48,18 @@ class Ch00ColdOpen(ThreeDSlide):
 
     # --- the counter -------------------------------------------------------------------------
     def counter(self):
-        self.slide(
+        self.slide(tr(
             """
             In December 1947 there was exactly one of these in the world. Since then, we have
             made about thirteen sextillion of them. That's a 13 followed by 21 zeros: more than
             a trillion and a half for every person alive.
+            """,
             """
-        )
-        field = VGroup(
-            *[
-                Dot([x * 0.32, y * 0.32, 0], radius=0.035, color=ELECTRON)
-                for x in range(-24, 25)
-                for y in range(-13, 14)
-            ]
-        )
+            1947-এর ডিসেম্বরে পুরা দুনিয়ায় এই জিনিস ছিল ঠিক একটা। তারপর থেকে আমরা বানাইছি প্রায় তেরো
+            sextillion। মানে 13-এর পরে 21টা শূন্য: দুনিয়ার প্রত্যেকটা মানুষের জন্য দেড় trillion-এরও বেশি।
+            """,
+        ))
+        field = VGroup(*[Dot([x * 0.32, y * 0.32, 0], radius=0.035, color=ELECTRON) for x in range(-24, 25) for y in range(-13, 14)])
         field.set_opacity(0.0)
         one = Dot(ORIGIN, radius=0.07, color=ELECTRON)
         halo = Circle(radius=0.35, stroke_width=0, fill_color=ELECTRON, fill_opacity=0.15)
@@ -80,33 +69,34 @@ class Ch00ColdOpen(ThreeDSlide):
 
         e = ValueTracker(0.0)
         number = always_redraw(lambda: display(big_count(e.get_value()), size=58, color=INK).move_to(UP * 1.3))
-        caption = text("transistors made", size=28, color=MUTED).move_to(UP * 0.45)
+        caption = text(tr("transistors made", "transistor বানানো হইছে"), size=28, color=MUTED).move_to(UP * 0.45)
         field.scale(12, about_point=ORIGIN)
         self.add(field)
-        self.play(
-            FadeOut(one), FadeOut(halo), FadeOut(year),
-            field.animate.scale(1 / 12, about_point=ORIGIN).set_opacity(0.18),
-            run_time=1.5,
-        )
+        self.play(FadeOut(one), FadeOut(halo), FadeOut(year), field.animate.scale(1 / 12, about_point=ORIGIN).set_opacity(0.18), run_time=1.5)
         self.add(number)
         self.play(FadeIn(caption), e.animate.set_value(log10(TOTAL)), run_time=5, rate_func=rate_functions.ease_in_out_sine)
         self.wait(0.5)
 
-        self.slide(
+        self.slide(tr(
             """
             One historian at the Computer History Museum calls the MOS transistor the most
             frequently manufactured human artifact in history. Nothing else comes close.
+            """,
             """
-        )
+            Computer History Museum-এর একজন historian MOS transistor-রে বলছেন মানুষের ইতিহাসে সবচেয়ে বেশি
+            বানানো জিনিস। ধারেকাছেও আর কিছু নাই।
+            """,
+        ))
         sci = MathTex(r"\approx 1.3\times10^{22}", font_size=48, color=ELECTRON).next_to(caption, DOWN, buff=0.4)
-        per = text("about 1.6 trillion for every person alive", size=28, color=MUTED).next_to(sci, DOWN, buff=0.3)
+        per = text(tr("about 1.6 trillion for every person alive", "প্রত্যেক মানুষের জন্য প্রায় 1.6 trillion"), size=28, color=MUTED).next_to(sci, DOWN, buff=0.3)
         self.play(Write(sci))
         self.play(FadeIn(per))
         self.play(field.animate.set_opacity(0.07))
         quote = text("“The most frequently manufactured human artifact in history.”", size=30, color=GATE, slant="ITALIC")
         who = text("David C. Brock, historian, Computer History Museum", size=20, color=MUTED)
         VGroup(quote, who).arrange(DOWN, buff=0.15).to_edge(DOWN, buff=1.0)
-        src = source("Count: Jim Handy's estimate of transistors made through 2018, via the Computer History Museum")
+        src = source(tr("Count: Jim Handy's estimate of transistors made through 2018, via the Computer History Museum",
+                        "Count: 2018 পর্যন্ত বানানো transistor-এর Jim Handy-র estimate, Computer History Museum থেকে"))
         self.play(FadeIn(quote, shift=UP * 0.2), FadeIn(who), FadeIn(src))
 
     # --- from a phone to one transistor ------------------------------------------------------
@@ -130,21 +120,20 @@ class Ch00ColdOpen(ThreeDSlide):
             m.become(frame(a)(i0.copy()))
             m.fade(1 - np.clip((a - 0.35) / 0.45, 0, 1))
 
-        self.play(
-            UpdateFromAlphaFunc(outer, upd_outer),
-            UpdateFromAlphaFunc(inner, upd_inner),
-            run_time=run_time,
-            rate_func=rate_functions.ease_in_out_cubic,
-        )
+        self.play(UpdateFromAlphaFunc(outer, upd_outer), UpdateFromAlphaFunc(inner, upd_inner),
+                  run_time=run_time, rate_func=rate_functions.ease_in_out_cubic)
         self.remove(outer)
 
     def dive_in(self):
-        self.slide(
+        self.slide(tr(
             """
             Where are they? Some of them are in your pocket. This is a phone. Inside it is a chip
             the size of a fingernail.
+            """,
             """
-        )
+            এরা আছে কোথায়? কিছু আছে আপনার পকেটেই। এইটা একটা phone। এর ভিতরে নখের সমান একটা chip।
+            """,
+        ))
         self.clear()
         phone = VGroup(
             RoundedRectangle(width=2.4, height=4.8, corner_radius=0.35, stroke_color=INK, stroke_width=3),
@@ -153,26 +142,24 @@ class Ch00ColdOpen(ThreeDSlide):
         chip_pt = np.array([0.0, 0.6, 0])
         chip = VGroup(
             Square(0.42, stroke_color=GATE, stroke_width=3, fill_color=PANEL, fill_opacity=1).move_to(chip_pt),
-            *[
-                Line(chip_pt + [x, 0.21, 0], chip_pt + [x, 0.28, 0], stroke_color=GATE, stroke_width=2)
-                for x in np.linspace(-0.15, 0.15, 5)
-            ],
-            *[
-                Line(chip_pt + [x, -0.21, 0], chip_pt + [x, -0.28, 0], stroke_color=GATE, stroke_width=2)
-                for x in np.linspace(-0.15, 0.15, 5)
-            ],
+            *[Line(chip_pt + [x, 0.21, 0], chip_pt + [x, 0.28, 0], stroke_color=GATE, stroke_width=2) for x in np.linspace(-0.15, 0.15, 5)],
+            *[Line(chip_pt + [x, -0.21, 0], chip_pt + [x, -0.28, 0], stroke_color=GATE, stroke_width=2) for x in np.linspace(-0.15, 0.15, 5)],
         )
-        p_lbl = text("a phone", size=26, color=MUTED).next_to(phone, DOWN, buff=0.3)
+        p_lbl = text(tr("a phone", "একটা phone"), size=26, color=MUTED).next_to(phone, DOWN, buff=0.3)
         level1 = VGroup(phone, chip, p_lbl)
         self.play(Create(phone[0]), FadeIn(phone[1]), run_time=1.2)
         self.play(FadeIn(chip, scale=0.5), FadeIn(p_lbl))
 
-        self.slide(
+        self.slide(tr(
             """
             Zoom in, and the chip is a city: processor cores, graphics, memory, all wired
             together. Apple's A17 Pro, from 2023, has nineteen billion transistors on it.
+            """,
             """
-        )
+            Zoom করেন, chip-টা একটা শহর: processor core, graphics, memory, সব wire দিয়া জোড়া। Apple-এর
+            2023-এর A17 Pro-তে উনিশ billion transistor।
+            """,
+        ))
         die = Square(5.6, stroke_color=GATE, stroke_width=3, fill_color=PANEL, fill_opacity=1)
         blocks = VGroup(
             Rectangle(width=1.9, height=1.6, fill_color="#2E4A5A", fill_opacity=1, stroke_width=0).move_to([-1.55, 1.55, 0]),
@@ -182,94 +169,104 @@ class Ch00ColdOpen(ThreeDSlide):
             Rectangle(width=1.8, height=1.9, fill_color="#5A4B2E", fill_opacity=1, stroke_width=0).move_to([1.7, -0.6, 0]),
             Rectangle(width=5.0, height=0.8, fill_color="#3A3F47", fill_opacity=1, stroke_width=0).move_to([0, -2.2, 0]),
         )
-        cache = VGroup(
-            *[
-                Square(0.16, stroke_width=0, fill_color="#565E6A", fill_opacity=1).move_to([1.0 + 0.2 * i, -0.15 - 0.2 * j, 0])
-                for i in range(7)
-                for j in range(4)
-            ]
-        ).move_to(blocks[4])
+        cache = VGroup(*[Square(0.16, stroke_width=0, fill_color="#565E6A", fill_opacity=1).move_to([1.0 + 0.2 * i, -0.15 - 0.2 * j, 0])
+                         for i in range(7) for j in range(4)]).move_to(blocks[4])
         names = VGroup(
-            text("CPU", size=22, color=INK).move_to(blocks[0]),
-            text("CPU", size=22, color=INK).move_to(blocks[1]),
-            text("GPU", size=22, color=INK).move_to(blocks[3]),
-            text("memory", size=20, color=INK).move_to(blocks[5]),
+            text("CPU", size=22).move_to(blocks[0]),
+            text("CPU", size=22).move_to(blocks[1]),
+            text("GPU", size=22).move_to(blocks[3]),
+            text("memory", size=20).move_to(blocks[5]),
         )
-        d_lbl = text("Apple A17 Pro (2023): 19 billion transistors", size=24, color=MUTED).next_to(die, DOWN, buff=0.15)
+        d_lbl = text(tr("Apple A17 Pro (2023): 19 billion transistors", "Apple A17 Pro (2023): 19 billion transistor"), size=24, color=MUTED).next_to(die, DOWN, buff=0.15)
         level2 = VGroup(die, blocks, cache, names, d_lbl)
         self.dive(level1, level2, chip_pt, die.width / 0.42)
 
-        self.slide(
+        self.slide(tr(
             """
-            Zoom into a processor core and you find rows and rows of standard cells: the logic
-            gates. The gold lines are the transistors' gates; the pink stripes are the silicon
-            they control.
+            Zoom into a processor core and you're in the view you work in every day: rows of
+            standard cells, poly crossing diffusion. The gold lines are the gates; the pink stripes
+            are the silicon they control.
+            """,
             """
-        )
+            Processor core-এ zoom করলে চলে আসবেন আপনাদের প্রতিদিনের চেনা view-তে: সারি সারি standard cell,
+            diffusion-এর উপর দিয়া poly। সোনালি line-গুলা gate; গোলাপি stripe-গুলা হইলো সেই silicon যেটারে gate
+            control করে।
+            """,
+        ))
         rows = VGroup()
         for r in range(5):
             y = 2.0 - r * 1.0
-            row = VGroup(
+            rows.add(VGroup(
                 Line([-5.5, y + 0.45, 0], [5.5, y + 0.45, 0], stroke_color=METAL, stroke_width=4),
                 Rectangle(width=11, height=0.22, fill_color=SILICON, fill_opacity=0.55, stroke_width=0).move_to([0, y + 0.15, 0]),
                 Rectangle(width=11, height=0.22, fill_color=HOLE, fill_opacity=0.4, stroke_width=0).move_to([0, y - 0.2, 0]),
-                *[
-                    Line([x, y - 0.38, 0], [x, y + 0.38, 0], stroke_color=GATE, stroke_width=5)
-                    for x in np.arange(-5.2, 5.4, 0.4)
-                ],
-            )
-            rows.add(row)
+                *[Line([x, y - 0.38, 0], [x, y + 0.38, 0], stroke_color=GATE, stroke_width=5) for x in np.arange(-5.2, 5.4, 0.4)],
+            ))
         rows.add(Line([-5.5, -2.55, 0], [5.5, -2.55, 0], stroke_color=METAL, stroke_width=4))
         c_lbl = text("standard cells", size=24, color=MUTED).to_edge(DOWN, buff=0.3)
         level3 = VGroup(rows, c_lbl)
         self.dive(level2, level3, blocks[0].get_center() + np.array([0.3, -0.2, 0]), 5.0)
 
-        self.slide(
+        self.slide(tr(
             """
-            And where one gold line crosses one silicon stripe: that's a transistor. A switch,
-            a few dozen nanometres across.
+            And where one gold line crosses one silicon stripe: that's a transistor. L across the
+            poly, W along it: the two numbers you draw. A switch a few dozen nanometres across.
+            """,
             """
-        )
+            আর যেখানে একটা সোনালি line একটা silicon stripe-রে cross করে: ওইটাই একটা transistor। Poly-র
+            এপার-ওপার L, poly বরাবর W: এই দুইটা সংখ্যাই আপনারা আঁকেন। কয়েক ডজন nanometre-এর একটা switch।
+            """,
+        ))
         act = Rectangle(width=7.0, height=1.6, fill_color=SILICON, fill_opacity=0.55, stroke_width=0)
         g = Rectangle(width=0.9, height=3.6, fill_color=GATE, fill_opacity=1, stroke_width=0)
         cs = Square(0.7, fill_color=METAL, fill_opacity=1, stroke_width=0).move_to([-2.4, 0, 0])
         cd = Square(0.7, fill_color=METAL, fill_opacity=1, stroke_width=0).move_to([2.4, 0, 0])
         labels = VGroup(
-            text("source", size=26, color=INK).next_to(cs, DOWN, buff=0.6),
+            text("source", size=26).next_to(cs, DOWN, buff=0.6),
             text("gate", size=26, color=GATE).next_to(g, UP, buff=0.15),
-            text("drain", size=26, color=INK).next_to(cd, DOWN, buff=0.6),
+            text("drain", size=26).next_to(cd, DOWN, buff=0.6),
         )
-        t_lbl = text("one transistor", size=24, color=MUTED).to_edge(DOWN, buff=0.3)
+        l_arr = DoubleArrow([-0.45, 1.05, 0], [0.45, 1.05, 0], buff=0, stroke_color=INK, stroke_width=3, tip_length=0.14)
+        l_lbl = MathTex("L", font_size=36).next_to(l_arr, LEFT, buff=0.15)
+        w_arr = DoubleArrow([3.8, -0.8, 0], [3.8, 0.8, 0], buff=0, stroke_color=INK, stroke_width=3, tip_length=0.14)
+        w_lbl = MathTex("W", font_size=36).next_to(w_arr, RIGHT, buff=0.12)
+        t_lbl = text(tr("one transistor", "একটা transistor"), size=24, color=MUTED).to_edge(DOWN, buff=0.3)
         level4 = VGroup(act, g, cs, cd, labels, t_lbl)
         target = np.array([-5.2 + 0.4 * 14, 2.0 + 0.15, 0])
         self.dive(level3, level4, target, 6.0)
-        self.level4 = level4
+        self.play(GrowFromCenter(l_arr), FadeIn(l_lbl), GrowFromCenter(w_arr), FadeIn(w_lbl))
+        self.level4 = VGroup(level4, l_arr, l_lbl, w_arr, w_lbl)
 
     # --- the transistor in 3D ----------------------------------------------------------------
     def device(self):
-        self.slide(
+        self.slide(tr(
             """
             Here is one in three dimensions. This is a nanosheet transistor, the kind in the
             newest chips. At the bottom, the silicon wafer. Then the channel: three sheets of
             silicon, each five nanometres thick. Then the gate wraps all the way around every
-            sheet: a thin oxide, then metal. Then insulating spacers, and the source and drain
-            on either side.
+            sheet: a thin oxide, then metal. Then insulating spacers, and the source and drain on
+            either side.
+            """,
             """
-        )
+            এইটা three dimension-এ একটা। Nanosheet transistor, সবচেয়ে নতুন chip-গুলায় যেটা থাকে। নিচে
+            silicon wafer। তারপর channel: silicon-এর তিনটা sheet, প্রত্যেকটা পাঁচ nanometre পুরু। তারপর gate
+            প্রত্যেকটা sheet-রে পুরা ঘিরে ফেলে: আগে পাতলা oxide, তারপর metal। তারপর insulating spacer, আর দুই
+            পাশে source আর drain।
+            """,
+        ))
         self.play(FadeOut(self.level4))
-        self.set_camera_orientation(phi=65 * DEGREES, theta=-60 * DEGREES, zoom=1.0)
+        self.set_camera_orientation(phi=65 * DEGREES, theta=-60 * DEGREES, zoom=0.9)
         order = ["Substrate & isolation", "Channel stack", "Gate-all-around stack", "Gate electrode", "Spacers", "Source / drain"]
         captions = [
-            "the silicon wafer",
-            "the channel: three silicon sheets, 5 nm thick (blue)",
-            "the gate oxide and metal, all the way around",
-            "the gate",
-            "insulating spacers",
-            "source and drain",
+            tr("the silicon wafer", "silicon wafer"),
+            tr("the channel: three silicon sheets, 5 nm thick (blue)", "channel: silicon-এর তিনটা sheet, 5 nm পুরু (নীল)"),
+            tr("the gate oxide and metal, all the way around", "gate oxide আর metal, চারদিক ঘিরে"),
+            "gate",
+            tr("insulating spacers", "insulating spacer"),
+            tr("source and drain", "source আর drain"),
         ]
         contacts = {"gatew", "nisi_source", "ni_source", "w_source", "nisi_drain", "ni_drain", "w_drain"}
-        channel = {f"sheet{i}": CHANNEL for i in (1, 2, 3)}
-        kw = dict(scale=0.048, groups=order, skip=contacts, recolor=channel)
+        kw = dict(scale=0.048, groups=order, skip=contacts, recolor={f"sheet{i}": CHANNEL for i in (1, 2, 3)})
         back, back_g = build_device(GEOMETRY, keep="back", **kw)
         front, front_g = build_device(GEOMETRY, keep="front", **kw)
         shift = -VGroup(back, front).get_center() + np.array([0, 0, -0.3])
@@ -277,30 +274,32 @@ class Ch00ColdOpen(ThreeDSlide):
         front.shift(shift)
         lst = VGroup(*[text(c, size=20, color=MUTED) for c in captions]).arrange(DOWN, aligned_edge=LEFT, buff=0.16)
         lst.to_corner(UL, buff=0.5)
-        src = source("Model: FET Lab's nanosheet nFET (15 nm gate, 5 nm sheets), contacts left off")
+        src = source(tr("Model: FET Lab's nanosheet nFET (15 nm gate, 5 nm sheets), contacts left off",
+                        "Model: FET Lab-এর nanosheet nFET (15 nm gate, 5 nm sheet), contact বাদ দেওয়া"))
         self.add_fixed_in_frame_mobjects(lst, src)
         self.remove(lst, src)
         self.play(FadeIn(src))
         for i, name in enumerate(order):
             item = lst[i]
-            self.play(
-                FadeIn(VGroup(back_g[name], front_g[name]), shift=IN * 0.8),
-                FadeIn(item),
-                *([lst[i - 1].animate.set_color(MUTED)] if i else []),
-                run_time=1.0,
-            )
+            self.play(FadeIn(VGroup(back_g[name], front_g[name]), shift=IN * 0.8), FadeIn(item),
+                      *([lst[i - 1].animate.set_color(MUTED)] if i else []), run_time=1.0)
             self.play(item.animate.set_color(INK), run_time=0.3)
         self.play(lst[-1].animate.set_color(MUTED), run_time=0.3)
 
-        self.slide(
+        self.slide(tr(
             """
             Now cut it open down the middle, along the channel. There are the three sheets,
             running from source to drain. And look between them: gate metal above and below
-            every sheet. The gate has the channel completely surrounded. Hold on to that
-            picture; by the end of the lecture you'll know why it had to look like this.
+            every sheet. The gate has the channel completely surrounded. Hold on to that picture;
+            by the end of the lecture you'll know why it had to look like this.
+            """,
             """
-        )
-        cut = text("cut open along the channel", size=24, color=GATE).to_corner(UR, buff=0.5)
+            এবার মাঝখান দিয়া কাটেন, channel বরাবর। এই যে তিনটা sheet, source থেকে drain পর্যন্ত। আর মাঝখানগুলা
+            দেখেন: প্রত্যেকটা sheet-এর উপরে-নিচে gate metal। Gate channel-টারে পুরা ঘিরে রাখছে। ছবিটা মাথায়
+            রাখেন; lecture শেষে বুঝবেন এইটা কেন এমন হইতেই হইছে।
+            """,
+        ))
+        cut = text(tr("cut open along the channel", "channel বরাবর কাটা"), size=24, color=GATE).to_corner(UR, buff=0.5)
         self.add_fixed_in_frame_mobjects(cut)
         self.remove(cut)
         self.play(FadeOut(front, shift=np.array([0, -3.0, 0])), FadeIn(cut), run_time=1.8)
@@ -308,29 +307,36 @@ class Ch00ColdOpen(ThreeDSlide):
         self.device_mob = VGroup(back)
         self.device_labels = VGroup(lst, src, cut)
 
-        self.slide(
+        self.slide(tr(
             """
             Every one of the thirteen sextillion has a gate like this one, and the gate is how it
             switches.
             """,
-            loop=True,
-        )
+            """
+            তেরো sextillion-এর প্রত্যেকটার এরকম একটা gate আছে, আর gate দিয়াই এইটা switch করে।
+            """,
+        ), loop=True)
         self.move_camera(theta=-62 * DEGREES, run_time=4, rate_func=rate_functions.ease_in_out_sine)
         self.move_camera(theta=-90 * DEGREES, run_time=4, rate_func=rate_functions.ease_in_out_sine)
 
     # --- the hook ----------------------------------------------------------------------------
     def hook(self):
-        self.slide(
+        self.slide(tr(
             """
             Every one of them has one job: let current through, or stop it. On, off. And here's
             the thing that surprised me. Turning a transistor on is easy. Turning it off, so that
-            it really stops, has been the hard part for a hundred years. Almost every big change
-            in how transistors are built was about turning them off.
+            it really stops, has been the hard part for a hundred years. Almost every big change in
+            how transistors are built was about turning them off.
+            """,
             """
-        )
+            এদের সবার কাজ একটাই: current যাইতে দেওয়া, নয়তো আটকানো। On, off। আর যে জিনিসটা আমারে অবাক
+            করছে: transistor on করা সহজ। Off করা, মানে সত্যি সত্যি বন্ধ করা, সেইটাই একশ বছর ধরে কঠিন কাজ।
+            Transistor বানানোর প্রায় প্রত্যেকটা বড় পরিবর্তন আসছে off করার জন্য।
+            """,
+        ))
         self.play(FadeOut(self.device_mob), FadeOut(self.device_labels))
         self.set_camera_orientation(phi=0, theta=-90 * DEGREES, zoom=1.0)
-        job = text("Every one of them has one job.", size=44, weight="SEMIBOLD").to_edge(UP, buff=0.8)
+        job = text(tr("Every one of them has one job.", "এদের সবার কাজ একটাই।"), size=44, weight="SEMIBOLD").to_edge(UP, buff=0.8)
         self.play(FadeIn(job))
 
         wire_y = 0.4
@@ -351,8 +357,7 @@ class Ch00ColdOpen(ThreeDSlide):
                 d.move_to([x, wire_y, 0])
 
         flow.add_updater(place)
-        tick = lambda m, dt: phase.increment_value(1.6 * dt)  # noqa: E731
-        flow.add_updater(tick)
+        flow.add_updater(lambda m, dt: phase.increment_value(1.6 * dt))
         self.play(Create(left), Create(right), Create(chan), FadeIn(gate), FadeIn(state), FadeIn(flow))
         self.wait(2)
         state_off = text("OFF", size=40, color=DRAIN, weight="BOLD").move_to(state)
@@ -360,13 +365,16 @@ class Ch00ColdOpen(ThreeDSlide):
         self.wait(1.5)
         flow.clear_updaters()
 
-        self.slide(
+        self.slide(tr(
             """
             Turning it on is easy. Turning it off has been the hard part for a hundred years.
+            """,
             """
-        )
-        easy = text("Turning it on is easy.", size=36, weight="SEMIBOLD")
-        hard = text("Turning it off has been the hard part for 100 years.", size=36, weight="SEMIBOLD", color=GATE)
+            Transistor on করা সহজ, কিন্তু off করা কঠিন। একশ বছর ধরে।
+            """,
+        ))
+        easy = text(tr("Turning it on is easy.", "Transistor on করা সহজ,"), size=36, weight="SEMIBOLD")
+        hard = text(tr("Turning it off has been the hard part for 100 years.", "কিন্তু off করা কঠিন, 100 বছর ধরে।"), size=36, weight="SEMIBOLD", color=GATE)
         VGroup(easy, hard).arrange(DOWN, buff=0.4).move_to(DOWN * 1.9)
         self.play(FadeIn(easy, shift=UP * 0.2))
         self.wait(0.6)
@@ -374,38 +382,45 @@ class Ch00ColdOpen(ThreeDSlide):
 
     # --- five shapes -------------------------------------------------------------------------
     def shapes(self):
-        self.slide(
+        self.slide(tr(
             """
             To keep their switches off, engineers have rebuilt the transistor again and again.
             First flat: a gate on one side of the channel.
+            """,
             """
-        )
+            Switch-গুলারে off রাখার জন্য engineer-রা transistor-রে বারবার নতুন করে বানাইছেন। প্রথমে flat:
+            channel-এর এক পাশে gate।
+            """,
+        ))
         self.clear()
         steps = [
-            ("planar", "Planar MOSFET", "1960 →", "gate on 1 side"),
-            ("finfet", "FinFET", "2011 →", "gate on 3 sides"),
-            ("nanosheet", "Nanosheet", "2022 →", "gate on all 4 sides"),
-            ("forksheet", "Forksheet", "~2030 (projected)", "n and p squeezed against a wall"),
-            ("cfet", "CFET", "~2033 (projected)", "n stacked on top of p"),
+            ("planar", "Planar MOSFET", "1960 →", tr("gate on 1 side", "এক পাশে gate")),
+            ("finfet", "FinFET", "2011 →", tr("gate on 3 sides", "তিন পাশে gate")),
+            ("nanosheet", "Nanosheet", "2022 →", tr("gate on all 4 sides", "চার পাশেই gate")),
+            ("forksheet", "Forksheet", "~2030 (projected)", tr("n and p squeezed against a wall", "একটা wall-এর দুই পাশে n আর p")),
+            ("cfet", "CFET", "~2033 (projected)", tr("n stacked on top of p", "p-এর মাথার উপরে n")),
         ]
         notes = [
             None,
-            "Then the channel stood up as a fin, with the gate on three sides.",
-            "Then the fin was sliced into sheets, with the gate all the way around.",
-            "Next, probably: the two kinds of transistor pressed against a wall between them.",
-            """
-            And after that, stacked: one kind of transistor on top of the other. Every one of
-            these changes was forced by physics. This lecture is the story of those forces.
-            """,
+            tr("Then the channel stood up as a fin, with the gate on three sides.",
+               "তারপর channel দাঁড়ায়ে গেল fin হয়ে, তিন পাশে gate।"),
+            tr("Then the fin was sliced into sheets, with the gate all the way around.",
+               "তারপর fin কেটে sheet বানানো হইলো, gate চারদিক ঘিরে।"),
+            tr("Next, probably: the two kinds of transistor pressed against a wall between them.",
+               "এরপর, সম্ভবত: দুই রকম transistor একটা wall-এর দুই পাশে চাপাচাপি করে।"),
+            tr("""
+               And after that, stacked: one kind of transistor on top of the other. Every one of
+               these changes was forced by physics. This lecture is the story of those forces.
+               """,
+               """
+               আর তার পরে stack: এক রকম transistor আরেকটার মাথার উপরে। প্রত্যেকটা পরিবর্তন physics-এর চাপে
+               আসছে। এই lecture হইলো সেই চাপগুলার গল্প।
+               """),
         ]
 
         def card(kind, name, year, faces):
             pic = xsection(kind).scale(1.35)
-            words = VGroup(
-                display(name, size=48),
-                text(year, size=26, color=GATE),
-                text(faces, size=26, color=MUTED),
-            ).arrange(DOWN, buff=0.15)
+            words = VGroup(display(name, size=48), text(year, size=26, color=GATE), text(faces, size=26, color=MUTED)).arrange(DOWN, buff=0.15)
             return VGroup(pic, words.next_to(pic, DOWN, buff=0.5)).move_to(UP * 0.2)
 
         cur = card(*steps[0])
@@ -416,35 +431,44 @@ class Ch00ColdOpen(ThreeDSlide):
             self.play(ReplacementTransform(cur[0], nxt[0]), FadeTransform(cur[1], nxt[1]), run_time=1.4)
             cur = nxt
 
-        self.slide(
+        self.slide(tr(
             """
-            Five shapes in sixty years, and two more on the way. Let's see why.
+            Five shapes: three in sixty years, and two more on the way. Let's see why each one had
+            to happen.
+            """,
             """
-        )
+            পাঁচটা shape: ষাট বছরে তিনটা, আর দুইটা আসতেছে। চলেন দেখি প্রত্যেকটা কেন আসতেই হইলো।
+            """,
+        ))
         row = VGroup(*[xsection(s[0]) for s in steps]).arrange(RIGHT, buff=0.5, aligned_edge=DOWN).scale(0.75)
         row.move_to(UP * 0.4)
-        names = VGroup(
-            *[
-                VGroup(text(s[1], size=22, weight="MEDIUM"), text(s[2], size=18, color=GATE)).arrange(DOWN, buff=0.08).next_to(p, DOWN, buff=0.3)
-                for s, p in zip(steps, row)
-            ]
-        )
+        names = VGroup(*[
+            VGroup(text(s[1], size=22, weight="MEDIUM"), text(s[2], size=18, color=GATE)).arrange(DOWN, buff=0.08).next_to(p, DOWN, buff=0.3)
+            for s, p in zip(steps, row)
+        ])
         self.play(ReplacementTransform(cur[0], row[-1]), FadeOut(cur[1]))
         self.play(LaggedStart(*[FadeIn(p, shift=UP * 0.2) for p in row[:-1]], lag_ratio=0.15), FadeIn(names))
 
     # --- title -------------------------------------------------------------------------------
     def title(self):
-        self.slide(
+        self.slide(tr(
             """
             The story starts in 1925, with a patent for a transistor that nobody could build.
+            """,
             """
-        )
+            গল্পটা শুরু 1925-এ, এমন একটা transistor-এর patent দিয়া যেটা কেউ বানাইতে পারে নাই।
+            """,
+        ))
         self.clear()
         kick = kicker("Lecture 1", color=GATE)
         ttl = display("The Switch That Wouldn't Turn Off", size=54)
-        sub = text("How the transistor evolved, told through its physics", size=30, color=MUTED)
+        sub = text(tr("How the transistor evolved, told through its physics", "Transistor কীভাবে বদলাইলো, physics দিয়া বলা গল্প"), size=30, color=MUTED)
         VGroup(kick, ttl, sub).arrange(DOWN, buff=0.3).move_to(UP * 0.6)
         tl = Timeline(2045).to_edge(DOWN, buff=0.45)
         self.play(FadeIn(kick), Write(ttl), run_time=1.6)
         self.play(FadeIn(sub), FadeIn(tl))
         self.play(tl.marker_to(1925), run_time=2.0)
+
+
+class Ch00ColdOpenBN(Ch00ColdOpen):
+    LANG = "bn"

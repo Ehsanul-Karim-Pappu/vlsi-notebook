@@ -1,10 +1,13 @@
 /* Shared look for the live labs: the series palette (kit/style.py) on a dark stage. */
 
-/* Inter, bundled into the deck by build.py (labs/fonts/); Google Fonts or the system font
-   stand in when a lab is opened straight from the repository. */
+/* Inter and Noto Sans Bengali, bundled into the deck by build.py (labs/fonts/); Google Fonts
+   or the system font stand in when a lab is opened straight from the repository. */
 @font-face { font-family: Inter; font-weight: 400; src: url("fonts/Inter-Regular.ttf") format("truetype"); }
 @font-face { font-family: Inter; font-weight: 500; src: url("fonts/Inter-Medium.ttf") format("truetype"); }
 @font-face { font-family: Inter; font-weight: 600 700; src: url("fonts/Inter-SemiBold.ttf") format("truetype"); }
+@font-face { font-family: "Noto Sans Bengali"; font-weight: 400; src: url("fonts/NotoSansBengali-Regular.ttf") format("truetype"); }
+@font-face { font-family: "Noto Sans Bengali"; font-weight: 500; src: url("fonts/NotoSansBengali-Medium.ttf") format("truetype"); }
+@font-face { font-family: "Noto Sans Bengali"; font-weight: 600 700; src: url("fonts/NotoSansBengali-SemiBold.ttf") format("truetype"); }
 :root {
   --bg: #0E1116;
   --panel: #171B22;
@@ -27,7 +30,7 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--ink);
-  font: 400 16px/1.4 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 400 16px/1.4 Inter, "Noto Sans Bengali", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 body {
@@ -45,6 +48,7 @@ header .kicker {
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
+html[lang="bn"] header .kicker { letter-spacing: 0; font-size: 14px; }
 header h1 { margin: 2px 0 2px; font-size: 30px; font-weight: 700; letter-spacing: -0.01em; }
 header p { margin: 0; color: var(--muted); font-size: 16px; }
 

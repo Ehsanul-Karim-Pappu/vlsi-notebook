@@ -15,7 +15,10 @@ HBAR = 1.054571817e-34  # J s
 M0 = 9.1093837015e-31  # kg
 LN10 = log(10)
 
+EPS_0 = 8.8541878128e-12  # F/m
 EPS_SIO2 = 3.9  # relative permittivity of SiO2
+EPS_SI = 11.7  # relative permittivity of Si
+N_I = 1.0e10  # intrinsic carrier density of Si at 300 K, cm^-3 (modern value ~9.7e9)
 
 
 def thermal_voltage(T=300.0):
@@ -88,3 +91,108 @@ def eot_nm(t_phys_nm, k):
 def physical_thickness_nm(eot, k):
     """The physical thickness of a k dielectric with the given EOT."""
     return eot * k / EPS_SIO2
+
+
+# --- Chapter 1: tubes, the field effect and surface states -----------------------------------
+def thermionic_current_density(T, work_function_eV, a_g=1.2e6):
+    """Richardson-Dushman: J = A_G T^2 exp(-W / k_B T), in A/m^2. A_G ~ 1.2e6 A m^-2 K^-2."""
+    return a_g * T * T * exp(-work_function_eV / thermal_voltage(T))
+
+
+def induced_sheet_density_cm2(v_g, t_ox_nm, k=EPS_SIO2):
+    """Electrons per cm^2 a gate induces through an insulator: n_s = C_ox V_G / q."""
+    c_ox = k * EPS_0 / (t_ox_nm * 1e-9)  # F/m^2
+    return c_ox * v_g / Q * 1e-4
+
+
+def depletion_capacitance_cm2(n_a_cm3, psi_s):
+    """C_dep = eps_Si / W_dep, with W_dep = sqrt(2 eps_Si psi_s / (q N_A)); in F/cm^2."""
+    eps = EPS_SI * EPS_0 * 1e-2  # F/cm
+    w = sqrt(2 * eps * psi_s / (Q * n_a_cm3))  # cm
+    return eps / w
+
+
+def surface_state_capacitance_cm2(d_it_cm2_eV):
+    """C_it = q^2 D_it, with D_it per cm^2 per eV; in F/cm^2 (q x states per volt)."""
+    return Q * d_it_cm2_eV
+
+
+def share_reaching_channel(d_it_cm2_eV, n_a_cm3=1e16):
+    """Of the charge a gate induces, the share that reaches the channel instead of filling
+    surface states: C_dep / (C_dep + C_it), with the depletion region at threshold (psi_s =
+    2 phi_F). Bardeen's surface states (D_it ~ 1e13) leave almost nothing for the channel."""
+    c_dep = depletion_capacitance_cm2(n_a_cm3, 2 * fermi_potential(n_a_cm3))
+    c_it = surface_state_capacitance_cm2(d_it_cm2_eV)
+    return c_dep / (c_dep + c_it)
+
+
+# --- Chapter 2: the bipolar transistor -------------------------------------------------------
+def collector_current(v_be, i_s=1e-16, T=300.0):
+    """I_C = I_S exp(q V_BE / k_B T), in amps."""
+    return i_s * exp(v_be / thermal_voltage(T))
+
+
+def delta_vbe(ratio, T=300.0):
+    """The bandgap's PTAT voltage: two BJTs at a current-density ratio N differ in V_BE by
+    (k_B T / q) ln N."""
+    return thermal_voltage(T) * log(ratio)
+
+
+# --- Chapter 3: the MOS capacitor and the MOSFET ---------------------------------------------
+def fermi_potential(n_a_cm3, T=300.0):
+    """phi_F = (k_B T / q) ln(N_A / n_i), in volts."""
+    return thermal_voltage(T) * log(n_a_cm3 / N_I)
+
+
+def oxide_capacitance_cm2(t_ox_nm, k=EPS_SIO2):
+    """C_ox = k eps_0 / t_ox, in F/cm^2."""
+    return k * EPS_0 / (t_ox_nm * 1e-9) * 1e-4
+
+
+def threshold_voltage(n_a_cm3, t_ox_nm, v_fb):
+    """V_T = V_FB + 2 phi_F + sqrt(2 q eps_Si N_A 2 phi_F) / C_ox, in volts."""
+    phi2 = 2 * fermi_potential(n_a_cm3)
+    eps = EPS_SI * EPS_0 * 1e-2  # F/cm
+    q_dep = sqrt(2 * Q * eps * n_a_cm3 * phi2)  # C/cm^2
+    return v_fb + phi2 + q_dep / oxide_capacitance_cm2(t_ox_nm)
+
+
+def square_law_current(v_gs, v_ds, v_t, k_prime, w_over_l):
+    """Long-channel MOSFET (gradual-channel approximation), in amps. k' = mu C_ox.
+    Off below threshold; linear when V_DS < V_GS - V_T; saturated (square law) beyond."""
+    v_ov = v_gs - v_t
+    if v_ov <= 0:
+        return 0.0
+    if v_ds < v_ov:
+        return k_prime * w_over_l * (v_ov * v_ds - v_ds * v_ds / 2)
+    return 0.5 * k_prime * w_over_l * v_ov * v_ov
+
+
+def dynamic_power(alpha, c, v, f):
+    """Switching power P = alpha C V^2 f, in watts."""
+    return alpha * c * v * v * f
+
+
+# --- Chapter 4: Moore and Dennard ------------------------------------------------------------
+def moore_count(year, start_year=1971, start_count=2300, doubling_years=2.0):
+    """Moore's 1975 rule from the 4004: the transistor count doubles every two years."""
+    return start_count * 2 ** ((year - start_year) / doubling_years)
+
+
+DENNARD = [
+    # quantity, how it scales with kappa (as a power of kappa)
+    ("dimensions: L, W, t_ox", -1),
+    ("doping N_A", 1),
+    ("voltage V", -1),
+    ("current I", -1),
+    ("capacitance C", -1),
+    ("delay CV/I", -1),
+    ("power per circuit VI", -2),
+    ("circuits per area", 2),
+    ("power density", 0),
+]
+
+
+def dennard_factor(power, kappa):
+    """kappa ** power: how a quantity in DENNARD changes when everything scales by kappa."""
+    return kappa**power

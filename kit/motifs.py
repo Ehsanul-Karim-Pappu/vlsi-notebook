@@ -35,6 +35,7 @@ from kit.style import (
     SUBSTRATE,
     WALL,
     text,
+    tr,
 )
 
 
@@ -257,9 +258,9 @@ class Boltzmann(VGroup):
                 stroke_width=3,
             )
         )
-        e_label = text("Energy", size=22, color=MUTED).rotate(PI / 2)
+        e_label = text(tr("Energy", "energy"), size=22, color=MUTED).rotate(PI / 2)
         e_label.next_to(self.axes.y_axis, LEFT, buff=0.15)
-        n_label = text("number of electrons", size=22, color=MUTED)
+        n_label = text(tr("number of electrons", "electron-এর সংখ্যা"), size=22, color=MUTED)
         n_label.next_to(self.axes.x_axis, DOWN, buff=0.15)
         self.add(self.axes, self.tail, self.curve, self.line, e_label, n_label)
 

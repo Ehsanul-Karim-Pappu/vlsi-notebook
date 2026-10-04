@@ -91,16 +91,13 @@
     </div>
 
     <script src="{{ cdn_url }}/dist/reveal.js"></script>
-    <script src="{{ cdn_url }}/dist/plugin/notes.js"></script>
     {% if has_notes %}
     <script src="{{ cdn_url }}/dist/plugin/markdown.js"></script>
     {% endif %}
     <script>
       Reveal.initialize({
         {% if has_notes %}
-        plugins: [ RevealMarkdown, RevealNotes ],
-        {% else %}
-        plugins: [ RevealNotes ],
+        plugins: [ RevealMarkdown ],
         {% endif %}
         width: {{ width }},
         height: {{ height }},
@@ -145,20 +142,81 @@
         hideCursorTime: {{ hide_cursor_time }}
       });
 
+      // build.py sets the deck's language here ("en" or "bn").
+      const DECK_LANG = "__DECK_LANG__";
+
+      function currentVideo() {
+        const bg = Reveal.getCurrentSlide().slideBackgroundContentElement;
+        return bg ? bg.querySelector("video") : null;
+      }
+      function toggleVideo() {
+        const v = currentVideo();
+        if (v) { if (v.paused) v.play(); else v.pause(); } else { Reveal.next(); }
+      }
+
       // SPACE plays or pauses the slide's video (as in manim-slides' own template).
-      Reveal.addKeyBinding({ keyCode: 32, key: "SPACE", description: "Play / pause video" }, () => {
-        const v = Reveal.getCurrentSlide().slideBackgroundContentElement.getElementsByTagName("video");
-        if (v.length > 0) { if (v[0].paused) v[0].play(); else v[0].pause(); } else { Reveal.next(); }
-      });
+      Reveal.addKeyBinding({ keyCode: 32, key: "SPACE", description: "Play / pause video" }, toggleVideo);
       // A clicker's buttons (Page Down / Page Up) follow the main story and skip the ↓ detours.
       Reveal.addKeyBinding({ keyCode: 34, key: "PAGE DOWN", description: "Next (skips detours)" }, () => Reveal.right());
       Reveal.addKeyBinding({ keyCode: 33, key: "PAGE UP", description: "Previous" }, () => Reveal.left());
 
-      // A lab keeps the keyboard while you use it; it sends slide changes up to the deck.
+      // --- Speaker view (S): notes, a timer, and a bar showing how far the current
+      // animation has run, in a second window that also drives the deck. ----------------
+      let speaker = null;
+      let shownKey = null;
+      Reveal.addKeyBinding({ keyCode: 83, key: "S", description: "Speaker view" }, () => {
+        speaker = window.open("speaker.html?lang=" + DECK_LANG, "deck-speaker", "width=1100,height=760");
+        shownKey = null;
+      });
+
+      function notesOf(slide) {
+        const a = slide && slide.querySelector(":scope > aside.notes");
+        return a ? a.innerHTML.trim() : "";
+      }
+      function teaser(slide) {
+        const a = slide && slide.querySelector(":scope > aside.notes");
+        const s = a ? a.textContent.replace(/\s+/g, " ").trim() : "";
+        return s.length > 140 ? s.slice(0, 140) + "…" : s;
+      }
+      function pushState() {
+        if (!speaker || speaker.closed) return;
+        const slide = Reveal.getCurrentSlide();
+        const idx = Reveal.getIndices();
+        const routes = Reveal.availableRoutes();
+        const msg = { type: "deck-state" };
+        msg.kind = slide.classList.contains("lab") ? "lab" : slide.hasAttribute("data-background-video") ? "video" : "none";
+        const v = currentVideo();
+        if (v) {
+          msg.t = v.currentTime; msg.d = v.duration; msg.paused = v.paused; msg.ended = v.ended; msg.loop = v.loop;
+        }
+        const key = idx.h + "/" + (idx.v || 0);
+        if (key !== shownKey) {
+          shownKey = key;
+          const stack = slide.parentElement.tagName === "SECTION" ? slide.parentElement.querySelectorAll(":scope > section").length : 1;
+          msg.notes = notesOf(slide);
+          msg.index = Reveal.getSlidePastCount() + 1;
+          msg.total = Reveal.getTotalSlides();
+          msg.vertical = (idx.v || 0) > 0;
+          msg.v = idx.v || 0;
+          msg.stack = stack - 1;
+          msg.hasDown = routes.down;
+          msg.last = !routes.right && !routes.down;
+          msg.next = routes.right ? teaser(Reveal.getSlide(idx.h + 1, 0)) : "";
+        }
+        speaker.postMessage(msg, "*");
+      }
+      setInterval(pushState, 100);
+
+      // Messages from the speaker view and from the labs.
       window.addEventListener("message", (e) => {
-        if (!e.data || e.data.type !== "deck") return;
-        if (e.data.go === "next") Reveal.right();
-        if (e.data.go === "prev") Reveal.left();
+        const m = e.data;
+        if (!m || m.type !== "deck") return;
+        if (m.go === "next") Reveal.right();
+        if (m.go === "prev") Reveal.left();
+        if (m.go === "down") Reveal.down();
+        if (m.go === "up") Reveal.up();
+        if (m.go === "toggle") toggleVideo();
+        if (m.go === "hello") shownKey = null;
       });
       // Give a lab the keyboard when its slide opens, and take it back when it closes.
       Reveal.on("slidechanged", (ev) => {
