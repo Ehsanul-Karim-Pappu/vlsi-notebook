@@ -352,6 +352,7 @@ def export_pptx(out, folder, core):
 # --- the continuous cut --------------------------------------------------------------------------
 NARRATION = HERE / "narration"
 WPM = 150  # speaking pace for slides with no recording yet
+LEAD, TAIL = 0.25, 0.6  # seconds of quiet before and after each recording
 
 
 def probe_seconds(path):
@@ -424,7 +425,7 @@ def movie(core=False, lang="en"):
         if screen and screen.exists():
             dur = probe_seconds(screen)
         else:
-            spoken = probe_seconds(audio) if audio else len(en.split()) * 60 / WPM + 1.0
+            spoken = probe_seconds(audio) + LEAD + TAIL if audio else len(en.split()) * 60 / WPM + 1.0
             dur = max(clip, spoken, 2.0)
         seg = work / f"{k:04d}.mp4"
         # The author line, as on every slide of the deck.
@@ -446,7 +447,9 @@ def movie(core=False, lang="en"):
             vmap = f"[0:v]{vf}[v]"
             if audio:
                 inputs += ["-i", str(audio)]
-                amap = "[1:a]aresample=48000,apad[a]"
+                # Every recording at the same loudness, after a short breath.
+                amap = (f"[1:a]loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000,"
+                        f"adelay={int(LEAD * 1000)}:all=1,apad[a]")
             else:
                 inputs += ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"]
                 amap = "[1:a]anull[a]"

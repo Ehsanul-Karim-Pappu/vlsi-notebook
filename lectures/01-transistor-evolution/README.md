@@ -71,6 +71,22 @@ notes' length at 150 words a minute, silent, which is the timing to record again
 screen recording of yourself working it at `narration/en/<lab name>.mp4`, with its sound, and it
 replaces the screenshot.
 
+**A synthetic English voice-over.** `voiceover.py` makes the core movie's narration with ElevenLabs
+text-to-speech, from the script in `narration/en-core/manifest.csv` (written to be spoken: "k T",
+"four-oh-oh-four", the labs described as their screenshots). Run it on your own machine; it needs
+only Python 3, and the API key stays there:
+
+```bash
+export ELEVENLABS_API_KEY=...            # or leave it unset and type it when asked
+python voiceover.py voices               # the voices you can use, and your credits
+python voiceover.py sample <voice_id>    # one sample, about 100 credits; listen, try another
+python voiceover.py make <voice_id>      # all 74 files, about 8,300 credits; asks first
+```
+
+It writes `narration/en-core/*.mp3`, picks up where it stopped if interrupted, and never respends
+on a file that's already there. Commit that folder, then `python build.py -q p --core --movie` cuts
+the narrated movie, with every recording at the same loudness and subtitles of what was said.
+
 | Key | Does |
 |---|---|
 | → / ← | next / previous slide |
@@ -103,6 +119,7 @@ while it has focus; click the background, or use the clicker, to move on.
 ```
 build.py               renders the chapters and assembles the deck
 core.py                the 25-minute core path: which slides, and their shorter script
+voiceover.py           the core movie's English voice-over, with ElevenLabs (narration/en-core/)
 physics.py             every equation the lecture shows, as functions
 devicedata.py          loads FET Lab's device models from data/ for the chapters
 chapters/              one Manim scene per chapter
@@ -114,7 +131,8 @@ images/                historical photos and patent drawings, with their sources
                        images/labs/ has a screenshot of each lab, for PowerPoint and the movie
 tests/test_physics.py  checks the equations, that the labs' JS port agrees with them, and the core path
 references.md          the sources for the slides' dates, names and numbers, with any gaps marked
-narration/             your recorded narration for --movie (not in the repository until you add it)
+narration/             narration for --movie: en-core/manifest.csv is the spoken script; the audio
+                       is yours to add, recorded or from voiceover.py
 data/, models/         FET Lab's device geometry and 3D models (see data/README.md)
 ```
 

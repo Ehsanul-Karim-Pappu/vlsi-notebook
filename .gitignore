@@ -3,6 +3,9 @@ media/
 slides/
 build/
 
+# --- voice-over samples (narration itself is committed) ---
+lectures/*/narration/samples/
+
 # --- Python ---
 __pycache__/
 *.pyc
