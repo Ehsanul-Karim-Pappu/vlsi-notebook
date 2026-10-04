@@ -1,0 +1,16 @@
+# --- renders and build outputs ---
+media/
+slides/
+build/
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# --- editors / OS ---
+.DS_Store
+Thumbs.db
+.vscode/
+*.swp
