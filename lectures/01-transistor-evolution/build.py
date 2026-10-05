@@ -431,8 +431,8 @@ def movie(core=False, lang="en"):
         if screen and screen.exists():
             dur = probe_seconds(screen)
         else:
-            spoken = probe_seconds(audio) + LEAD + TAIL if audio else len(en.split()) * 60 / WPM + 1.0
-            dur = max(clip, spoken, 2.0)
+            talk = probe_seconds(audio) if audio else len(en.split()) * 60 / WPM + 1.0
+            dur = max(clip, talk + (LEAD + TAIL if audio else 0.0), 2.0)
         seg = work / f"{k:04d}.mp4"
         # The author line, as on every slide of the deck.
         font = str(FONTS / "Inter-Regular.ttf").replace("\\", "/").replace(":", "\\:")  # ffmpeg filter escaping
@@ -463,12 +463,14 @@ def movie(core=False, lang="en"):
                         "-map", "[v]", "-map", "[a]", "-t", f"{dur:.3f}", "-c:v", "libx264", "-preset", "veryfast",
                         "-crf", "20", "-c:a", "aac", "-b:a", "160k", "-ac", "2", str(seg)], check=True)
         segments.append(seg)
-        # Subtitles: the notes, a sentence or two per cue, timed in proportion to their length.
+        # Subtitles: the notes, a sentence or two per cue, timed in proportion to their length across
+        # the recording (not the whole slide, whose animation can run on after the voice stops).
         parts = [p for p in re.split(r"(?<=[.?!।:])\s+", " ".join(text.split())) if p] or [""]
         total = sum(len(p) for p in parts) or 1
-        start = t
+        span = dur if screen and screen.exists() else min(dur, talk)
+        start = t + (LEAD if audio and not (screen and screen.exists()) else 0.0)
         for part in parts:
-            end = start + dur * len(part) / total
+            end = start + span * len(part) / total
             srt += [str(len(srt) // 4 + 1), f"{srt_time(start)} --> {srt_time(end)}", "\n".join(textwrap.wrap(part, 60)), ""]
             start = end
         t += probe_seconds(seg)
