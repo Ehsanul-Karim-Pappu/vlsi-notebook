@@ -211,3 +211,21 @@ where a citation is weaker than the claim and what the slide does about it.
 | Shortest gates ≈ 6λ: about 40 (planar), 15 (FinFET) and 12–16 nm (nanosheet) | Toy model: `physics.natural_length_nm`, 1 nm oxide (EOT) |
 | Forksheets switch about like nanosheets | imec, 15 June 2021 (chapter 9) |
 | (k_BT/q) ln 10 = 59.5 mV per decade at 300 K: the ideal thermal factor for a conventional transistor without internal gain; real devices are a little worse; a bipolar transistor's V_BE follows the same factor | `physics.subthreshold_swing`; Sze and Ng, ch. 5 and 6 |
+
+## The layout edition (`layout/`)
+
+The layout edition reuses the full lecture's sources for every date and device number above.
+These are the extra ones it relies on.
+
+| Claim | Source |
+|---|---|
+| Well proximity: ions scattered from the edge of the well's resist mask raise the threshold of transistors near the edge, most strongly within about a micron | T. B. Hook, J. Brown, P. Cottrell et al., "Lateral ion implant straggle and mask proximity effect", *IEEE Trans. Electron Devices* 50(9), 1946 (2003); P. G. Drennan, M. L. Kniffin and D. R. Locascio, "Implications of proximity effects for analog design", *Proc. IEEE CICC* 2006. The curve on the slide is illustrative |
+| Stress from the trench isolation changes the current with the gate's distance to the active's ends (SA, SB), in opposite directions for n and p | R. A. Bianchi et al., "Accurate modeling of trench isolation induced mechanical stress effects on MOSFET electrical performance", *IEDM* 2002; the SA/SB stress model in BSIM4 (UC Berkeley BSIM group). Qualitative on the slide |
+| Mismatch falls with the square root of the gate area (four times the area halves it) | M. J. M. Pelgrom, A. C. J. Duinmaijer and A. P. G. Welbers, "Matching properties of MOS transistors", *IEEE J. Solid-State Circuits* 24(5), 1433 (1989) |
+| A linear gradient cancels in a common-centroid (A B B A) placement | Arithmetic, shown on the slide; see A. Hastings, *The Art of Analog Layout*, 2nd ed. (Prentice Hall, 2006), on common-centroid layout |
+| Fins and the tightest metals made by self-aligned double or quadruple patterning, then cut | Standard practice since FinFET-era nodes; in some processes the tightest metals use EUV instead, which the slide's "in many processes" allows for. No single source is cited for a process-specific claim |
+| Few gate lengths per process, long devices as series stacks; diffusion breaks; dummy gates (named PODE in some PDKs); allowed sheet widths | Typical of FinFET and nanosheet PDKs, and marked "typical · check your PDK" on every slide that says it. Not tied to one foundry |
+| Self-heating in fins and sheets; hot wires wear out sooner by electromigration | Qualitative and widely reported; marked qualitative on the slide. No number is given |
+| Antenna rules: charge from plasma etching collected by metal on a gate escapes through the gate oxide; fixes by jumping to a higher metal or adding a diode | Standard process-reliability practice (plasma-induced gate-oxide damage); A. Hastings, *The Art of Analog Layout*, on antenna effects |
+| Intel 18A uses backside power (PowerVia) in production; TSMC announced backside power ("Super Power Rail") for A16 | Intel, PowerVia (VLSI Symposium 2023 test chip; 18A in production, as in the full lecture's chapter 10); TSMC Technology Symposium, April 2024, A16 announcement |
+| The schematics | Drawn with cirfig_gen (K. Kim, MIT licence, https://github.com/KwantaeKim/cirfig_gen); `ota5t` is its reference OTA1P. Licence: `layout/schematics/LICENSE-cirfig_gen.txt` |

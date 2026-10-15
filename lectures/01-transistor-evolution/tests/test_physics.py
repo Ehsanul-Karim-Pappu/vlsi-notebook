@@ -294,11 +294,37 @@ class DeckFiles(unittest.TestCase):
         words += sum(len(en.split()) for en, bn in core.LABS.values())
         self.assertTrue(2500 <= words <= 3400, f"core script: {words} words")
 
+    def test_layout_edition(self):
+        """The layout edition: every chapter file defines its scene, every slide's notes come in
+        both languages, every schematic a chapter shows exists, and every lab is in labs/."""
+        import ast
+        import re
+
+        sys.path.insert(0, str(LECTURE.parents[1]))
+        from build import LAYOUT_SEQUENCE
+
+        for step in LAYOUT_SEQUENCE:
+            if step[0] == "lab":
+                self.assertTrue((LECTURE / "labs" / step[1]).exists(), step[1])
+                self.assertTrue(any("ঀ" <= c <= "৿" for c in step[3][1]), f"{step[1]}: Bangla notes")
+                continue
+            source = (LECTURE / step[1]).read_text()
+            tree = ast.parse(source)
+            with self.subTest(scene=step[2]):
+                self.assertIn(step[2], [n.name for n in ast.walk(tree) if isinstance(n, ast.ClassDef)])
+                says = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and getattr(n.func, "id", "") == "say"]
+                self.assertTrue(says)
+                for call in says:
+                    bn = ast.unparse(call.args[1])
+                    self.assertTrue(any("ঀ" <= c <= "৿" for c in bn), f"{step[2]} line {call.lineno}")
+                for name in re.findall(r'schematic\("(\w+)"', source):
+                    for ext in (".json", ".png"):
+                        self.assertTrue((LECTURE / "layout" / "schematics" / (name + ext)).exists(), name + ext)
+
     def test_voice_over_script(self):
         """The voice-over has one line per slide of the core movie, in the movie's order; its audio
         tags are well formed; and the subtitles and voiceover.py take them out the same way."""
         import csv
-        import re
 
         import core
         import voiceover

@@ -9,6 +9,7 @@
     python build.py --pptx           also export PowerPoint (labs as screenshots; with --core, both)
     python build.py --movie          also cut a continuous movie, with subtitles (--core, --lang bn)
     python build.py --cdn            load reveal.js from the internet instead of bundling it
+    python build.py --edition layout the layout edition (layout/), into build/deck-layout/
 
 Quality: l 480p15 (draft), m 720p30, p 1080p30 (presenting), h 1080p60, k 4K60.
 
@@ -16,6 +17,10 @@ The deck lands in build/deck/. Open index.html in a browser: → and ← move be
 opens a derivation where there is one, S opens the speaker view, F goes full screen. core.html,
 next to it, is the 25-minute core path (core.py), using the same videos. Run it from anywhere;
 paths are relative to this file.
+
+The layout edition (layout/PLAN.md) tells the same story from the layout side. It shares the
+labs, the models and the data; --edition layout renders its chapters and builds its own deck,
+and the other options work the same way (except --core, which is the full lecture's).
 """
 
 import argparse
@@ -141,6 +146,46 @@ SEQUENCE = [
     ("scene", "chapters/ch11_beyond.py", "Ch11Beyond"),
     ("scene", "chapters/ch12_outro.py", "Ch12Outro"),
 ]
+
+# The layout edition: the same story from the layout side (layout/PLAN.md), with two of the labs.
+LAYOUT_TITLE = "Lecture 1, layout edition · What You Draw, and Why It Changed"
+LAYOUT_SEQUENCE = [
+    ("scene", "layout/l00_cold_open.py", "L00ColdOpen"),
+    ("scene", "layout/l01_planar.py", "L01Planar"),
+    ("scene", "layout/l02_why_it_changed.py", "L02WhyItChanged"),
+    (
+        "lab",
+        "lab2_barrier.html",
+        "Live lab 2: Who controls the barrier?",
+        (
+            "Live lab. It opens on a planar transistor with a short gate, in the red. Raise the drain voltage "
+            "and watch the top of the hill sink and the leakage climb: that's the drain acting as a second "
+            "gate. Now press FinFET: the same gate length, but the gate grips the channel from three sides "
+            "and the hill holds. Try the nanosheet. Then press Shrink the gate and watch where each one gives "
+            "up. The numbers come from a simple model; the trend is the point.",
+            "এইটা live lab। শুরু হয় ছোট gate-এর একটা planar transistor দিয়া, লাল অংশে। Drain voltage বাড়ান, দেখেন "
+            "পাহাড়ের চূড়া নামে আর leakage বাড়ে: এইটাই drain-এর দ্বিতীয় gate হয়ে ওঠা। এবার FinFET চাপেন: gate length "
+            "একই, কিন্তু gate তিন দিক থেকে channel ধরে, আর পাহাড়টা টিকে থাকে। Nanosheet try করেন। তারপর Shrink the "
+            "gate চাপেন, দেখেন কোনটা কোথায় হাল ছাড়ে। সংখ্যাগুলা একটা সহজ model থেকে; আসল কথা trend।",
+        ),
+    ),
+    ("scene", "layout/l03_finfet.py", "L03FinFET"),
+    ("scene", "layout/l04_nanosheet.py", "L04Nanosheet"),
+    ("scene", "layout/l05_fork_cfet.py", "L05ForkCFET"),
+    next(s for s in SEQUENCE if s[1] == "lab4_cell.html"),
+    next(s for s in SEQUENCE if s[1] == "lab5_models.html"),
+    ("scene", "layout/l06_neighbourhood.py", "L06Neighbourhood"),
+    ("scene", "layout/l07_outro.py", "L07Outro"),
+]
+DECK, STEM = "deck", "lecture1"  # build/<DECK>/, build/<STEM>.pptx and .mp4
+
+
+def set_edition(name):
+    """Point the build at one edition: "lecture" (the default) or "layout"."""
+    global SEQUENCE, TITLE, DECK, STEM
+    if name == "layout":
+        SEQUENCE, TITLE, DECK, STEM = LAYOUT_SEQUENCE, LAYOUT_TITLE, "deck-layout", "lecture1-layout"
+
 
 # Manim settings per quality. Use long options: manim-slides reads the "h" in "-qh" as its own
 # -h (help) and exits without rendering.
@@ -293,7 +338,7 @@ def convert_html(dest, folder, title, cdn, core):
 
 
 def build_deck(pptx=False, cdn=False, core=False):
-    deck = BUILD / "deck"
+    deck = BUILD / DECK
     scenes = scene_names()
     missing = [s for s in scenes if not (HERE / "slides" / f"{s}.json").exists()]
     if missing:
@@ -315,9 +360,9 @@ def build_deck(pptx=False, cdn=False, core=False):
         shutil.copy(f, deck / "labs" / "fonts" / f.name)
     print(f"Deck: {(deck / 'index.html').relative_to(HERE)}" + (f", {(deck / 'core.html').relative_to(HERE)}" if core else ""))
     if pptx:
-        export_pptx(BUILD / "lecture1.pptx", HERE / "slides", core=False)
+        export_pptx(BUILD / f"{STEM}.pptx", HERE / "slides", core=False)
         if core:
-            export_pptx(BUILD / "lecture1-core.pptx", BUILD / "core-slides", core=True)
+            export_pptx(BUILD / f"{STEM}-core.pptx", BUILD / "core-slides", core=True)
 
 
 # --- PowerPoint ------------------------------------------------------------------------------
@@ -341,7 +386,7 @@ def export_pptx(out, folder, core):
         if shot.exists():
             slide.shapes.add_picture(str(shot), 0, 0, prs.slide_width, prs.slide_height)
         box = slide.shapes.add_textbox(Pt(18), prs.slide_height - Pt(40), prs.slide_width - Pt(36), Pt(30))
-        box.text_frame.text = f"{title}: a screenshot. Open the HTML deck (build/deck/index.html) to use it live."
+        box.text_frame.text = f"{title}: a screenshot. Open the HTML deck (build/{DECK}/index.html) to use it live."
         box.text_frame.paragraphs[0].runs[0].font.size = Pt(14)
         slide.notes_slide.notes_text_frame.text = f"{en}\n\n{BANGLA}\n\n{bn}"
         ids.insert(sum(counts[: n + 1]), ids[-1])
@@ -390,7 +435,7 @@ def movie(core=False, lang="en"):
     Writes build/lecture1[-core]-<lang>.mp4, a matching .srt subtitle file, and the script."""
     folder = core_folder() if core else HERE / "slides"
     tag = f"{'-core' if core else ''}-{lang}"
-    rec = NARRATION / (lang + ("-core" if core else ""))
+    rec = NARRATION / (("layout-" if STEM != "lecture1" else "") + lang + ("-core" if core else ""))
     first = json.loads((folder / f"{scene_names()[0]}.json").read_text())
     width, height = first["resolution"]
     labs_after = {}
@@ -476,7 +521,7 @@ def movie(core=False, lang="en"):
         t += probe_seconds(seg)
     listing = work / "list.txt"
     listing.write_text("".join(f"file '{seg}'\n" for seg in segments))
-    out = BUILD / f"lecture1{tag}.mp4"
+    out = BUILD / f"{STEM}{tag}.mp4"
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(listing), "-c", "copy",
                     "-movflags", "+faststart", str(out)], check=True)
     out.with_suffix(".srt").write_text("\n".join(srt), encoding="utf-8")
@@ -497,8 +542,13 @@ def main():
     ap.add_argument("--movie", action="store_true", help="also cut a continuous movie with subtitles")
     ap.add_argument("--lang", choices=("en", "bn"), default="en", help="the movie's narration and subtitles")
     ap.add_argument("--cdn", action="store_true", help="load reveal.js from the internet instead of bundling it")
+    ap.add_argument("--edition", choices=("lecture", "layout"), default="lecture",
+                    help="the full lecture (default) or the layout edition (layout/)")
     ap.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 2)
     args = ap.parse_args()
+    if args.edition == "layout" and args.core:
+        sys.exit("--core is the full lecture's 25-minute path; the layout edition has none.")
+    set_edition(args.edition)
 
     BUILD.mkdir(exist_ok=True)
     if not args.deck_only:

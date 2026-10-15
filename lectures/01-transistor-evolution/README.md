@@ -27,6 +27,16 @@ patent, and forksheet and CFET patents. The FinFET, nanosheet, forksheet and CFE
 3D models, built up layer by layer and cut open; their layouts are drawn from above, the way a
 layout tool shows them.
 
+**The layout edition.** The same story, told from the layout side for analog layout engineers:
+what each transistor looks like in a layout tool, what you size and what's fixed, the grids,
+dummy gates and diffusion breaks, the cell and backside power, and a chapter of layout-dependent
+effects (the well's edge, isolation stress, neighbours, common centroid, orientation, the
+substrate, self-heating, contact parasitics, antennas) with a checklist. Physics comes one
+sentence at a time. Eight chapters and three live labs, about 45 to 50 minutes; plan and
+storyboard in [layout/PLAN.md](layout/PLAN.md). Its schematics are drawn with
+[cirfig_gen](https://github.com/KwantaeKim/cirfig_gen). It's a separate deck; the full lecture
+is unchanged.
+
 ## Build the deck
 
 Set up the tools first (see the [repository README](../../README.md#setup)), then from this
@@ -35,6 +45,12 @@ folder:
 ```bash
 python build.py            # quick draft: 480p, 15 fps
 python build.py -q p --core   # for presenting: 1080p, 30 fps, and the 25-minute core (much slower)
+```
+
+The layout edition builds the same way, into `build/deck-layout/`:
+
+```bash
+python build.py --edition layout -q p   # its chapters (layout/), then build/deck-layout/index.html
 ```
 
 Other options: `-q m` (720p), `-q h` (1080p at 60 fps), `--only Ch05` (re-render one
@@ -131,6 +147,9 @@ voiceover.py           the core movie's English voice-over, with ElevenLabs (nar
 physics.py             every equation the lecture shows, as functions
 devicedata.py          loads FET Lab's device models from data/ for the chapters
 chapters/              one Manim scene per chapter
+layout/                the layout edition: its plan, its chapters (l00 to l07), common.py (layer
+                       colours, a planar MOSFET from above, the schematic card), and schematics/
+                       (cirfig_gen layouts, their SVG and PNG, and draw.py to redraw them)
 labs/                  the five live labs (plain HTML and JavaScript); lab-physics.js is the JS port of
                        physics.py; lab5-models.js holds the 3D models for Lab 5 (written by build.py)
 template/deck.html     the reveal.js page the deck is built into
