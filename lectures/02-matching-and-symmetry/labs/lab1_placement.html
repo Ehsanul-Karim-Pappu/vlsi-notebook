@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Place the Units</title>
+  <link rel="stylesheet" href="lab.css">
+  <style>
+    .grid.lab1 { grid-template-columns: 1.6fr 1fr; }
+    .controls.lab1 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .presets { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .presets .label { color: var(--muted); font-size: 14px; font-weight: 500; margin-right: 4px; }
+    .presets button.ghost { font-size: 14px; padding: 6px 12px; }
+    .presets button.ghost.on { border-color: var(--gate); color: var(--gate); }
+    .side { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: hidden; }
+    .meter { height: 14px; border-radius: 7px; background: var(--faint); overflow: hidden; }
+    .meter i { display: block; height: 100%; width: 0; background: var(--thermal); transition: width 0.2s, background 0.2s; }
+    .stat { display: grid; gap: 2px; }
+    .stat span { color: var(--muted); font-size: 14px; }
+    .stat b { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .verdict { font-weight: 600; font-size: 15px; }
+    @media (max-height: 760px) { .stat b { font-size: 20px; } .side { gap: 6px; } .stat span { font-size: 13px; } }
+    .verdict.bad { color: var(--drain); }
+    .verdict.mid { color: var(--gate); }
+    .verdict.ok { color: var(--good); }
+    .key { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+    .key i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+    .assume { grid-column: 1 / -1; }
+    @media (max-width: 820px) { .controls.lab1 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="kicker">Live lab</div>
+    <h1>Place the units</h1>
+    <p>A and B are the two halves of a matched pair, drawn as identical units. The colour behind them is a process gradient. Pick an arrangement, or click a square to change it, and see what's left.</p>
+  </header>
+
+  <main class="grid lab1">
+    <section class="panel">
+      <h2>The array over the gradient: blue is low, orange is high; the crosses are each device's centroid</h2>
+      <canvas id="view" aria-label="The unit array over a process gradient, with the centroids of A and B"></canvas>
+      <div class="key">
+        <span><i style="background: var(--electron)"></i><span id="kA">A</span></span>
+        <span><i style="background: var(--gate)"></i><span id="kB">B</span></span>
+        <span><i style="background: var(--faint)"></i>dummy</span>
+        <span>click a square: A → B → dummy → empty</span>
+      </div>
+    </section>
+    <section class="panel side">
+      <h2>What's left</h2>
+      <div class="stat"><span>Mismatch between A and B (illustrative)</span><b id="rMis"></b></div>
+      <div class="stat"><span>Of the side-by-side mismatch</span><b id="rPct"></b><div class="meter"><i id="bar"></i></div></div>
+      <div class="stat"><span>Distance between the centroids</span><b id="rDist"></b></div>
+      <div id="verdict" class="verdict"></div>
+    </section>
+  </main>
+
+  <footer class="controls lab1">
+    <label class="control">
+      <div class="row"><span>Gradient direction</span><output id="oAng"></output></div>
+      <input id="ang" type="range" min="0" max="180" step="5" value="0">
+    </label>
+    <label class="control">
+      <div class="row"><span>Gradient strength, across 8 units</span><output id="oStr"></output></div>
+      <input id="str" type="range" min="0" max="4" step="0.1" value="2">
+    </label>
+    <label class="control">
+      <div class="row"><span>Curvature (a bowl, off to one side)</span><output id="oCur"></output></div>
+      <input id="cur" type="range" min="0" max="3" step="0.1" value="0">
+    </label>
+    <div class="presets" role="group" aria-label="Arrangements">
+      <span class="label">Arrangement:</span>
+      <button class="ghost" data-p="side">Side by side</button>
+      <button class="ghost" data-p="inter">Interdigitated</button>
+      <button class="ghost" data-p="mirror">Mirrored</button>
+      <button class="ghost" data-p="quad">Cross-quad</button>
+      <button class="ghost" data-p="ring">Cross-quad + dummies</button>
+      <button class="ghost" data-p="bg">Bandgap 1 : 8</button>
+    </div>
+    <div class="hint assume">Illustrative model: a straight gradient (mV of threshold shift per 8 unit pitches) plus a bowl whose centre sits about 3 pitches off the array's centre. Each device's error is the average over its units; dummies and empty spaces don't count. Random variation isn't modelled: only area shrinks it.</div>
+  </footer>
+
+  <script src="lab.js"></script>
+  <script>
+  (function () {
+    const C = {
+      ink: Lab.css("--ink"), muted: Lab.css("--muted"), faint: Lab.css("--faint"), panel: Lab.css("--panel"),
+      A: Lab.css("--electron"), B: Lab.css("--gate"), drain: Lab.css("--drain"), good: Lab.css("--good"),
+    };
+    const PRESETS = {
+      side: { rows: ["AAAABBBB"], a: "M1", b: "M2" },
+      inter: { rows: ["ABABABAB"], a: "M1", b: "M2" },
+      mirror: { rows: ["ABBAABBA"], a: "M1", b: "M2" },
+      quad: { rows: ["ABBA", "BAAB"], a: "M1", b: "M2" },
+      ring: { rows: ["DDDDDD", "DABBAD", "DBAABD", "DDDDDD"], a: "M1", b: "M2" },
+      bg: { rows: ["DDDDD", "DBBBD", "DBABD", "DBBBD", "DDDDD"], a: "Q1", b: "Q2 (8)" },
+    };
+    const NEXT = { A: "B", B: "D", D: " ", " ": "A" };
+    const $ = (id) => document.getElementById(id);
+    const ui = { ang: $("ang"), str: $("str"), cur: $("cur") };
+    let grid = [], names = { a: "M1", b: "M2" }, preset = "side";
+    let hit = [];
+
+    function load(p) {
+      preset = p;
+      grid = PRESETS[p].rows.map((r) => r.split(""));
+      names = { a: PRESETS[p].a, b: PRESETS[p].b };
+      document.querySelectorAll(".presets button").forEach((b) => b.classList.toggle("on", b.dataset.p === p));
+      update();
+    }
+
+    // The field at a point (x, y) in unit pitches from the array's centre, in mV.
+    function field(x, y) {
+      const a = (+ui.ang.value * Math.PI) / 180;
+      const lin = (+ui.str.value / 8) * (x * Math.cos(a) + y * Math.sin(a));
+      const bx = x + 3, by = y + 1;  // the bowl's centre is 3 pitches left and 1 down
+      return lin + (+ui.cur.value / 10) * (bx * bx + by * by);
+    }
+
+    function cells(g) {
+      const rows = g.length, cols = Math.max(...g.map((r) => r.length));
+      const out = [];
+      g.forEach((r, i) => r.forEach((ch, j) => {
+        out.push({ ch, i, j, x: j - (cols - 1) / 2, y: (rows - 1) / 2 - i });
+      }));
+      return { out, rows, cols };
+    }
+
+    function stats(g) {
+      const { out } = cells(g);
+      const pick = (ch) => out.filter((c) => c.ch === ch);
+      const mean = (arr, f) => arr.reduce((s, c) => s + f(c), 0) / arr.length;
+      const A = pick("A"), B = pick("B");
+      if (!A.length || !B.length) return null;
+      const mis = mean(A, (c) => field(c.x, c.y)) - mean(B, (c) => field(c.x, c.y));
+      const ca = [mean(A, (c) => c.x), mean(A, (c) => c.y)], cb = [mean(B, (c) => c.x), mean(B, (c) => c.y)];
+      return { mis, ca, cb, nA: A.length, nB: B.length, dist: Math.hypot(ca[0] - cb[0], ca[1] - cb[1]) };
+    }
+
+    // The same units, side by side, under the same gradient: the reference.
+    function reference(s) {
+      const n = s.nA + s.nB;
+      const row = [..."A".repeat(s.nA) + "B".repeat(s.nB)];
+      const ref = stats([row]);
+      // and the other way round, so the reference doesn't vanish when the gradient runs across it
+      const tall = Array.from({ length: n }, (_, k) => [k < s.nA ? "A" : "B"]);
+      const ref2 = stats(tall);
+      return Math.max(Math.abs(ref.mis), Math.abs(ref2.mis));
+    }
+
+    let view = null;
+    view = Lab.fitCanvas($("view"), () => { if (view) draw(); });
+    function colour(v, lo, hi) {
+      const t = Math.max(0, Math.min(1, (v - lo) / (hi - lo || 1)));
+      const c0 = [0x3d, 0x6f, 0xb6], c1 = [0xff, 0x8c, 0x42];
+      const bg = [0x17, 0x1b, 0x22];  // the panel, so the field reads at 55 % without seams between tiles
+      return `rgb(${c0.map((c, k) => Math.round(bg[k] + 0.55 * (c + (c1[k] - c) * t - bg[k]))).join(",")})`;
+    }
+
+    function cross(ctx, x, y, r, col) {
+      ctx.strokeStyle = col; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x - r * 1.7, y); ctx.lineTo(x + r * 1.7, y);
+      ctx.moveTo(x, y - r * 1.7); ctx.lineTo(x, y + r * 1.7); ctx.stroke();
+    }
+
+    function draw() {
+      const { ctx, w, h } = view;
+      if (!w) return;
+      ctx.clearRect(0, 0, w, h);
+      const { out, rows, cols } = cells(grid);
+      const span = Math.max(cols + 2, (rows + 2) * (w / h), 10);
+      const pitch = Math.min(w / span, h / Math.max(rows + 2, 6));
+      const cx = w / 2, cy = h / 2;
+      const X = (x) => cx + x * pitch, Y = (y) => cy - y * pitch;
+      // the field, over the whole panel, scaled to the values on the array (plus a margin)
+      const vals = [];
+      for (let x = -cols / 2 - 1; x <= cols / 2 + 1; x += 0.5) for (let y = -rows / 2 - 1; y <= rows / 2 + 1; y += 0.5) vals.push(field(x, y));
+      const lo = Math.min(...vals), hi = Math.max(...vals);
+      const step = Math.max(6, pitch / 4);
+      for (let px = 0; px < w; px += step) {
+        for (let py = 0; py < h; py += step) {
+          ctx.fillStyle = colour(field((px + step / 2 - cx) / pitch, (cy - py - step / 2) / pitch), lo, hi);
+          ctx.fillRect(px, py, step + 1, step + 1);
+        }
+      }
+      // the units
+      const s = pitch * 0.84;
+      hit = [];
+      out.forEach((c) => {
+        const x = X(c.x), y = Y(c.y);
+        hit.push({ c, x0: x - pitch / 2, y0: y - pitch / 2, x1: x + pitch / 2, y1: y + pitch / 2 });
+        if (c.ch === " ") {
+          ctx.strokeStyle = C.faint; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5;
+          ctx.strokeRect(x - s / 2, y - s / 2, s, s); ctx.setLineDash([]);
+          return;
+        }
+        const col = c.ch === "A" ? C.A : c.ch === "B" ? C.B : C.faint;
+        ctx.fillStyle = "rgba(14,17,22,0.55)";
+        ctx.fillRect(x - s / 2, y - s / 2, s, s);
+        ctx.strokeStyle = col; ctx.lineWidth = 3;
+        ctx.strokeRect(x - s / 2, y - s / 2, s, s);
+        ctx.fillStyle = c.ch === "D" ? C.muted : col;
+        ctx.font = `600 ${Math.round(s * (c.ch === "D" ? 0.32 : 0.42))}px Inter, system-ui, sans-serif`;
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(c.ch === "D" ? "d" : c.ch, x, y + 1);
+      });
+      const st = stats(grid);
+      if (st) {
+        cross(ctx, X(st.ca[0]), Y(st.ca[1]), pitch * 0.16, C.A);
+        cross(ctx, X(st.cb[0]), Y(st.cb[1]), pitch * 0.11, C.B);
+      }
+    }
+
+    function update() {
+      $("oAng").textContent = `${ui.ang.value}°`;
+      $("oStr").textContent = `${(+ui.str.value).toFixed(1)} mV`;
+      $("oCur").textContent = (+ui.cur.value).toFixed(1);
+      $("kA").textContent = names.a; $("kB").textContent = names.b;
+      const st = stats(grid);
+      const v = $("verdict");
+      if (!st) {
+        ["rMis", "rPct", "rDist"].forEach((id) => ($(id).textContent = "–"));
+        v.textContent = "Place at least one A and one B."; v.className = "verdict bad";
+        $("bar").style.width = "0";
+        draw();
+        return;
+      }
+      const ref = reference(st);
+      const frac = ref > 1e-9 ? Math.abs(st.mis) / ref : 0;
+      $("rMis").textContent = `${Math.abs(st.mis).toFixed(2)} mV`;
+      $("rPct").textContent = ref > 1e-9 ? `${Math.round(100 * frac)} %` : "–";
+      $("bar").style.width = `${Math.min(100, 100 * frac)}%`;
+      $("bar").style.background = frac < 0.05 ? C.good : frac < 0.5 ? C.B : Lab.css("--thermal");
+      $("rDist").textContent = `${st.dist.toFixed(2)} units`;
+      $("kA").textContent = `${names.a} (${st.nA})`; $("kB").textContent = `${names.b} (${st.nB})`;
+      const lin = st.dist < 1e-6;
+      if (frac < 0.02) { v.textContent = "Nothing left: the centroids coincide, and this gradient cancels."; v.className = "verdict ok"; }
+      else if (lin) { v.textContent = "The centroids coincide, so the straight part cancels. What's left is curvature: keep the array compact."; v.className = "verdict mid"; }
+      else if (frac < 0.5) { v.textContent = "Smaller, not zero: the centroids are still apart along the gradient."; v.className = "verdict mid"; }
+      else { v.textContent = "Most of the gradient shows up as mismatch."; v.className = "verdict bad"; }
+      draw();
+    }
+
+    $("view").addEventListener("click", (e) => {
+      const r = $("view").getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      const h = hit.find((k) => x >= k.x0 && x < k.x1 && y >= k.y0 && y < k.y1);
+      if (!h) return;
+      grid[h.c.i][h.c.j] = NEXT[h.c.ch];
+      document.querySelectorAll(".presets button").forEach((b) => b.classList.remove("on"));
+      update();
+    });
+    document.querySelectorAll(".presets button").forEach((b) => b.addEventListener("click", () => load(b.dataset.p)));
+    Object.values(ui).forEach((el) => el.addEventListener("input", update));
+    load("side");
+  })();
+  </script>
+</body>
+</html>
