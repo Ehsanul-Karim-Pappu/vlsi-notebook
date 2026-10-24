@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fire the Thyristor</title>
+  <link rel="stylesheet" href="lab.css">
+  <style>
+    .grid.lab1 { grid-template-columns: 1.35fr 1fr; }
+    .controls.lab1 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .actions .label { color: var(--muted); font-size: 14px; font-weight: 500; margin-right: 4px; }
+    .actions button.ghost { font-size: 14px; padding: 6px 12px; }
+    .actions button.ghost.on { border-color: var(--gate); color: var(--gate); }
+    .actions .gap { flex: 1; }
+    #cycle { background: var(--drain); }
+    .verdict { flex-basis: 100%; font-weight: 600; font-size: 16px; min-height: 1.4em; }
+    .verdict.bad { color: var(--drain); }
+    .verdict.mid { color: var(--gate); }
+    .verdict.ok { color: var(--good); }
+    .assume { grid-column: 1 / -1; }
+    .panel { min-height: 0; overflow: hidden; }
+    @media (max-width: 820px) { .controls.lab1 { grid-template-columns: 1fr; } }
+    @media (max-height: 760px) {
+      header p { display: none; }
+      .panel h2 { font-size: 13px; }
+      .readouts { gap: 2px 16px; font-size: 13px; margin-top: 4px; }
+      .readouts .big b { font-size: 16px; }
+      .verdict { font-size: 13px; }
+      .assume { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="kicker">Live lab</div>
+    <h1>Fire the thyristor</h1>
+    <p>The inverter's parasitic PNP and NPN, the resistance to each tap, and an injection pulse. Set the layout, pick a supply, inject, and see whether it latches.</p>
+  </header>
+
+  <main class="grid lab1">
+    <section class="panel">
+      <h2>The cross-section, to scale across (not in depth): taps, the n-well, the two bipolars</h2>
+      <canvas id="xs" aria-label="The CMOS cross-section with the parasitic bipolars and the taps"></canvas>
+      <div class="readouts">
+        <div class="big"><span>R<sub>sub</sub></span> <b id="rRs"></b></div>
+        <div class="big"><span>Drop at the NPN's base</span> <b id="rDrop"></b></div>
+        <div class="big"><span>Loop gain β<sub>n</sub>·β<sub>p</sub></span> <b id="rGain"></b></div>
+        <div id="verdict" class="verdict"></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>Seen from the supply: the S-curve, the supply line and where it sits</h2>
+      <canvas id="iv" aria-label="The thyristor's S-shaped I-V curve with the supply voltage"></canvas>
+      <div class="readouts">
+        <div class="big"><span>Holding voltage</span> <b id="rVh"></b></div>
+        <div class="big"><span>Trigger current</span> <b id="rIt"></b></div>
+        <div class="big"><span>Supply current</span> <b id="rIdd"></b></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="controls lab1">
+    <label class="control">
+      <div class="row"><span>Substrate tap distance</span><output id="oDs"></output></div>
+      <input id="ds" type="range" min="2" max="60" step="1" value="5">
+    </label>
+    <label class="control">
+      <div class="row"><span>Well tap distance</span><output id="oDw"></output></div>
+      <input id="dw" type="range" min="2" max="60" step="1" value="5">
+    </label>
+    <label class="control">
+      <div class="row"><span>N+ to N-well spacing</span><output id="oSp"></output></div>
+      <input id="sp" type="range" min="1" max="30" step="0.5" value="2">
+    </label>
+    <label class="control">
+      <div class="row"><span>Injected current</span><output id="oInj"></output></div>
+      <input id="inj" type="range" min="0.5" max="20" step="0.5" value="2">
+    </label>
+    <div class="actions" role="group" aria-label="Supply and actions">
+      <span class="label">Supply:</span>
+      <button class="ghost" data-vdd="0.8">0.8 V core</button>
+      <button class="ghost" data-vdd="1.8">1.8 V I/O</button>
+      <button class="ghost" data-vdd="3.3">3.3 V I/O</button>
+      <span class="gap"></span>
+      <button id="inject">Inject</button>
+      <button id="cycle">Power cycle</button>
+    </div>
+    <div class="hint assume">Toy model (physics.py): R<sub>sub</sub> = 50 Ω + 25 Ω/µm to the substrate tap, R<sub>well</sub> = 100 Ω + 40 Ω/µm to the well tap; a bipolar turns on at 0.65 V; the lateral NPN's gain falls with the N+ to well spacing; holding voltage 1.0 V + 0.08 V/µm of spacing; 8 Ω once latched. The shapes are right, the values illustrative.</div>
+  </footer>
+
+  <script src="lab-model.js"></script>
+  <script src="lab.js"></script>
+  <script>
+  (function () {
+    const M = window.LUP;
+    const C = {
+      ink: Lab.css("--ink"), muted: Lab.css("--muted"), faint: Lab.css("--faint"), panel: Lab.css("--panel"),
+      n: Lab.css("--electron"), p: Lab.css("--hole"), gate: Lab.css("--gate"), drain: Lab.css("--drain"),
+      good: Lab.css("--good"), sub: "#4E4148", well: "#3E6A52", metal: "#B8BCC6",
+    };
+    const $ = (id) => document.getElementById(id);
+    const ui = { ds: $("ds"), dw: $("dw"), sp: $("sp"), inj: $("inj") };
+    let vdd = 3.3, latched = false, flash = 0, pulse = 0, t0 = performance.now();
+
+    const vals = () => ({ ds: +ui.ds.value, dw: +ui.dw.value, sp: +ui.sp.value, inj: +ui.inj.value });
+
+    // --- the cross-section ------------------------------------------------------------------
+    let xs = null, iv = null;
+    xs = Lab.fitCanvas($("xs"), () => { if (xs) draw(); });
+    iv = Lab.fitCanvas($("iv"), () => { if (iv) draw(); });
+
+    function bjtSym(ctx, x, y, s, kind, on, col) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.strokeStyle = on ? col : C.muted;
+      ctx.lineWidth = on ? 3.5 : 2;
+      if (on) { ctx.shadowColor = col; ctx.shadowBlur = 14; }
+      ctx.beginPath(); ctx.moveTo(0, -s * 0.35); ctx.lineTo(0, s * 0.35); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-s * 0.5, 0); ctx.lineTo(0, 0); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, -s * 0.15); ctx.lineTo(s * 0.4, -s * 0.45); ctx.lineTo(s * 0.4, -s * 0.75);
+      ctx.moveTo(0, s * 0.15); ctx.lineTo(s * 0.4, s * 0.45); ctx.lineTo(s * 0.4, s * 0.75); ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawXs() {
+      const { ctx, w, h } = xs;
+      ctx.clearRect(0, 0, w, h);
+      const v = vals();
+      // µm positions: nMOS source at 0, the well from sp to sp + 6 + dw, pMOS source at sp + 3
+      const xSubTap = -v.ds, xN = 0, xWl = v.sp, xP = v.sp + 3, xWt = v.sp + 3 + v.dw, xWr = xWt + 3;
+      const lo = xSubTap - 4, hi = xWr + 3;
+      const k = (w - 30) / (hi - lo);
+      const X = (u) => 15 + (u - lo) * k;
+      const top = Math.max(h * 0.32, 78), bot = h * 0.92, wellBot = top + (bot - top) * 0.55;
+      ctx.fillStyle = C.sub; ctx.fillRect(X(lo), top, X(hi) - X(lo), bot - top);
+      ctx.fillStyle = C.well; ctx.fillRect(X(xWl), top, X(xWr) - X(xWl), wellBot - top);
+      const dw_ = Math.max(14, 2.2 * k), dh = 14;
+      const dif = (u, col, lab) => {
+        ctx.fillStyle = col; ctx.fillRect(X(u) - dw_ / 2, top, dw_, dh);
+        ctx.fillStyle = "#0E1116"; ctx.font = "600 11px Inter, system-ui"; ctx.textAlign = "center";
+        ctx.fillText(lab, X(u), top + 11);
+      };
+      dif(xSubTap, C.p, "p+"); dif(xN, C.n, "n+"); dif(xP, C.p, "p+"); dif(xWt, C.n, "n+");
+      // supply wires and labels
+      const wire = (u, lab, col) => {
+        ctx.strokeStyle = C.metal; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(X(u), top); ctx.lineTo(X(u), top - 30); ctx.stroke();
+        ctx.fillStyle = col; ctx.font = "600 13px Inter, system-ui"; ctx.textAlign = "center";
+        ctx.fillText(lab, X(u), top - 36);
+      };
+      wire(xSubTap, "VSS", C.muted); wire(xN, "VSS", C.muted); wire(xP, "VDD", C.drain); wire(xWt, "VDD", C.drain);
+      // dimension lines
+      const dim = (a, b, y, lab) => {
+        ctx.strokeStyle = C.gate; ctx.fillStyle = C.gate; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(X(a), y); ctx.lineTo(X(b), y); ctx.stroke();
+        [a, b].forEach((u) => { ctx.beginPath(); ctx.moveTo(X(u), y - 5); ctx.lineTo(X(u), y + 5); ctx.stroke(); });
+        ctx.font = "500 12px Inter, system-ui"; ctx.textAlign = "center"; ctx.fillText(lab, (X(a) + X(b)) / 2, y - 6);
+      };
+      dim(xSubTap, xN, top - 62, `${v.ds} µm`);
+      dim(xP, xWt, top - 62, `${v.dw} µm`);
+      dim(xN, xWl, bot + 0, "");
+      ctx.fillStyle = C.gate; ctx.font = "500 12px Inter, system-ui"; ctx.textAlign = "center";
+      ctx.fillText(`${v.sp} µm`, (X(xN) + X(xWl)) / 2, bot - 6);
+      // the bipolars
+      const st = currentState();
+      const npnOn = st.npn, pnpOn = st.pnp;
+      const s = Math.min(46, h * 0.16);
+      bjtSym(ctx, (X(xN) + X(xWl)) / 2, top + (bot - top) * 0.62, s, "npn", npnOn, C.n);
+      bjtSym(ctx, X(xP), top + (wellBot - top) * 0.6, s, "pnp", pnpOn, C.p);
+      ctx.font = "600 13px Inter, system-ui"; ctx.textAlign = "center";
+      ctx.fillStyle = npnOn ? C.n : C.muted; ctx.fillText("NPN", (X(xN) + X(xWl)) / 2, top + (bot - top) * 0.62 + s * 0.95);
+      ctx.fillStyle = pnpOn ? C.p : C.muted; ctx.fillText("PNP", X(xP) - s * 0.9, top + (wellBot - top) * 0.6 + 4);
+      // current: dots flowing VDD → p+ → down → n+ when latched; along R_sub during a pulse
+      const now = performance.now();
+      if (latched || flash > now) {
+        const n = 14;
+        for (let i = 0; i < n; i++) {
+          const f = ((now - t0) / 1400 + i / n) % 1;
+          const path = [[X(xP), top + dh], [X(xP), wellBot + 18], [X(xN), wellBot + 18], [X(xN), top + dh]];
+          const seg = f * 3, k2 = Math.floor(seg), r = seg - k2;
+          const a = path[k2], b = path[k2 + 1];
+          ctx.fillStyle = C.drain; ctx.beginPath(); ctx.arc(a[0] + (b[0] - a[0]) * r, a[1] + (b[1] - a[1]) * r, 3.5, 0, 6.3); ctx.fill();
+        }
+      }
+      if (pulse > now) {
+        const f = 1 - (pulse - now) / 900;
+        ctx.strokeStyle = C.gate; ctx.lineWidth = 4;
+        const y = top + (bot - top) * 0.85;
+        ctx.beginPath(); ctx.moveTo(X(xN), y); ctx.lineTo(X(xN) + (X(xSubTap) - X(xN)) * f, y); ctx.stroke();
+        ctx.fillStyle = C.gate; ctx.font = "600 12px Inter, system-ui"; ctx.textAlign = "left";
+        ctx.fillText(`${v.inj} mA → substrate tap`, X(xSubTap) + 4, y - 8);
+      }
+    }
+
+    // --- the S-curve --------------------------------------------------------------------------
+    function drawIv() {
+      const { ctx, w, h } = iv;
+      ctx.clearRect(0, 0, w, h);
+      const v = vals();
+      const L = 64, R = 12, T = 14, B = 30;
+      const X = (volt) => L + (volt / 7) * (w - L - R);
+      const Y = (ma) => T + (1 - (Math.log10(Math.max(ma, 1e-3)) + 3) / 6) * (h - T - B);
+      ctx.strokeStyle = C.muted; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(L, T); ctx.lineTo(L, h - B); ctx.lineTo(w - R, h - B); ctx.stroke();
+      ctx.fillStyle = C.muted; ctx.font = "12px Inter, system-ui"; ctx.textAlign = "right";
+      [[0.01, "0.01 mA"], [1, "1 mA"], [100, "100 mA"]].forEach(([ma, s]) => ctx.fillText(s, L - 6, Y(ma) + 4));
+      ctx.textAlign = "center";
+      [0, 1, 2, 3, 4, 5, 6, 7].forEach((volt) => ctx.fillText(`${volt}`, X(volt), h - B + 16));
+      ctx.fillText("V", w - R - 4, h - B - 6);
+      const pts = M.sCurve(v.ds, v.dw, v.sp, 6.0, 8.0, 900);
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.beginPath();
+      pts.forEach(([volt, ma], i) => (i ? ctx.lineTo(X(volt), Y(ma)) : ctx.moveTo(X(volt), Y(ma))));
+      ctx.stroke();
+      const vh = M.holdingVoltage(v.sp), ih = M.holdingCurrent(v.ds, v.dw);
+      ctx.fillStyle = C.drain; ctx.beginPath(); ctx.arc(X(vh), Y(ih), 5, 0, 6.3); ctx.fill();
+      ctx.textAlign = "left"; ctx.font = "600 12px Inter, system-ui";
+      ctx.fillText("holding", X(vh) + 8, Y(ih) + 14);
+      ctx.strokeStyle = vdd > vh ? C.p : C.n; ctx.setLineDash([5, 5]); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(X(vdd), T); ctx.lineTo(X(vdd), h - B); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = ctx.strokeStyle; ctx.fillText(`VDD ${vdd} V`, X(vdd) + 6, T + 12);
+      if (latched) {
+        const ion = ((vdd - vh) / 8) * 1e3;
+        ctx.fillStyle = C.drain; ctx.beginPath(); ctx.arc(X(vdd), Y(ion), 7, 0, 6.3); ctx.fill();
+      }
+    }
+
+    function currentState() {
+      const v = vals();
+      const drop = M.baseDrop(v.inj, v.ds);
+      const firing = pulse > performance.now() || flash > performance.now();
+      return {
+        npn: latched || (firing && drop >= M.V_ON),
+        pnp: latched || (flash > performance.now()),
+      };
+    }
+
+    function draw() { drawXs(); drawIv(); }
+
+    function update() {
+      const v = vals();
+      $("oDs").textContent = `${v.ds} µm`; $("oDw").textContent = `${v.dw} µm`;
+      $("oSp").textContent = `${v.sp} µm`; $("oInj").textContent = `${v.inj} mA`;
+      document.querySelectorAll("[data-vdd]").forEach((b) => b.classList.toggle("on", +b.dataset.vdd === vdd));
+      const vh = M.holdingVoltage(v.sp);
+      if (latched && vdd <= vh) { latched = false; say("The supply is now below the holding voltage: the loop let go.", "mid"); }
+      $("rRs").textContent = `${Math.round(M.rSub(v.ds))} Ω`;
+      $("rDrop").textContent = `${M.baseDrop(v.inj, v.ds).toFixed(2)} V`;
+      $("rGain").textContent = `${Math.round(M.loopGain(v.sp))}`;
+      $("rVh").textContent = `${vh.toFixed(2)} V`;
+      $("rIt").textContent = `${M.triggerCurrent(v.ds).toFixed(2)} mA`;
+      $("rIdd").textContent = latched ? `≈ ${Math.round(((vdd - vh) / 8) * 1e3)} mA` : "≈ 0 mA";
+      draw();
+    }
+
+    function say(s, cls) { const el = $("verdict"); el.textContent = s; el.className = `verdict ${cls}`; }
+
+    $("inject").addEventListener("click", () => {
+      const v = vals();
+      const now = performance.now();
+      pulse = now + 900;
+      const st = M.state(v.inj, v.ds, v.dw, v.sp, vdd);
+      if (latched) { say("Already latched: injecting more changes nothing. Power cycle.", "bad"); }
+      else if (st === "quiet") {
+        const drop = M.baseDrop(v.inj, v.ds);
+        say(drop < M.V_ON ? `Quiet: the drop across R_sub is ${drop.toFixed(2)} V, below 0.65 V. The NPN never wakes.`
+          : "Quiet: the NPN wakes, but the loop gain is below one.", "ok");
+      } else if (st === "lets go") {
+        flash = now + 1500;
+        say(`It fired, and let go: the supply (${vdd} V) is below the holding voltage.`, "mid");
+      } else {
+        latched = true; t0 = now;
+        say("Latched. The pulse is gone and the loop keeps itself on. Only a power cycle stops it.", "bad");
+      }
+      update();
+    });
+    $("cycle").addEventListener("click", () => { latched = false; flash = 0; say("Power cycled: quiet again.", "ok"); update(); });
+    document.querySelectorAll("[data-vdd]").forEach((b) => b.addEventListener("click", () => { vdd = +b.dataset.vdd; update(); }));
+    Object.values(ui).forEach((el) => el.addEventListener("input", update));
+
+    function tick() {
+      const now = performance.now();
+      if (latched || pulse > now || flash > now) draw();
+      requestAnimationFrame(tick);
+    }
+    say("Press Inject.", "mid");
+    update();
+    requestAnimationFrame(tick);
+  })();
+  </script>
+</body>
+</html>

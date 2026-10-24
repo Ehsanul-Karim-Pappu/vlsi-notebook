@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tap the Floor</title>
+  <link rel="stylesheet" href="lab.css">
+  <style>
+    .grid.lab2 { grid-template-columns: 1fr; }
+    .controls.lab2 { grid-template-columns: minmax(0, 1fr) auto; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .actions .label { color: var(--muted); font-size: 14px; font-weight: 500; margin-right: 4px; }
+    .actions button.ghost { font-size: 14px; padding: 6px 12px; }
+    .actions button.ghost.on { border-color: var(--drain); color: var(--drain); }
+    .verdict { flex-basis: 100%; font-weight: 600; font-size: 16px; min-height: 1.4em; }
+    .verdict.bad { color: var(--drain); }
+    .verdict.mid { color: var(--gate); }
+    .verdict.ok { color: var(--good); }
+    .key { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; color: var(--muted); margin-top: 6px; }
+    .key i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+    .assume { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="kicker">Live lab</div>
+    <h1>Tap the floor</h1>
+    <p>A block from above: N+ active in the substrate, P+ active in two N-wells. Every active must be within the tap distance of a tap of its own kind, in its own region. Click a free site to place or remove a tap.</p>
+  </header>
+
+  <main class="grid lab2">
+    <section class="panel">
+      <h2>The block, to scale: shaded squares are each tap's reach (sized as a DRC sizes it); red marks are LUP.TAP errors</h2>
+      <canvas id="floor" aria-label="A block of transistors from above with taps and error markers"></canvas>
+      <div class="key">
+        <span><i style="background: var(--electron)"></i>N+ active (substrate)</span>
+        <span><i style="background: var(--hole)"></i>P+ active (N-well)</span>
+        <span><i style="background: #3E6A52"></i>N-well</span>
+        <span><i style="border: 2px solid var(--ink)"></i>tap</span>
+        <span><i style="background: var(--drain)"></i>error</span>
+      </div>
+      <div class="readouts">
+        <div class="big"><span>Errors</span> <b id="rErr"></b></div>
+        <div class="big"><span>Taps</span> <b id="rTaps"></b></div>
+        <div class="big"><span>Taps that count</span> <b id="rGood"></b></div>
+        <div id="verdict" class="verdict"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="controls lab2">
+    <label class="control">
+      <div class="row"><span>Tap distance rule (one site = 3 µm)</span><output id="oReach"></output></div>
+      <input id="reach" type="range" min="2" max="8" step="1" value="5">
+    </label>
+    <div class="actions" role="group" aria-label="Presets">
+      <span class="label">Start from:</span>
+      <button class="ghost" data-p="none">No taps</button>
+      <button class="ghost" data-p="ends">Row ends</button>
+      <button class="ghost" data-p="fixed">A fix</button>
+      <button class="ghost" id="wrong">Wrong well</button>
+    </div>
+    <div class="hint assume">A schematic block, not a real cell: the rule is checked the way a DRC sizes taps, in x and y (a square reach, not a circle). A tap counts only for active of its own kind in its own region: a P+ tap in the substrate for N+ active, an N+ tap in the same N-well for P+ active. With Wrong well on, clicks place the other kind (P+ in a well, N+ in the substrate): it looks like a tap and counts for nothing.</div>
+  </footer>
+
+  <script src="lab-model.js"></script>
+  <script src="lab.js"></script>
+  <script>
+  (function () {
+    const C = {
+      ink: Lab.css("--ink"), muted: Lab.css("--muted"), faint: Lab.css("--faint"), panel: Lab.css("--panel"),
+      n: Lab.css("--electron"), p: Lab.css("--hole"), drain: Lab.css("--drain"), good: Lab.css("--good"),
+      sub: "#4E4148", well: "#3E6A52",
+    };
+    const COLS = 24, ROWS = 8;
+    const FREE = new Set([0, 5, 11, 17, 23]);  // columns with no active, where taps can go
+    const REGION = ["wellA", "wellA", "sub", "sub", "wellB", "wellB", "sub", "sub"];
+    const isWell = (r) => REGION[r] !== "sub";
+    const $ = (id) => document.getElementById(id);
+    let taps = [];  // {c, r, right: whether it's the right kind for its region}
+    let wrongMode = false;
+    let floor = null;
+    floor = Lab.fitCanvas($("floor"), () => { if (floor) draw(); });
+
+    const actives = [];
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (!FREE.has(c)) actives.push([c, r]);
+
+    function counts(tp, cell) {
+      // a tap counts for this active if it's the right kind and in the same region
+      return tp.right && REGION[tp.r] === REGION[cell[1]];
+    }
+    function errors(reach) {
+      return actives.filter((cell) => {
+        const good = taps.filter((t) => counts(t, cell)).map((t) => [t.c, t.r]);
+        return !window.LUP.covered(cell, good, reach);
+      });
+    }
+
+    function preset(name) {
+      taps = [];
+      const regionsRows = [0, 2, 4, 6];
+      if (name === "ends") regionsRows.forEach((r) => { taps.push({ c: 0, r, right: true }); taps.push({ c: 23, r: r + 1, right: true }); });
+      if (name === "fixed") regionsRows.forEach((r) => { taps.push({ c: 5, r, right: true }); taps.push({ c: 17, r: r + 1, right: true }); });
+      update();
+    }
+
+    function geom() {
+      const { w, h } = floor;
+      const s = Math.min((w - 110) / COLS, (h - 20) / ROWS);
+      const x0 = 90 + (w - 100 - s * COLS) / 2, y0 = (h - s * ROWS) / 2;
+      return { s, x0, y0 };
+    }
+
+    function draw() {
+      const { ctx, w, h } = floor;
+      if (!w) return;
+      ctx.clearRect(0, 0, w, h);
+      const { s, x0, y0 } = geom();
+      const reach = +$("reach").value;
+      // regions
+      for (let r = 0; r < ROWS; r++) {
+        ctx.fillStyle = isWell(r) ? C.well : C.sub;
+        ctx.fillRect(x0, y0 + r * s, COLS * s, s);
+      }
+      // tap reach
+      taps.forEach((t) => {
+        if (!t.right) return;
+        const rows = REGION.map((g, i) => (g === REGION[t.r] ? i : -1)).filter((i) => i >= 0);
+        const rLo = Math.max(t.r - reach, Math.min(...rows)), rHi = Math.min(t.r + reach, Math.max(...rows));
+        const cLo = Math.max(0, t.c - reach), cHi = Math.min(COLS - 1, t.c + reach);
+        ctx.fillStyle = isWell(t.r) ? "rgba(79,199,216,0.22)" : "rgba(224,90,156,0.24)";
+        ctx.fillRect(x0 + cLo * s, y0 + rLo * s, (cHi - cLo + 1) * s, (rHi - rLo + 1) * s);
+      });
+      const errs = new Set(errors(reach).map(([c, r]) => `${c},${r}`));
+      // actives
+      actives.forEach(([c, r]) => {
+        const x = x0 + c * s, y = y0 + r * s;
+        ctx.fillStyle = isWell(r) ? C.p : C.n;
+        ctx.globalAlpha = 0.55; ctx.fillRect(x + s * 0.12, y + s * 0.15, s * 0.76, s * 0.7); ctx.globalAlpha = 1;
+        if (errs.has(`${c},${r}`)) {
+          ctx.strokeStyle = C.drain; ctx.lineWidth = 2.5; ctx.strokeRect(x + s * 0.08, y + s * 0.1, s * 0.84, s * 0.8);
+        }
+      });
+      // free sites
+      for (let r = 0; r < ROWS; r++) FREE.forEach((c) => {
+        ctx.strokeStyle = C.faint; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+        ctx.strokeRect(x0 + c * s + s * 0.2, y0 + r * s + s * 0.2, s * 0.6, s * 0.6); ctx.setLineDash([]);
+      });
+      // taps
+      taps.forEach((t) => {
+        const x = x0 + t.c * s, y = y0 + t.r * s;
+        const kindN = isWell(t.r) === t.right;  // N+ tap if (well and right) or (substrate and wrong)
+        ctx.fillStyle = kindN ? C.n : C.p;
+        ctx.fillRect(x + s * 0.18, y + s * 0.18, s * 0.64, s * 0.64);
+        ctx.strokeStyle = t.right ? C.ink : C.drain; ctx.lineWidth = 2.5;
+        ctx.strokeRect(x + s * 0.18, y + s * 0.18, s * 0.64, s * 0.64);
+        ctx.fillStyle = "#0E1116"; ctx.fillRect(x + s * 0.4, y + s * 0.4, s * 0.2, s * 0.2);
+        if (!t.right) {
+          ctx.strokeStyle = C.drain; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(x + s * 0.18, y + s * 0.18); ctx.lineTo(x + s * 0.82, y + s * 0.82); ctx.stroke();
+        }
+      });
+      // region labels
+      ctx.font = "600 13px Inter, system-ui"; ctx.textAlign = "right"; ctx.fillStyle = C.muted;
+      [[0, "N-well A"], [2, "substrate"], [4, "N-well B"], [6, "substrate"]].forEach(([r, s_]) => ctx.fillText(s_, x0 - 8, y0 + (r + 1) * s + 4));
+    }
+
+    function update() {
+      const reach = +$("reach").value;
+      $("oReach").textContent = `${reach} sites = ${reach * 3} µm`;
+      $("wrong").classList.toggle("on", wrongMode);
+      const errs = errors(reach).length;
+      const good = taps.filter((t) => t.right).length;
+      $("rErr").textContent = `${errs}`;
+      $("rTaps").textContent = `${taps.length}`;
+      $("rGood").textContent = `${good}`;
+      const v = $("verdict");
+      if (errs === 0) { v.textContent = `Clean, with ${good} tap${good === 1 ? "" : "s"} that count.`; v.className = "verdict ok"; }
+      else if (taps.some((t) => !t.right)) { v.textContent = `${errs} errors. The crossed-out taps are the wrong kind for their region: they count for nothing.`; v.className = "verdict bad"; }
+      else { v.textContent = `${errs} actives are farther than ${reach * 3} µm from a tap of their kind.`; v.className = "verdict bad"; }
+      draw();
+    }
+
+    $("floor").addEventListener("click", (e) => {
+      const rect = $("floor").getBoundingClientRect();
+      const { s, x0, y0 } = geom();
+      const c = Math.floor((e.clientX - rect.left - x0) / s), r = Math.floor((e.clientY - rect.top - y0) / s);
+      if (c < 0 || c >= COLS || r < 0 || r >= ROWS || !FREE.has(c)) return;
+      const k = taps.findIndex((t) => t.c === c && t.r === r);
+      if (k >= 0) taps.splice(k, 1); else taps.push({ c, r, right: !wrongMode });
+      update();
+    });
+    document.querySelectorAll("[data-p]").forEach((b) => b.addEventListener("click", () => preset(b.dataset.p)));
+    $("wrong").addEventListener("click", () => { wrongMode = !wrongMode; update(); });
+    $("reach").addEventListener("input", update);
+    preset("none");
+  })();
+  </script>
+</body>
+</html>

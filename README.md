@@ -9,7 +9,8 @@ Animated slides built with Manim, with live simulations and the theory behind ev
 |---|---|---|
 | 1 | [The Switch That Wouldn't Turn Off](lectures/01-transistor-evolution/): the transistor from Lilienfeld's 1925 patent to the MOSFET, FinFET, nanosheet, forksheet, CFET and beyond | Built: 13 chapters, 5 live labs, a 25-minute core path; a layout edition for layout engineers (8 chapters, 3 labs) |
 | 2 | [Matching and Symmetry, in Layout](lectures/02-matching-and-symmetry/): what each matching technique cancels, laid out on a folded-cascode OTA with CMFB and a bandgap reference | Built: 9 chapters, 1 live lab, about 45 minutes |
-| 3 | Analog building blocks, with simulation | Planned |
+| 3 | [Latch-up, in Layout](lectures/03-latch-up/): the parasitic thyristor in bulk CMOS, how it fires and holds, and why each LUP rule exists (taps, guard rings, injectors, wells) | Built: 9 chapters, 2 live labs, about 45–50 minutes |
+| 4 | Analog building blocks, with simulation | Planned |
 
 Each lecture is an animated, presenter-paced slide deck built with
 [Manim](https://www.manim.community/) and [manim-slides](https://github.com/jeertmans/manim-slides).
